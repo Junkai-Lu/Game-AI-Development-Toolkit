@@ -6,7 +6,6 @@ by Junkai Lu
 version:2017/1/12
 */
 
-
 #include "stdafx.h"
 #include <iostream>
 #include <stdlib.h>

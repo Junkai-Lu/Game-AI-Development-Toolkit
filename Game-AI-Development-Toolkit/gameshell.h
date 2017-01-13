@@ -17,6 +17,8 @@
 #include <functional>
 #include <set>
 
+#include "gadtlib.h"
+
 #pragma once
 
 namespace gadt

@@ -214,7 +214,7 @@ namespace gadt
 		}
 
 		//get bit.
-		inline bool operator[](size_t index) const
+		inline size_t operator[](size_t index) const
 		{
 			return get(index);
 		}
@@ -240,10 +240,10 @@ namespace gadt
 		}
 
 		//add one card in this card group.
-		inline void Push(size_t index)
+		inline void push(size_t index)
 		{
 			GADT_WARNING_CHECK(index >= 16, "out of range.");
-			gadt_int64 value = get(index);
+			size_t value = get(index);
 			GADT_WARNING_CHECK(value == 15, "overflow.");
 			set(index, value + 1);
 		}
