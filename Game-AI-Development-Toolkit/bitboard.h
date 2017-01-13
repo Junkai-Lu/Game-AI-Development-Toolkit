@@ -1,3 +1,15 @@
+/*
+* bitboard include bitboard and bitpoker.
+*
+* bitboard equal to a bool array which size is 64 and the size can not be change.
+* bitpoker equal to a unsigned int array which size is 16, the value of each one is limit between 0 and 15.
+* in poker games, we have cards with 15 different numbers(assume black joker and red joker is different),and the cards can be saved by bitpokers.
+*
+* version: 2017/1/13
+* copyright: Junkai Lu
+* email: Junkai-Lu@outlook.com
+*/
+
 #include "stdafx.h"
 #include <string>
 #include "gadtlib.h"
@@ -6,13 +18,11 @@
 
 namespace gadt
 {
-
 #ifndef GADT_GCC
 	typedef __int64 gadt_int64;
 #else
 	typedef long long gadt_int64;
 #endif
-
 
 	//bit board.
 	class BitBoard

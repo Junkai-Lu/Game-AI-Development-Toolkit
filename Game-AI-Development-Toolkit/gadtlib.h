@@ -1,22 +1,25 @@
 /*
-* game shell is used for game AI developing and this shell is consist of the concept we called 'pages',
-* each page is an single set of command and include data that binded to each page by use template.
+* gadt lib include some basic function of Game Ai Development Toolkit.
 *
-* version: 2017/1/12
+* version: 2017/1/13
 * copyright: Junkai Lu
 * email: Junkai-Lu@outlook.com
 */
+
+#define GADT_WARNING
+#define GADT_WARNING_CHECK(warning_condition, reason) console::WarningCheck(warning_condition, reason, __FILE__, __LINE__, __FUNCTION__)
+//#define GADT_GCC
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <Windows.h>
-#pragma once
 
-#define GADT_WARNING
-#define GADT_WARNING_CHECK(warning_condition, reason) console::WarningCheck(warning_condition, reason, __FILE__, __LINE__, __FUNCTION__)
-//#define GADT_GCC
+#ifndef GADT_GCC
+	#include <Windows.h>
+#endif
+
+#pragma once
 
 namespace gadt
 {
