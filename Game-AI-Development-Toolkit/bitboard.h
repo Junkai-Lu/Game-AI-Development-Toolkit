@@ -12,7 +12,6 @@
 * email: Junkai-Lu@outlook.com
 */
 
-#include "stdafx.h"
 #include <string>
 #include <sstream>
 #include "gadtlib.h"
@@ -21,7 +20,7 @@
 
 namespace gadt
 {
-#ifndef GADT_GCC
+#ifndef GADT_UNIX
 	typedef unsigned __int64 gadt_int64;
 #else
 	typedef unsigned long long gadt_int64;

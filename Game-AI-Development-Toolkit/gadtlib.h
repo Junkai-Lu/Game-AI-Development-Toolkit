@@ -1,23 +1,27 @@
 /*
 * gadt lib include some basic function of Game Ai Development Toolkit.
 *
-* version: 2017/1/13
+* version: 2017/1/16
 * copyright: Junkai Lu
 * email: Junkai-Lu@outlook.com
 */
 
 #define GADT_WARNING
 #define GADT_WARNING_CHECK(warning_condition, reason) console::WarningCheck(warning_condition, reason, __FILE__, __LINE__, __FUNCTION__)
-//#define GADT_GCC
+//#define GADT_UNIX
 
+#ifndef GADT_UNIX
+	#include <SDKDDKVer.h>
+	#include <Windows.h>
+#endif
+
+#include <stdio.h>
+#include <tchar.h>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
-
-#ifndef GADT_GCC
-	#include <Windows.h>
-#endif
+#include <time.h>
 
 #pragma once
 
@@ -98,5 +102,13 @@ namespace gadt
 			}
 #endif
 		}
+
+	}
+
+	namespace timer
+	{
+		std::string TimeString();
+		clock_t GetTimePoint();
+		double GetTimeDifference(const clock_t& start);
 	}
 }

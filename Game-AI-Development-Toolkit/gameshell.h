@@ -2,12 +2,11 @@
 * game shell is used for game AI developing and this shell is consist of the concept we called 'pages',
 * each page is an single set of command and include data that binded to each page by use template.
 *
-* version: 2017/1/12
+* version: 2017/1/16
 * copyright: Junkai Lu
 * email: Junkai-Lu@outlook.com
 */
 
-#include "stdafx.h"
 #include <iostream>
 #include <fstream>
 #include <string>

@@ -3,10 +3,9 @@ General MCTS Lib
 
 by Junkai Lu
 
-version:2017/1/12
+version:2017/1/16
 */
 
-#include "stdafx.h"
 #include <iostream>
 #include <stdlib.h>
 #include <functional>
