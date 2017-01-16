@@ -84,6 +84,7 @@ namespace gadt
 #ifdef GADT_WARNING
 			if (condition)
 			{
+				std::cout << std::endl << std::endl;
 				Cprintf(">> WARNING: ", color::purple);
 				Cprintf(reason, color::red);
 				std::cout << std::endl;
