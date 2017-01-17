@@ -1,7 +1,7 @@
 /*
 * gadt lib include some basic function of Game Ai Development Toolkit.
 *
-* version: 2017/1/16
+* version: 2017/1/17
 * copyright: Junkai Lu
 * email: Junkai-Lu@outlook.com
 */
@@ -35,27 +35,23 @@ namespace gadt
 		//get string format of current time.
 		std::string TimeString()
 		{
-#ifndef GADT_UNIX
-			time_t t;
-			tm local;
+			time_t t = time(NULL);
 			char buf[128] = { 0 };
-			t = time(NULL);
+#ifndef GADT_UNIX
+			tm local;
 			localtime_s(&local, &t);
 			strftime(buf, 64, "%Y.%m.%d-%H:%M:%S", &local);
 			return std::string(buf);
 #else
-			time_t t;  //秒时间  
-			tm* local; //本地时间   
-			char buf[128] = { 0 };
-			t = time(NULL); //获取目前秒时间
-			local = localtime(&t); //转为本地时间  
+			tm* local; 
+			local = localtime(&t);
 			strftime(buf, 64, "%Y.%m.%d-%H:%M:%S", local);
 			return std::string(buf);
 #endif
 		}
 		
 		//create timepoint.
-		clock_t GetTimePoint()
+		clock_t GetClock()
 		{
 			return clock();
 		}
@@ -65,5 +61,6 @@ namespace gadt
 		{
 			return (double)(clock() - start) / CLOCKS_PER_SEC;
 		}
+
 	}
 }

@@ -1,7 +1,7 @@
 /*
 * gadt lib include some basic function of Game Ai Development Toolkit.
 *
-* version: 2017/1/16
+* version: 2017/1/17
 * copyright: Junkai Lu
 * email: Junkai-Lu@outlook.com
 */
@@ -50,7 +50,6 @@ namespace gadt
 				white = 15
 			};
 		}
-
 		void Cprintf(std::string tex, color::Color color);
 		inline std::string B2S(bool b)
 		{
@@ -102,13 +101,12 @@ namespace gadt
 			}
 #endif
 		}
-
 	}
 
 	namespace timer
 	{
 		std::string TimeString();
-		clock_t GetTimePoint();
+		clock_t GetClock();
 		double GetTimeDifference(const clock_t& start);
 	}
 }
