@@ -4,8 +4,9 @@
 * BitBoard equal to a bool array which size is 64 and the size can not be change.
 * BitPoker equal to a unsigned int array which size is 16, the value of each one is limit between 0 and 15.
 * BitMahjong is a unsigned int vector whose size is 42, each value is limit between 0 and 7.
+*
 * in poker games, we have cards with 15 different numbers(assume black joker and red joker is different),and the cards can be saved by bitpokers.
-* in mahjong games. there are 34 kinds of tile and each one is less than 8 in game, so we design a vector by using two 64-bit uint to save these info.
+* in mahjong games. there are <40 kinds of tile and each one is less than 8 in game, so we design a vector by using two 64-bit uint to save these info.
 *
 * version: 2017/1/16
 * copyright: Junkai Lu
@@ -682,6 +683,71 @@ namespace gadt
 		inline bool operator==(const BitMahjong& target)
 		{
 			return _fir_data == target._fir_data && _sec_data == target._sec_data;
+		}
+	};
+
+	//value vector.
+	template<size_t upper_bound>
+	class ValueVector
+	{
+	private:
+		uint8_t _values[upper_bound];
+		size_t _len;
+	public:
+		//default constructor function
+		inline ValueVector() :
+			_len(0)
+		{
+		}
+		
+		//copy constructor is default.
+		inline ValueVector(const ValueVector&) = default;
+
+		//visit operation.
+		inline uint8_t operator[](const size_t index) const
+		{
+			GADT_WARNING_CHECK(index < 0 || index >= _len, "overflow");
+			return _values[index];
+		}
+
+		//get value operation.
+		inline uint8_t value(size_t index) const
+		{
+			GADT_WARNING_CHECK(index <0 || index >= _len, "overflow");
+			return _values[index];
+		}
+
+		//push a new value in the end of array.
+		inline void push(uint8_t index)
+		{
+			GADT_WARNING_CHECK(_len >= _upper_bound, "overflow");
+			_values[_len] = index;
+			_len++;
+		}
+
+		//get current length of array.
+		inline size_t length() const
+		{
+			return _len;
+		}
+
+		//get random value and remove it.
+		inline uint8_t draw_and_remove_value()
+		{
+			GADT_WARNING_CHECK(_len <= 0, "overflow");
+			size_t rnd = rand() % _len;
+			uint8_t temp = _values[rnd];
+			_values[rnd] = _values[_len];
+			_len--;
+			return temp;
+		}
+
+		//get random value but do not remove.
+		inline uint8_t draw_value()
+		{
+			GADT_WARNING_CHECK(_len <= 0, "overflow");
+			size_t rnd = rand() % _len;
+			return _values[rnd];
 		}
 	};
 }
