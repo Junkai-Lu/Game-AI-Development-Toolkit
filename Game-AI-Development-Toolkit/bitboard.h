@@ -687,19 +687,26 @@ namespace gadt
 	};
 
 	//value vector.
-	template<size_t upper_bound>
+	template<size_t ub>
 	class ValueVector
 	{
 	private:
-		uint8_t _values[upper_bound];
+		uint8_t _values[ub];
 		size_t _len;
+		const size_t _upper_bound;
 	public:
 		//default constructor function
 		inline ValueVector() :
-			_len(0)
+			_len(0),
+			_upper_bound(ub)
 		{
 		}
-		
+
+		//get upper bound.
+		inline size_t upper_bound()
+		{
+			return _upper_bound;
+		}
 		//copy constructor is default.
 		inline ValueVector(const ValueVector&) = default;
 
