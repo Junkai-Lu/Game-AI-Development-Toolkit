@@ -7,7 +7,7 @@
 */
 
 #define GADT_WARNING
-#define GADT_WARNING_CHECK(warning_condition, reason) console::WarningCheck(warning_condition, reason, __FILE__, __LINE__, __FUNCTION__)
+#define GADT_WARNING_CHECK(warning_condition, reason) gadt::console::WarningCheck(warning_condition, reason, __FILE__, __LINE__, __FUNCTION__)
 //#define GADT_UNIX
 
 #ifndef GADT_UNIX

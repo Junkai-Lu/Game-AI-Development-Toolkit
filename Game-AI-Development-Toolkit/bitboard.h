@@ -702,6 +702,27 @@ namespace gadt
 		{
 		}
 
+		//copy constructor
+		ValueVector(const ValueVector& v) :
+			_len(v._len),
+			_upper_bound(ub)
+		{
+			for (size_t i = 0; i < ub; i++)
+			{
+				_values[i] = v._values[i];
+			}
+		}
+		void operator=(const ValueVector& v)
+		{
+			for (size_t i = 0; i < ub; i++)
+			{
+				_values[i] = v._values[i];
+			}
+			_len = v._len;
+		}
+		template<size_t uub> ValueVector(const ValueVector<uub>& g) = delete;
+		template<size_t uub> void operator=(const ValueVector<uub>& g) = delete;
+
 		//get upper bound.
 		inline size_t upper_bound()
 		{
