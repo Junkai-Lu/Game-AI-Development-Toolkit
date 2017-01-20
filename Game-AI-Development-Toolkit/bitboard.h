@@ -264,6 +264,14 @@ namespace gadt
 			return get(index);
 		}
 
+		//get ullong string.
+		inline std::string to_ullong_string() const
+		{
+			std::stringstream ss;
+			ss << _fir_data << " " << _sec_data;
+			return ss.str();
+		}
+
 		//get string format.
 		inline std::string to_bit_string() const
 		{
@@ -609,6 +617,15 @@ namespace gadt
 			return ss.str();
 		}
 
+		//get ullong string.
+		inline std::string to_ullong_string() const
+		{
+			std::stringstream ss;
+			ss << _fir_data << " " << _sec_data;
+			return ss.str();
+		}
+
+		//get bits string.
 		inline std::string to_bit_string() const
 		{
 			char c[129];
@@ -638,6 +655,7 @@ namespace gadt
 			return std::string(c,129);
 		}
 
+		//operation.
 		inline void operator+=(const BitMahjong& target)
 		{
 #ifdef GADT_WARNING
