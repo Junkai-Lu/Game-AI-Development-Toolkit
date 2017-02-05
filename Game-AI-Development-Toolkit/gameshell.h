@@ -183,7 +183,17 @@ namespace gadt
 				*/
 				BeFocus();	//ensure this page is always the focus.
 				GameShell::InputTip();
-				std::string command = GameShell::GetInput();
+				std::string command;
+
+				//get command that is not empty.
+				for (;;)
+				{
+					command = GameShell::GetInput();
+					if (command != "")
+					{
+						break;
+					}
+				}
 
 				//return command
 				if (command == "return")
