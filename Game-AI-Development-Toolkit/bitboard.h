@@ -8,7 +8,7 @@
 * in poker games, we have cards with 15 different numbers(assume black joker and red joker is different),and the cards can be saved by bitpokers.
 * in mahjong games. there are <40 kinds of tile and each one is less than 8 in game, so we design a vector by using two 64-bit uint to save these info.
 *
-* version: 2017/1/19
+* version: 2017/2/5
 * copyright: Junkai Lu
 * email: Junkai-Lu@outlook.com
 */
@@ -22,32 +22,52 @@
 namespace gadt
 {
 #ifndef GADT_UNIX
-	typedef unsigned __int64 gadt_int64;
+	typedef uint64_t gadt_int64;
 #else
-	typedef unsigned long long gadt_int64;
+	typedef uint64_t gadt_int64;
 #endif
 
 	//bit board.
 	class BitBoard64
 	{
 	private:
+#ifdef GADT_DEBUG_INFO
+		bool _debug_data[64];
+#endif
 		gadt_int64 _data;
-
 	public:
 		inline BitBoard64() :
 			_data(0)
-		{
 
+		{
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 64; i++)
+			{
+				_debug_data[i] = false;
+			}
+#endif
 		}
 		inline BitBoard64(gadt_int64 board) :
 			_data(board)
 		{
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 64; i++)
+			{
+				_debug_data[i] = get(i);
+			}
+#endif
 		}
 
 		//equal to the appointed value.
 		inline void operator=(gadt_int64 board)
 		{
 			_data = board;
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 64; i++)
+			{
+				_debug_data[i] = get(i);
+			}
+#endif
 		}
 
 		//return whether any bit is true.
@@ -69,6 +89,9 @@ namespace gadt
 			gadt_int64 temp = 1;
 			temp = temp << index;
 			_data = _data | temp;
+#ifdef GADT_DEBUG_INFO
+			_debug_data[index] = true;
+#endif
 		}
 
 		//reset appointed bit.
@@ -78,12 +101,21 @@ namespace gadt
 			gadt_int64 temp = 1;
 			temp = ~(temp << index);
 			_data = _data & temp;
+#ifdef GADT_DEBUG_INFO
+			_debug_data[index] = false;
+#endif
 		}
 
 		//reset all bits.
 		inline void reset()
 		{
 			_data = 0;
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 64; i++)
+			{
+				_debug_data[i] = false;
+			}
+#endif
 		}
 
 		//write value to appointed bit.
@@ -163,20 +195,33 @@ namespace gadt
 	class BitBoard128
 	{
 	private:
+#ifdef GADT_DEBUG_INFO
+		bool _debug_data[128];
+#endif
 		gadt_int64 _fir_data;
 		gadt_int64 _sec_data;
-
 	public:
 		inline BitBoard128() :
 			_fir_data(0),
 			_sec_data(0)
 		{
-
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 128; i++)
+			{
+				_debug_data[i] = false;
+			}
+#endif
 		}
 		inline BitBoard128(gadt_int64 fir_data,gadt_int64 sec_data) :
 			_fir_data(fir_data),
 			_sec_data(sec_data)
 		{
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 128; i++)
+			{
+				_debug_data[i] = get(i);
+			}
+#endif
 		}
 
 		//return whether any bit is true.
@@ -206,6 +251,9 @@ namespace gadt
 				temp = temp << index;
 				_fir_data = _fir_data | temp;
 			}
+#ifdef GADT_DEBUG_INFO
+			_debug_data[index] = true;
+#endif
 		}
 
 		//reset appointed bit.
@@ -223,7 +271,9 @@ namespace gadt
 				temp = ~(temp << index);
 				_fir_data = _fir_data & temp;
 			}
-			
+#ifdef GADT_DEBUG_INFO
+			_debug_data[index] = false;
+#endif
 		}
 
 		//reset all bits.
@@ -231,6 +281,12 @@ namespace gadt
 		{
 			_fir_data = 0;
 			_sec_data = 0;
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 128; i++)
+			{
+				_debug_data[i] = false;
+			}
+#endif
 		}
 
 		//write value to appointed bit.
@@ -312,22 +368,42 @@ namespace gadt
 	class BitPoker
 	{
 	private:
+#ifdef GADT_DEBUG_INFO
+		uint8_t _debug_data[16];
+#endif
 		gadt_int64 _data;
 	public:
 		inline BitPoker() :
 			_data(0)
 		{
-
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 16; i++)
+			{
+				_debug_data[i] = 0;
+			}
+#endif
 		}
 		inline BitPoker(gadt_int64 board) :
 			_data(board)
 		{
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 16; i++)
+			{
+				_debug_data[i] = (uint8_t)get(i);
+			}
+#endif
 		}
 
 		//equal to the appointed value.
 		inline void operator=(gadt_int64 board)
 		{
 			_data = board;
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 16; i++)
+			{
+				_debug_data[i] = (uint8_t)get(i);
+			}
+#endif
 		}
 
 		//return whether any bit is true.
@@ -348,6 +424,9 @@ namespace gadt
 			GADT_WARNING_CHECK(index >= 16, "out of range.");
 			GADT_WARNING_CHECK(value >= 16, "out of value.");
 			_data = (_data & (~((gadt_int64)0xF << index * 4))) | ((value & 0xF) << (index * 4));
+#ifdef GADT_DEBUG_INFO
+			_debug_data[index] = (uint8_t)value;
+#endif
 		}
 
 		//reset appointed bit.
@@ -357,12 +436,21 @@ namespace gadt
 			gadt_int64 temp = 15;
 			temp = ~(temp << index);
 			_data = _data & temp;
+#ifdef GADT_DEBUG_INFO
+			_debug_data[index] = 0;
+#endif
 		}
 
 		//reset all bits.
 		inline void reset()
 		{
 			_data = 0;
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 16; i++)
+			{
+				_debug_data[i] = 0;
+			}
+#endif
 		}
 
 		//get bit.
@@ -486,6 +574,9 @@ namespace gadt
 	class BitMahjong
 	{
 	private:
+#ifdef GADT_DEBUG_INFO
+		uint8_t _debug_data[42];
+#endif
 		gadt_int64 _fir_data;
 		gadt_int64 _sec_data;
 	public:
@@ -493,11 +584,23 @@ namespace gadt
 			_fir_data(0),
 			_sec_data(0)
 		{
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 42; i++)
+			{
+				_debug_data[i] = 0;
+			}
+#endif
 		}
 		inline BitMahjong(gadt_int64 fir_data, gadt_int64 sec_data) :
 			_fir_data(fir_data),
 			_sec_data(sec_data)
 		{
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 42; i++)
+			{
+				_debug_data[i] = (uint8_t)get(i);
+			}
+#endif
 		}
 
 		//return whether any bit is true.
@@ -526,6 +629,9 @@ namespace gadt
 				gadt_int64 t = (((gadt_int64)value & 0x7) << (index * 3));
 				_fir_data = (_fir_data & (~((gadt_int64)0x7 << index * 3))) | ((value & 0x7) << (index * 3));
 			}
+#ifdef GADT_DEBUG_INFO
+			_debug_data[index] = (uint8_t)value;
+#endif
 		}
 
 		//reset appointed bit.
@@ -543,7 +649,9 @@ namespace gadt
 				temp = ~(temp << index);
 				_fir_data = _fir_data & temp;
 			}
-			
+#ifdef GADT_DEBUG_INFO
+			_debug_data[index] = 0;
+#endif
 		}
 
 		//reset all bits.
@@ -551,6 +659,12 @@ namespace gadt
 		{
 			_fir_data = 0;
 			_sec_data = 0;
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 42; i++)
+			{
+				_debug_data[i] = 0;
+			}
+#endif
 		}
 
 		//get bit.

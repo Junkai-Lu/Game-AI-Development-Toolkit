@@ -1,11 +1,12 @@
 /*
 * gadt lib include some basic function of Game Ai Development Toolkit.
 *
-* version: 2017/1/17
+* version: 2017/2/5
 * copyright: Junkai Lu
 * email: Junkai-Lu@outlook.com
 */
 
+#define GADT_DEBUG_INFO
 #define GADT_WARNING
 #define GADT_WARNING_CHECK(warning_condition, reason) gadt::console::WarningCheck(warning_condition, reason, __FILE__, __LINE__, __FUNCTION__)
 //#define GADT_UNIX
