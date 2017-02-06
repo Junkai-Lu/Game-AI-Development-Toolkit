@@ -8,7 +8,7 @@
 * in poker games, we have cards with 15 different numbers(assume black joker and red joker is different),and the cards can be saved by bitpokers.
 * in mahjong games. there are <40 kinds of tile and each one is less than 8 in game, so we design a vector by using two 64-bit uint to save these info.
 *
-* version: 2017/2/5
+* version: 2017/2/6
 * copyright: Junkai Lu
 * email: Junkai-Lu@outlook.com
 */
@@ -532,6 +532,12 @@ namespace gadt
 				GADT_WARNING_CHECK(get(i) + target.get(i) > 0xF, ">> WARNING:: function BITGROUP::Plus overflow.");
 			}
 #endif
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 16; i++)
+			{
+				_debug_data[i] += target._debug_data[i];
+			}
+#endif
 			_data += target._data;
 		}
 		inline void operator-=(const BitPoker& target)
@@ -540,6 +546,12 @@ namespace gadt
 			for (size_t i = 0; i < 16; i++)
 			{
 				GADT_WARNING_CHECK(get(i) < target.get(i), ">> WARNING:: function BITGROUP::Plus overflow.");
+			}
+#endif
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 16; i++)
+			{
+				_debug_data[i] -= target._debug_data[i];
 			}
 #endif
 			_data -= target._data;
@@ -552,7 +564,15 @@ namespace gadt
 				GADT_WARNING_CHECK(get(i) + target.get(i) > 0xF, ">> WARNING:: function BITGROUP::Plus overflow.");
 			}
 #endif
-			return BitPoker(_data + target._data);
+
+			BitPoker temp(_data + target._data);
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 16; i++)
+			{
+				temp._debug_data[i] = get(i) + target.get(i);
+			}
+#endif
+			return temp;
 		}
 		inline BitPoker operator-(const BitPoker& target) const
 		{
@@ -562,7 +582,15 @@ namespace gadt
 				GADT_WARNING_CHECK(get(i) < target.get(i), ">> WARNING:: function BITGROUP::Plus overflow.");
 			}
 #endif
-			return BitPoker(_data - target._data);
+
+			BitPoker temp(_data - target._data);
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 16; i++)
+			{
+				temp._debug_data[i] = get(i) - target.get(i);
+			}
+#endif
+			return temp;
 		}
 		inline bool operator==(const BitPoker& target)
 		{
@@ -778,6 +806,12 @@ namespace gadt
 				GADT_WARNING_CHECK(get(i) + target.get(i) > 0x7, "overflow.");
 			}
 #endif
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 42; i++)
+			{
+				_debug_data[i] += target._debug_data[i];
+			}
+#endif
 			_fir_data += target._fir_data;
 			_sec_data += target._sec_data;
 		}
@@ -787,6 +821,12 @@ namespace gadt
 			for (size_t i = 0; i < 42; i++)
 			{
 				GADT_WARNING_CHECK(get(i) < target.get(i), "overflow.");
+			}
+#endif
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 42; i++)
+			{
+				_debug_data[i] -= target._debug_data[i];
 			}
 #endif
 			_fir_data -= target._fir_data;
@@ -800,7 +840,15 @@ namespace gadt
 				GADT_WARNING_CHECK(get(i) + target.get(i) > 0xF, "overflow.");
 			}
 #endif
-			return BitMahjong(_fir_data + target._fir_data, _sec_data + target._sec_data);
+
+			BitMahjong temp(_fir_data + target._fir_data, _sec_data + target._sec_data);
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 42; i++)
+			{
+				temp._debug_data[i] = _debug_data[i] + target._debug_data[i];
+			}
+#endif
+			return temp;
 		}
 		inline BitMahjong operator-(const BitMahjong& target) const
 		{
@@ -810,7 +858,14 @@ namespace gadt
 				GADT_WARNING_CHECK(get(i) < target.get(i), "overflow.");
 			}
 #endif
-			return BitMahjong(_fir_data - target._fir_data, _sec_data - target._sec_data);
+			BitMahjong temp(_fir_data - target._fir_data, _sec_data - target._sec_data);
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < 42; i++)
+			{
+				temp._debug_data[i] = _debug_data[i] - target._debug_data[i];
+			}
+#endif
+			return temp;
 		}
 		inline bool operator==(const BitMahjong& target)
 		{
