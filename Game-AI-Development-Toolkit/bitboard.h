@@ -434,7 +434,7 @@ namespace gadt
 		{
 			GADT_WARNING_CHECK(index >= 16, "out of range.");
 			gadt_int64 temp = 15;
-			temp = ~(temp << index);
+			temp = ~(temp << (index*4));
 			_data = _data & temp;
 #ifdef GADT_DEBUG_INFO
 			_debug_data[index] = 0;
@@ -569,7 +569,7 @@ namespace gadt
 #ifdef GADT_DEBUG_INFO
 			for (size_t i = 0; i < 16; i++)
 			{
-				temp._debug_data[i] = get(i) + target.get(i);
+				temp._debug_data[i] = _debug_data[i] + target._debug_data[i];
 			}
 #endif
 			return temp;
@@ -587,7 +587,7 @@ namespace gadt
 #ifdef GADT_DEBUG_INFO
 			for (size_t i = 0; i < 16; i++)
 			{
-				temp._debug_data[i] = get(i) - target.get(i);
+				temp._debug_data[i] = _debug_data[i] - target._debug_data[i];
 			}
 #endif
 			return temp;
@@ -669,12 +669,12 @@ namespace gadt
 			gadt_int64 temp = 7;
 			if (index >= 21)
 			{
-				temp = ~(temp << (index-21));
+				temp = ~(temp << ((index-21)*3));
 				_sec_data = _sec_data & temp;
 			}
 			else
 			{
-				temp = ~(temp << index);
+				temp = ~(temp << (index*3));
 				_fir_data = _fir_data & temp;
 			}
 #ifdef GADT_DEBUG_INFO
