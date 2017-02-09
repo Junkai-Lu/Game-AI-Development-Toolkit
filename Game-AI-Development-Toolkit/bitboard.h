@@ -950,7 +950,7 @@ namespace gadt
 			GADT_WARNING_CHECK(_len <= 0, "overflow");
 			size_t rnd = rand() % _len;
 			uint8_t temp = _values[rnd];
-			_values[rnd] = _values[_len];
+			_values[rnd] = _values[_len - 1];
 			_len--;
 			return temp;
 		}
