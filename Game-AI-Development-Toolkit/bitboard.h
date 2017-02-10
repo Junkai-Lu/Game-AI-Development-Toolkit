@@ -27,7 +27,185 @@ namespace gadt
 	typedef uint64_t gadt_int64;
 #endif
 
-	//bit board.
+	template<size_t ub>
+	class BitBoard
+	{
+	private:
+		//data array upper bound
+		static const size_t data_ub = (ub / 16) + 1;
+		
+		//data array.
+		uint16_t _data[data_ub];
+
+		//debug info
+#ifdef GADT_DEBUG_INFO
+		bool _debug_data[ub];
+#endif
+	public:
+		//default constructor
+		inline BitBoard()
+		{
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < ub; i++)
+			{
+				_debug_data[i] = false;
+			}
+#endif
+			for (size_t i = 0; i < data_ub; i++)
+			{
+				_data[i] = 0;
+			}
+		}
+
+		//return whether any bit is true.
+		inline bool any() const
+		{
+			for (size_t i = 0; i < data_ub; i++)
+			{
+				if (_data[data_ub] != 0)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		//return whether no any bit is true.
+		inline bool none() const
+		{
+			for (size_t i = 0; i < data_ub; i++)
+			{
+				if (_data[data_ub] != 0)
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		//set appointed bit to true.
+		inline void set(size_t index)
+		{
+			GADT_WARNING_CHECK(index >= ub, "out of range.");
+			size_t data_index = index / 16;
+			size_t bit_index = index % 16;
+			uint16_t temp = 1;
+			temp = temp << bit_index;
+			_data[data_index] = _data[data_index] | temp;
+
+#ifdef GADT_DEBUG_INFO
+			_debug_data[index] = true;
+#endif
+		}
+
+		//reset appointed bit.
+		inline void reset(size_t index)
+		{
+			GADT_WARNING_CHECK(index >= ub, "out of range.");
+			gadt_int64 temp = 1;
+			size_t data_index = index / 16;
+			size_t bit_index = index % 16;
+			temp = ~(temp << bit_index);
+			_data[data_index] = _data[data_index] & temp;
+
+#ifdef GADT_DEBUG_INFO
+			_debug_data[index] = false;
+#endif
+		}
+
+		//reset all bits.
+		inline void reset()
+		{
+			for (size_t i = 0; i < data_ub; i++)
+			{
+				_data[data_ub] = 0;
+			}
+#ifdef GADT_DEBUG_INFO
+			for (size_t i = 0; i < ub; i++)
+			{
+				_debug_data[i] = false;
+			}
+#endif
+		}
+
+		//write value to appointed bit.
+		inline void write(size_t index, int value)
+		{
+			GADT_WARNING_CHECK(index >= ub, "out of range.");
+			if (value)
+			{
+				set(index);
+			}
+			else
+			{
+				reset(index);
+			}
+		}
+
+		//get bit.
+		inline bool get(size_t index) const
+		{
+			GADT_WARNING_CHECK(index >= ub, "out of range.");
+			size_t data_index = index / 16;
+			size_t bit_index = index % 16;
+			return ((_data[data_index] >> bit_index) & 0x1) == 1;
+		}
+
+		//get total
+		inline size_t total() const
+		{
+			size_t n = 0;
+			for (size_t i = 0; i < ub; i++)
+			{
+				n += get(i);
+			}
+			return n;
+		}
+
+		//upper bound
+		inline static size_t upper_bound()
+		{
+			return ub;
+		}
+
+		//get data
+		inline uint16_t to_ushort(size_t data_index) const
+		{
+			return _data[data_index];
+		}
+
+		//get ullong string.
+		inline std::string to_ushort_string() const
+		{
+			std::stringstream ss;
+			for (size_t i = 0; i < data_ub; i++)
+			{
+				ss << _data[i] << "\n";
+			}
+			return ss.str();
+		}
+
+		//get bit.
+		inline bool operator[](size_t index) const
+		{
+			return get(index);
+		}
+
+		//equal
+		inline bool operator==(const BitBoard& target)
+		{
+			for (size_t i = 0; i < data_ub; i++)
+			{
+				if (_data[data_ub] != target._data[data_ub])
+				{
+					return false
+				}
+			}
+			return true;
+		}
+	};
+
+	//bit board64.
 	class BitBoard64
 	{
 	private:
@@ -47,7 +225,7 @@ namespace gadt
 			}
 #endif
 		}
-		inline BitBoard64(gadt_int64 board) :
+		explicit inline BitBoard64(gadt_int64 board) :
 			_data(board)
 		{
 #ifdef GADT_DEBUG_INFO
@@ -139,12 +317,25 @@ namespace gadt
 			return ((_data >> index) & 0x1) == 1;
 		}
 
-		//get bit.
-		inline bool operator[](size_t index) const
+		//total bit.
+		inline size_t total() const
 		{
-			return get(index);
+			size_t n = _data & 0x1;	//the velue of first pos.
+			gadt_int64 temp = _data;
+			for (size_t i = 1; i < 64; i++)
+			{
+				temp = temp >> 1;	//next pos;
+				n += temp & 0x1;	//plus value of current pos.
+			}
+			return n;
 		}
 
+		//upper bound.
+		inline static size_t upper_bound()
+		{
+			return 64;
+		}
+		
 		//get value
 		inline gadt_int64 to_ullong() const
 		{
@@ -169,6 +360,10 @@ namespace gadt
 			return std::string(c);
 		}
 
+		inline bool operator[](size_t index) const
+		{
+			return get(index);
+		}
 		inline bool operator<(const BitBoard64& target)
 		{
 			return _data < target._data;
@@ -191,178 +386,9 @@ namespace gadt
 		}
 	};
 
-	//bit board.
-	class BitBoard128
-	{
-	private:
-#ifdef GADT_DEBUG_INFO
-		bool _debug_data[128];
-#endif
-		gadt_int64 _fir_data;
-		gadt_int64 _sec_data;
-	public:
-		inline BitBoard128() :
-			_fir_data(0),
-			_sec_data(0)
-		{
-#ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 128; i++)
-			{
-				_debug_data[i] = false;
-			}
-#endif
-		}
-		inline BitBoard128(gadt_int64 fir_data,gadt_int64 sec_data) :
-			_fir_data(fir_data),
-			_sec_data(sec_data)
-		{
-#ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 128; i++)
-			{
-				_debug_data[i] = get(i);
-			}
-#endif
-		}
-
-		//return whether any bit is true.
-		inline bool any() const
-		{
-			return _fir_data != 0 || _sec_data != 0;
-		}
-
-		//return whether no any bit is true.
-		inline bool none() const
-		{
-			return _fir_data == 0 && _sec_data == 0;
-		}
-
-		//set appointed bit to true.
-		inline void set(size_t index)
-		{
-			GADT_WARNING_CHECK(index >= 128, "out of range.");
-			gadt_int64 temp = 1;
-			if (index > 63)
-			{
-				temp = temp << (index - 64);
-				_sec_data = _sec_data | temp;
-			}
-			else
-			{
-				temp = temp << index;
-				_fir_data = _fir_data | temp;
-			}
-#ifdef GADT_DEBUG_INFO
-			_debug_data[index] = true;
-#endif
-		}
-
-		//reset appointed bit.
-		inline void reset(size_t index)
-		{
-			GADT_WARNING_CHECK(index >= 128, "out of range.");
-			gadt_int64 temp = 1;
-			if (index >= 64)
-			{
-				temp = ~(temp << (index-64));
-				_sec_data = _sec_data & temp;
-			}
-			else
-			{
-				temp = ~(temp << index);
-				_fir_data = _fir_data & temp;
-			}
-#ifdef GADT_DEBUG_INFO
-			_debug_data[index] = false;
-#endif
-		}
-
-		//reset all bits.
-		inline void reset()
-		{
-			_fir_data = 0;
-			_sec_data = 0;
-#ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 128; i++)
-			{
-				_debug_data[i] = false;
-			}
-#endif
-		}
-
-		//write value to appointed bit.
-		inline void write(size_t index, int value)
-		{
-			GADT_WARNING_CHECK(index >= 128, "out of range.");
-			if (value)
-			{
-				set(index);
-			}
-			else
-			{
-				reset(index);
-			}
-		}
-
-		//get bit.
-		inline bool get(size_t index) const
-		{
-			GADT_WARNING_CHECK(index >= 128, "out of range.");
-			if (index >= 64)
-			{
-				return ((_sec_data >> (index - 64)) & 0x1) == 1;
-			}
-			return ((_fir_data >> index) & 0x1) == 1;
-		}
-
-		//get bit.
-		inline bool operator[](size_t index) const
-		{
-			return get(index);
-		}
-
-		//get ullong string.
-		inline std::string to_ullong_string() const
-		{
-			std::stringstream ss;
-			ss << _fir_data << " " << _sec_data;
-			return ss.str();
-		}
-
-		//get string format.
-		inline std::string to_bit_string() const
-		{
-			char c[129];
-			c[64] = 10;
-			for (size_t i = 64 - 1; i >= 0 && i <= 64; i--)
-			{
-				if ((_fir_data >> i) & 1)
-				{
-					c[63 - i] = '1';
-				}
-				else
-				{
-					c[63 - i] = '0';
-				}
-			}
-			for (size_t i = 64 - 1; i >= 0 && i <= 64; i--)
-			{
-				if ((_sec_data >> i) & 1)
-				{
-					c[128 - i] = '1';
-				}
-				else
-				{
-					c[128 - i] = '0';
-				}
-			}
-			return std::string(c, 129);
-		}
-
-		inline bool operator==(const BitBoard128& target)
-		{
-			return _fir_data == target._fir_data && _sec_data == target._sec_data;
-		}
-	};
+	//type define.
+	typedef BitBoard<128> BitBoard128;
+	typedef BitBoard<256> BitBoard256;
 
 	//bit poker.
 	class BitPoker
@@ -956,7 +982,7 @@ namespace gadt
 		}
 
 		//get random value but do not remove.
-		inline uint8_t draw_value()
+		inline uint8_t draw_value() const
 		{
 			GADT_WARNING_CHECK(_len <= 0, "overflow");
 			size_t rnd = rand() % _len;
@@ -964,6 +990,7 @@ namespace gadt
 		}
 	};
 
+	//type define.
 	typedef ValueVector<54> PokerVector;
 	typedef ValueVector<144> MahjongVector;
 }
