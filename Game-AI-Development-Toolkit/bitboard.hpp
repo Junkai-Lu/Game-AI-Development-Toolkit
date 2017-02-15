@@ -8,7 +8,7 @@
 * in poker games, we have cards with 15 different numbers(assume black joker and red joker is different),and the cards can be saved by bitpokers.
 * in mahjong games. there are <40 kinds of tile and each one is less than 8 in game, so we design a vector by using two 64-bit uint to save these info.
 *
-* version: 2017/2/10
+* version: 2017/2/15
 * copyright: Junkai Lu
 * email: Junkai-Lu@outlook.com
 */

@@ -1,7 +1,7 @@
 /*
 * General MCTS Lib
 *
-* version: 2017/2/10
+* version: 2017/2/15
 * copyright: Junkai Lu
 * email: Junkai-Lu@outlook.com
 */
