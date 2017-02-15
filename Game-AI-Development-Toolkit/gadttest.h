@@ -1,5 +1,13 @@
+/*
+* a simple unit test for GADT.
+*
+* version: 2017/2/10
+* copyright: Junkai Lu
+* email: Junkai-Lu@outlook.com
+*/
+
 #include "gadtlib.h"
-#include "bitboard.h"
+#include "bitboard.hpp"
 
 #pragma once
 

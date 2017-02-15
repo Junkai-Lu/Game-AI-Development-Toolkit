@@ -1,36 +1,17 @@
 /*
-General MCTS Lib
-
-by Junkai Lu
-
-version:2017/1/16
+* General MCTS Lib
+*
+* version: 2017/2/10
+* copyright: Junkai Lu
+* email: Junkai-Lu@outlook.com
 */
 
-#include <iostream>
-#include <stdlib.h>
-#include <functional>
-#include <vector>
-#include <math.h>
-#include <string>
-#include <time.h>
+#include "gadtlib.h"
 
 #pragma once
 
 namespace gadt
 {
-	inline void MctsWarning(bool condition, std::string reason, std::string file, int line, std::string func)
-	{
-		if (condition)
-		{
-			std::cerr << std::endl << " ===== General MCTS Warning ===== " << std::endl << std::endl;
-			std::cerr << ">> ERROR: " << reason << std::endl << std::endl;
-			std::cerr << ">> FILE: " << file << std::endl;
-			std::cerr << ">> LINE: " << line << std::endl << std::endl;
-			std::cerr << ">> FUNCTION: " << func << std::endl << std::endl;
-			system("pause");
-		}
-	}
-
 	//State Info
 	template <
 		typename t_State,
@@ -39,7 +20,7 @@ namespace gadt
 		int(*winner_determind_func)(const t_State&),
 		bool debug_model
 	>
-	class StateInfo
+	class StateInfo final
 	{
 	private:
 		t_State _state;
@@ -58,7 +39,7 @@ namespace gadt
 				make_action_func(state, _action_vec);
 				if (debug_model)
 				{
-					MctsWarning(_action_vec.size() == 0, "wrong make action func", __FILE__, __LINE__, __FUNCTION__);
+					GADT_WARNING_CHECK(_action_vec.size() == 0, "wrong make action func");
 				}
 			}
 		}
@@ -103,7 +84,7 @@ namespace gadt
 	template <
 		typename t_State
 	>
-	class MctsResult
+	class MctsResult final
 	{
 	private:
 		t_State _result_state;
@@ -137,7 +118,7 @@ namespace gadt
 		int(*winner_determind_func)(const t_State&),
 		bool debug_model
 	>
-	class MctsNode
+	class MctsNode final
 	{
 		typedef StateInfo<t_State, t_Action, make_action_func, winner_determind_func, debug_model> t_StateInfo;
 		typedef MctsResult<t_State> t_MctsResult;
@@ -257,7 +238,6 @@ namespace gadt
 				{
 					//return current state.
 					return new t_MctsResult(_state_info->state(), _state_info->winner());
-					//MctsWarning(true,"extend a end state",__FILE__,__LINE__,__FUNCTION__);
 				}
 
 				if (_state_info->exist_unactivated_action())
@@ -371,7 +351,7 @@ namespace gadt
 		int(*winner_determind_func)(const t_State&),
 		bool debug_model = false
 	>
-	class MctsSearch
+	class MctsSearch final
 	{
 		//Members
 		typedef StateInfo<t_State, t_Action, make_action_func, winner_determind_func, debug_model> t_StateInfo;
@@ -426,7 +406,7 @@ namespace gadt
 				{
 					//default policy should not be execute in a end state.
 					t_StateInfo original_state_info(temp_state);
-					MctsWarning(original_state_info.is_end_state(), "do default policy in a end state.", __FILE__, __LINE__, __FUNCTION__);
+					GADT_WARNING_CHECK(original_state_info.is_end_state(), "do default policy in a end state.");
 				}
 
 				for (;;)
@@ -493,7 +473,7 @@ namespace gadt
 			t_StateInfo root_info = *root_node->state_info();//copy
 			if (debug_model)
 			{
-				MctsWarning(root_info.is_end_state(), "start from leaf node.", __FILE__, __LINE__, __FUNCTION__);
+				GADT_WARNING_CHECK(root_info.is_end_state(), "start from leaf node.");
 			}
 			//iteration.
 			for (size_t i = 0; i < iteration_time; i++)

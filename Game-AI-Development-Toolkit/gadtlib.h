@@ -1,28 +1,53 @@
 /*
 * gadt lib include some basic function of Game Ai Development Toolkit.
 *
-* version: 2017/2/5
+* version: 2017/2/10
 * copyright: Junkai Lu
 * email: Junkai-Lu@outlook.com
 */
 
+
+// exclude unsupported compilers
+#if defined(__clang__)
+	#define GADT_UNIX
+	#if (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__) < 30400
+		#error "unsupported Clang version - see https://github.com/nlohmann/json#supported-compilers"
+	#endif
+#elif defined(__GNUC__)
+	#define GADT_UNIX
+	#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40900
+		#error "unsupported GCC version - see https://github.com/nlohmann/json#supported-compilers"
+	#endif
+#endif
+
+//open debug-info option to include extra info , this would lead to little performance penalties.
 #define GADT_DEBUG_INFO
+
+//warning option allow the functions in GADT execute parameter check and report wrong parameters.
 #define GADT_WARNING
+
+//a marco use for parameters check.
 #define GADT_WARNING_CHECK(warning_condition, reason) gadt::console::WarningCheck(warning_condition, reason, __FILE__, __LINE__, __FUNCTION__)
-//#define GADT_UNIX
 
 #ifndef GADT_UNIX
 	#include <SDKDDKVer.h>
 	#include <Windows.h>
 #endif
 
+#include <stdlib.h>
+#include <math.h>
 #include <stdio.h>
 #include <tchar.h>
+#include <time.h>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <time.h>
+#include <map>
+#include <vector>
+#include <memory>
+#include <functional>
+#include <set>
 
 #pragma once
 

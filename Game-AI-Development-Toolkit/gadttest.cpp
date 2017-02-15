@@ -1,3 +1,11 @@
+/*
+* a simple unit test for GADT.
+*
+* version: 2017/2/10
+* copyright: Junkai Lu
+* email: Junkai-Lu@outlook.com
+*/
+
 #include "gadttest.h"
 
 namespace gadt

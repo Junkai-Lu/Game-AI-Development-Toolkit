@@ -1,8 +1,8 @@
 #include "gadtlib.h"
 #include "gadttest.h"
 #include "gameshell.h"
-#include "bitboard.h"
-#include "mcts.h"
+#include "bitboard.hpp"
+#include "mcts.hpp"
 
 using namespace gadt;
 using namespace std;
