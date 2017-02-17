@@ -196,7 +196,7 @@ namespace gadt
 			{
 				if (_data[data_ub] != target._data[data_ub])
 				{
-					return false
+					return false;
 				}
 			}
 			return true;

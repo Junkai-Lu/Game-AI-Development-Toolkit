@@ -7,8 +7,12 @@
 */
 
 
-// exclude unsupported compilers
-#if defined(__clang__)
+// exclude unsupported compilers and define some marco by compiler.
+#ifdef _MSC_VER
+	#include <SDKDDKVer.h>
+	#include <Windows.h>
+	#include <tchar.h>
+#elif defined(__clang__)
 	#define GADT_UNIX
 	#if (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__) < 30400
 		#error "unsupported Clang version"
@@ -27,17 +31,15 @@
 #define GADT_WARNING
 
 //a marco use for parameters check.
-#define GADT_WARNING_CHECK(warning_condition, reason) gadt::console::WarningCheck(warning_condition, reason, __FILE__, __LINE__, __FUNCTION__)
-
-#ifndef GADT_UNIX
-	#include <SDKDDKVer.h>
-	#include <Windows.h>
+#ifdef GADT_WARNING
+	#define GADT_WARNING_CHECK(warning_condition, reason) gadt::console::WarningCheck(warning_condition, reason, __FILE__, __LINE__, __FUNCTION__)
+#else
+	#define GADT_WARNING_CHECK(warning_condition, reason)
 #endif
 
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
-#include <tchar.h>
 #include <time.h>
 #include <iostream>
 #include <fstream>
@@ -51,10 +53,23 @@
 
 #pragma once
 
+using std::cout;
+using std::cerr;
+using std::endl;
+using std::ofstream;
+using std::ifstream;
+using std::string;
+using std::vector;
+using std::map;
+using std::stringstream;
+using std::function;
+using std::shared_ptr;
+
 namespace gadt
 {
 	namespace console
 	{
+		//console color type
 		namespace color
 		{
 			enum Color
@@ -76,7 +91,12 @@ namespace gadt
 				white = 15
 			};
 		}
-		void Cprintf(std::string tex, color::Color color);
+		typedef color::Color Color;
+
+		//colorful print.
+		void Cprintf(std::string tex, Color color);
+
+		//bool to string. that can be replaced by '<< boolalpha'
 		inline std::string B2S(bool b)
 		{
 			if (b)
@@ -85,12 +105,16 @@ namespace gadt
 			}
 			return "false";
 		}
+
+		//interger to string.
 		inline std::string I2S(size_t i)
 		{
 			std::stringstream ss;
 			ss << i;
 			return ss.str();
 		}
+
+		//show error in terminal.
 		inline void ShowError(std::string reason)
 		{
 			std::cout << std::endl;
@@ -98,6 +122,8 @@ namespace gadt
 			Cprintf(reason, color::white);
 			std::cout << std::endl << std::endl;
 		}
+
+		//show message in terminal.
 		inline void ShowMessage(std::string message, bool show_MSG = true)
 		{
 			std::cout << ">> ";
@@ -108,9 +134,10 @@ namespace gadt
 			Cprintf(message, color::green);
 			std::cout << std::endl << std::endl;
 		}
+
+		//if 'condition' is true that report detail.
 		inline void WarningCheck(bool condition, std::string reason, std::string file, int line, std::string function)
 		{
-#ifdef GADT_WARNING
 			if (condition)
 			{
 				std::cout << std::endl << std::endl;
@@ -125,7 +152,6 @@ namespace gadt
 				std::cout << std::endl;
 				system("pause");
 			}
-#endif
 		}
 	}
 

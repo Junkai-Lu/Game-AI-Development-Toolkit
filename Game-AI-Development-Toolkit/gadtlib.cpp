@@ -13,7 +13,7 @@ namespace gadt
 	namespace console
 	{
 		//colorful print
-		void Cprintf(std::string tex, console::color::Color color)
+		void Cprintf(std::string tex, Color color)
 		{
 #ifndef GADT_UNIX
 			WORD colorOld;
@@ -25,7 +25,27 @@ namespace gadt
 			std::cout << tex;
 			SetConsoleTextAttribute(handle, colorOld);
 #else
-			std::cout << tex;
+			static string color_str[16] =
+			{
+				string(""),
+				string("\e[1;40;34m"),		//deep_blue = 1,
+				string("\e[1;40;32m"),		//deep_green = 2,
+				string("\e[1;40;36m"),		//deep_cyan = 3,
+				string("\e[1;40;31m"),		//brown = 4,
+				string("\e[1;40;35m"),		//purple = 5,
+				string("\e[1;40;33m"),		//deep_yellow = 6,
+				string("\e[1;40;37m"),		//deep_white = 7,
+				string("\e[1;40;37m"),		//gray = 8,
+				string("\e[0;40;34m"),		//blue = 9,
+				string("\e[0;40;32m"),		//green = 10,
+				string("\e[0;40;36m"),		//cyan = 11,
+				string("\e[0;40;31m"),		//red = 12,
+				string("\e[0;40;35m"),		//pink = 13,
+				string("\e[0;40;33m"),		//yellow = 14,
+				string("\e[0;40;37m")		//white = 15
+			};
+			std::cout << color_str[color] << tex << "\e[0m";
+			//std::cout << tex;
 #endif
 		}
 	}
