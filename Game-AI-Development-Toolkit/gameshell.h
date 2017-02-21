@@ -1,3 +1,24 @@
+/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
+
 #include "gadtlib.h"
 
 #pragma once
@@ -13,10 +34,10 @@ namespace gadt
 	{
 		friend class GameShell;
 	private:
+		GameShell* _belonging_shell;	//the game shell this page belong to.
 		std::string _name;				//name, each name correspond to one page in a game shell.
 		size_t _index;					//page index, each page have a unique index.
 		ShellPageBase* _call_source;	//call source point to the page that call this page.
-		GameShell* _belonging_shell;	//the game shell this page belong to.
 	protected:
 		std::function<void()> _info;	//point to a function that shows infos about page. default is empty. 
 

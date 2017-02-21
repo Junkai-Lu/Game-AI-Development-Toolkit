@@ -105,7 +105,7 @@ namespace gadt
 			size_t data_index = index / 16;
 			size_t bit_index = index % 16;
 			uint16_t temp = 1;
-			temp = temp << bit_index;
+			temp = uint16_t(temp << bit_index);
 			_data[data_index] = _data[data_index] | temp;
 
 #ifdef GADT_DEBUG_INFO
@@ -117,10 +117,10 @@ namespace gadt
 		inline void reset(size_t index)
 		{
 			GADT_WARNING_CHECK(index >= ub, "out of range.");
-			gadt_int64 temp = 1;
+			uint16_t temp = 1;
 			size_t data_index = index / 16;
 			size_t bit_index = index % 16;
-			temp = ~(temp << bit_index);
+			temp = uint16_t(~(temp << bit_index));
 			_data[data_index] = _data[data_index] & temp;
 
 #ifdef GADT_DEBUG_INFO
@@ -410,7 +410,7 @@ namespace gadt
 	{
 	private:
 #ifdef GADT_DEBUG_INFO
-		uint8_t _debug_data[16];
+		size_t _debug_data[16];
 #endif
 		gadt_int64 _data;
 	public:
@@ -644,7 +644,7 @@ namespace gadt
 	{
 	private:
 #ifdef GADT_DEBUG_INFO
-		uint8_t _debug_data[42];
+		size_t _debug_data[42];
 #endif
 		gadt_int64 _fir_data;
 		gadt_int64 _sec_data;
@@ -695,7 +695,6 @@ namespace gadt
 			}
 			else
 			{
-				gadt_int64 t = (((gadt_int64)value & 0x7) << (index * 3));
 				_fir_data = (_fir_data & (~((gadt_int64)0x7 << index * 3))) | ((value & 0x7) << (index * 3));
 			}
 #ifdef GADT_DEBUG_INFO

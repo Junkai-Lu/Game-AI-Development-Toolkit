@@ -32,29 +32,35 @@
 * THE SOFTWARE.
 */
 
+
 #include "gadtlib.h"		//basic library of GADT
 #include "gadttest.h"		//a simple unittest
 #include "gameshell.h"		//game shell
 #include "bitboard.hpp"		//bit board data struct
 #include "mcts.hpp"			//monte carlo tree search for games.
 
+using namespace gadt;
 
 int main()
 {
-	gadt::GameShell gadt("GADT");
-	auto* root = gadt::CreateShellPage<int>(gadt,"root");
-	//auto* test = gadt::CreateShellPage<int>(gadt, "test");
+	GameShell gadt("GADT");
+	auto* root = CreateShellPage<int>(gadt,"root");
+	//auto* test = CreateShellPage<int>(gadt, "test");
 	GADT_CREATE_SHELL_PAGE(int, test, gadt);
+
+	//Root Page.
 	root->AddInfoFunc([]() {
-		gadt::console::Cprintf("=============================================\n", gadt::console::color::gray);
-		gadt::console::Cprintf("       FUZHOU MAHJONG AI\n", gadt::console::color::blue);
-		gadt::console::Cprintf("       Copyright @ Junkai-Lu 2017\n", gadt::console::color::blue);
-		gadt::console::Cprintf("=============================================", gadt::console::color::gray);
+		console::Cprintf("=============================================\n", console::color::gray);
+		console::Cprintf("       Game AI Development Toolkit\n", console::color::yellow);
+		console::Cprintf("       Copyright @ Junkai-Lu 2017\n", console::color::yellow);
+		console::Cprintf("=============================================", console::color::gray);
 		std::cout << endl << endl;
 	});
 	root->AddChildPage("test", "start unit test");
-	test->AddFunction("all", [](int)->void { gadt::unittest::RunAllTest(); }, "run all test");
-	test->AddFunction("bitboard", [](int)->void { gadt::unittest::TestBitBoard(); }, "run bitboard test");
+
+	//Unit Test Page
+	test->AddFunction("all", [](int)->void { unittest::RunAllTest(); }, "run all test");
+	test->AddFunction("bitboard", [](int)->void { unittest::TestBitBoard(); }, "run bitboard test");
 	gadt.RunPage("root");
 	return 0;
 }

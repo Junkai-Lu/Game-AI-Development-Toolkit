@@ -28,32 +28,30 @@
 
 namespace gadt
 {
+	//a golbal color ostream 
+	console::costream ccout(std::cout);
+
 	namespace console
 	{
-		//colorful print
-		void Cprintf(std::string tex, color::Color color)
+		//change_color
+		std::string costream::change_color(color::Color color)
 		{
 #ifndef GADT_UNIX
-			WORD colorOld;
 			HANDLE handle = ::GetStdHandle(STD_OUTPUT_HANDLE);
-			CONSOLE_SCREEN_BUFFER_INFO csbi;
-			GetConsoleScreenBufferInfo(handle, &csbi);
-			colorOld = csbi.wAttributes;
 			SetConsoleTextAttribute(handle, color);
-			std::cout << tex;
-			SetConsoleTextAttribute(handle, colorOld);
+			return std::string("");
 #else
 			static string color_str[16] =
 			{
 				string(""),
-				string("\e[1;40;34m"),		//deep_blue = 1,
-				string("\e[1;40;32m"),		//deep_green = 2,
-				string("\e[1;40;36m"),		//deep_cyan = 3,
-				string("\e[1;40;31m"),		//brown = 4,
-				string("\e[1;40;35m"),		//purple = 5,
-				string("\e[1;40;33m"),		//deep_yellow = 6,
-				string("\e[1;40;37m"),		//deep_white = 7,
-				string("\e[1;40;37m"),		//gray = 8,
+				string("\e[0;40;34m"),		//deep_blue = 1,
+				string("\e[0;40;32m"),		//deep_green = 2,
+				string("\e[0;40;36m"),		//deep_cyan = 3,
+				string("\e[0;40;31m"),		//brown = 4,
+				string("\e[0;40;35m"),		//purple = 5,
+				string("\e[0;40;33m"),		//deep_yellow = 6,
+				string("\e[0m"),			//deep_white = 7,
+				string("\e[0;40;37m"),		//gray = 8,
 				string("\e[0;40;34m"),		//blue = 9,
 				string("\e[0;40;32m"),		//green = 10,
 				string("\e[0;40;36m"),		//cyan = 11,
@@ -61,44 +59,96 @@ namespace gadt
 				string("\e[0;40;35m"),		//pink = 13,
 				string("\e[0;40;33m"),		//yellow = 14,
 				string("\e[0;40;37m")		//white = 15
+											//string("\e[0;40;37m")		//white = 15
 			};
-			std::cout << color_str[color] << tex << "\e[0m";
-			//std::cout << tex;
+			return color_str[color];
 #endif
 		}
-	}
 
-	namespace timer
-	{
-		//get string format of current time.
-		std::string TimeString()
+		//printf in costream.
+		void costream::print(std::string str, color::Color color)
 		{
-			time_t t = time(NULL);
-			char buf[128] = { 0 };
-#ifndef GADT_UNIX
-			tm local;
-			localtime_s(&local, &t);
-			strftime(buf, 64, "%Y.%m.%d-%H:%M:%S", &local);
-			return std::string(buf);
+			color::Color temp_color = _color;
+			ccout << color << str << temp_color;
+		}
+		
+		void ShowError(std::string reason)
+		{
+			std::cout << std::endl;
+			Cprintf(">> ERROR: ", color::red);
+			Cprintf(reason, color::white);
+			std::cout << std::endl << std::endl;
+		}
+
+		void Cprintf(std::string tex, color::Color color)
+		{
+			ccout.print(tex, color);
+		}
+
+		void ShowMessage(std::string message, bool show_MSG)
+		{
+			std::cout << ">> ";
+			if (show_MSG)
+			{
+				Cprintf("MSG: ", color::deep_green);
+			}
+			Cprintf(message, color::green);
+			std::cout << std::endl << std::endl;
+		}
+
+		void WarningCheck(bool condition, std::string reason, std::string file, int line, std::string function)
+		{
+			if (condition)
+			{
+				std::cout << std::endl << std::endl;
+				Cprintf(">> WARNING: ", color::purple);
+				Cprintf(reason, color::red);
+				std::cout << std::endl;
+				Cprintf("[File]: " + file, color::gray);
+				std::cout << std::endl;
+				Cprintf("[Line]: " + I2S(line), color::gray);
+				std::cout << std::endl;
+				Cprintf("[Func]: " + function, color::gray);
+				std::cout << std::endl;
+				console::SystemPause();
+			}
+		}
+
+		void SystemPause()
+		{
+#ifdef GADT_UNIX
+			cout << "Press ENTER to continue." << endl;
+			while (!getchar());
 #else
-			tm* local;
-			local = localtime(&t);
-			strftime(buf, 64, "%Y.%m.%d-%H:%M:%S", local);
-			return std::string(buf);
+			system("pause");
 #endif
 		}
-
-		//create timepoint.
-		clock_t GetClock()
-		{
-			return clock();
-		}
-
-		//get time difference between current time and start time.
-		double GetTimeDifference(const clock_t& start)
-		{
-			return (double)(clock() - start) / CLOCKS_PER_SEC;
-		}
-
 	}
+}
+
+std::string gadt::timer::TimeString()
+{
+	time_t t = time(NULL);
+	char buf[128] = { 0 };
+#ifndef GADT_UNIX
+	tm local;
+	localtime_s(&local, &t);
+	strftime(buf, 64, "%Y.%m.%d-%H:%M:%S", &local);
+	return std::string(buf);
+#else
+	tm* local;
+	local = localtime(&t);
+	strftime(buf, 64, "%Y.%m.%d-%H:%M:%S", local);
+	return std::string(buf);
+#endif
+}
+
+clock_t gadt::timer::GetClock()
+{
+	return clock();
+}
+
+double gadt::timer::GetTimeDifference(const clock_t & start)
+{
+	return (double)(clock() - start) / CLOCKS_PER_SEC;
 }
