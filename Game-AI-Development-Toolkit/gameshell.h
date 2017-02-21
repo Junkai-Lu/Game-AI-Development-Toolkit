@@ -1,20 +1,41 @@
 /*
 * game shell is used for game AI developing and this shell is consist of the concept we called 'pages',
 * each page is an single set of command and include data that binded to each page by use template.
-*
-* version: 2017/2/15
-* copyright: Junkai Lu
-* email: Junkai-Lu@outlook.com
 */
+
+/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
+
 
 #include "gadtlib.h"
 
 #pragma once
 
+#define GADT_CREATE_SHELL_PAGE(datatype, name, shell) auto* name = gadt::CreateShellPage<datatype>(shell, #name);
+
 namespace gadt
 {
 	//Shell Page Interface
 	class GameShell;
+	class SHELL;
 	class ShellPageBase
 	{
 		friend class GameShell;
@@ -23,7 +44,8 @@ namespace gadt
 		size_t _index;					//page index, each page have a unique index.
 		ShellPageBase* _call_source;	//call source point to the page that call this page.
 		GameShell* _belonging_shell;	//the game shell this page belong to.
-	protected:std::function<void()> _info;	//point to a function that shows infos about page. default is empty. 
+	protected:
+		std::function<void()> _info;	//point to a function that shows infos about page. default is empty. 
 
 	protected:
 
@@ -69,12 +91,102 @@ namespace gadt
 
 	};
 
+	//Shell
+	class GameShell final
+	{
+		friend ShellPageBase;
+
+	private:
+		//global variable
+		static GameShell* _g_focus_game;	//focus page, that is used for show path.
+
+											//page table
+		std::map<std::string, std::shared_ptr<ShellPageBase>> _page_table;
+		std::string _name;
+		ShellPageBase* _focus_page;
+
+	public:
+		//global function
+		static inline GameShell* focus_game()
+		{
+			return _g_focus_game;
+		}
+		static inline void InputTip(std::string tip = "")
+		{
+			if (focus_game() != nullptr)
+			{
+				if (focus_game()->focus_page() != nullptr)
+				{
+					focus_game()->focus_page()->ShowPath();
+					if (tip != "")
+					{
+						std::cout << "/";
+					}
+					console::Cprintf(tip, console::color::green);
+					std::cout << ": >> ";
+				}
+				else
+				{
+					console::Cprintf("ERROR: focus page not exist", console::color::purple);
+				}
+			}
+			else
+			{
+				console::Cprintf("ERROR: focus game not exist", console::color::purple);
+			}
+		}
+		static inline std::string GetInput()
+		{
+			char buffer[50];
+			std::cin.getline(buffer, 50);
+			return std::string(buffer);
+		}
+
+		//public function
+		GameShell(std::string name);
+		GameShell(GameShell&) = delete;
+
+		inline std::string name() const
+		{
+			return _name;
+		}
+		inline ShellPageBase* focus_page() const
+		{
+			return _focus_page;
+		}
+		inline bool page_exist(std::string name) const
+		{
+			return _page_table.count(name) > 0;
+		}
+		inline void AddPage(std::string name, std::shared_ptr<ShellPageBase> new_page)
+		{
+			_page_table[name] = new_page;
+		}
+
+		inline void BeFocus()
+		{
+			_g_focus_game = this;
+		}
+		inline void RunPage(std::string name, ShellPageBase* call_source = nullptr)
+		{
+			if (page_exist(name))
+			{
+				_page_table[name]->Run(call_source);
+			}
+			else
+			{
+				std::cerr << "page '" << name << "' not exist" << std::endl;
+			}
+		}
+
+
+	};
+
 	//Shell Page
 	template<typename datatype>
-	class ShellPage :public ShellPageBase
+	class ShellPage final :public ShellPageBase
 	{
-		friend class GameShell;
-
+		friend class ShellCreator;
 	private:
 		std::map<std::string, std::function<void(datatype&)> > _func;
 		std::map<std::string, std::string> _des;
@@ -83,22 +195,6 @@ namespace gadt
 		datatype _data;
 
 	private:
-		//default function.
-		ShellPage(GameShell* belonging_shell, std::string name) :
-			ShellPageBase(belonging_shell, name),
-			_extra_command([](std::string a, datatype& b)->bool {return false; })
-		{
-			ShellInit();
-		}
-		ShellPage(GameShell* belonging_shell, std::string name, datatype data) :
-			ShellPageBase(belonging_shell, name),
-			_data(data),
-			_extra_command([](std::string a, datatype& b)->bool {return false; })
-		{
-			ShellInit();
-		}
-		ShellPage(ShellPage&) = delete;
-
 		inline void ShellInit()
 		{
 			AddDescript("return", "return to previous menu.");
@@ -143,7 +239,7 @@ namespace gadt
 			if (!func_exist(command))
 			{
 				std::cerr << "function '" << command << "' in page '" << name() << "'not exist" << std::endl;
-				system("pause");
+				console::SystemPause();
 			}
 			return _func[command];
 		}
@@ -152,12 +248,12 @@ namespace gadt
 			if (!func_exist(command))
 			{
 				std::cerr << "descript '" << command << "' in page '" << name() << "'not exist" << std::endl;
-				system("pause");
+				console::SystemPause();
 			}
-			return _des[command];
+			return _des.at(command);
 		}
 
-		void Run(ShellPageBase* call_source)
+		void Run(ShellPageBase* call_source) override
 		{
 			set_call_source(call_source);
 			BeFocus();
@@ -223,6 +319,22 @@ namespace gadt
 		}
 
 	public:
+		//default function.
+		ShellPage(GameShell* belonging_shell, std::string name) :
+			ShellPageBase(belonging_shell, name),
+			_extra_command([](std::string a, datatype& b)->bool {return false; })
+		{
+			ShellInit();
+		}
+		ShellPage(GameShell* belonging_shell, std::string name, datatype data) :
+			ShellPageBase(belonging_shell, name),
+			_data(data),
+			_extra_command([](std::string a, datatype& b)->bool {return false; })
+		{
+			ShellInit();
+		}
+		ShellPage(ShellPage&) = delete;
+
 		//deconstor function, DO NOT EXECUTE ALONE.
 		~ShellPage()
 		{
@@ -243,7 +355,7 @@ namespace gadt
 				console::Cprintf(" page ", console::color::gray);
 				console::Cprintf(name(), console::color::red);
 				console::Cprintf(" add itself as child page!\n", console::color::gray);
-				system("pause");
+				console::SystemPause();
 			}
 		}
 
@@ -272,103 +384,22 @@ namespace gadt
 		{
 			set_info_func(info);
 		}
-
-
 	};
 
-	//Shell
-	class GameShell
+	//Create Page
+	template<typename datatype>
+	ShellPage<datatype>* CreateShellPage(GameShell& belonging_shell, std::string name)
 	{
-		friend ShellPageBase;
+		std::shared_ptr<ShellPage<datatype>> ptr(new ShellPage<datatype>(&belonging_shell, name));
+		belonging_shell.AddPage(name, ptr);
+		return ptr.get();
+	}
 
-	private:
-		//global variable
-		static GameShell* _g_focus_game;	//focus page, that is used for show path.
-
-		//page table
-		std::map<std::string, std::shared_ptr<ShellPageBase>> _page_table;
-		std::string _name;
-		ShellPageBase* _focus_page;
-
-	public:
-		//global function
-		static inline GameShell* focus_game()
-		{
-			return _g_focus_game;
-		}
-		static inline void InputTip(std::string tip = "")
-		{
-			if (focus_game() != nullptr)
-			{
-				if (focus_game()->focus_page() != nullptr)
-				{
-					focus_game()->focus_page()->ShowPath();
-					if (tip != "")
-					{
-						std::cout << "/";
-					}
-					console::Cprintf(tip, console::color::green);
-					std::cout << ": >> ";
-				}
-				else
-				{
-					console::Cprintf("ERROR: focus page not exist", console::color::purple);
-				}
-			}
-			else
-			{
-				console::Cprintf("ERROR: focus game not exist", console::color::purple);
-			}
-		}
-		static inline std::string GetInput()
-		{
-			char buffer[50];
-			std::cin.getline(buffer, 50);
-			return std::string(buffer);
-		}
-
-		//public function
-		GameShell(std::string name);
-		GameShell(GameShell&) = delete;
-		inline std::string name() const
-		{
-			return _name;
-		}
-		inline ShellPageBase* focus_page() const
-		{
-			return _focus_page;
-		}
-		inline bool page_exist(std::string name) const
-		{
-			return _page_table.count(name) > 0;
-		}
-		inline void BeFocus()
-		{
-			_g_focus_game = this;
-		}
-		inline void RunPage(std::string name, ShellPageBase* call_source = nullptr)
-		{
-			if (page_exist(name))
-			{
-				_page_table[name]->Run(call_source);
-			}
-			else
-			{
-				std::cerr << "page '" << name << "' not exist" << std::endl;
-			}
-		}
-		template<typename datatype> ShellPage<datatype>* CreatePage(std::string name)
-		{
-			std::shared_ptr<ShellPage<datatype>> ptr(new ShellPage<datatype>(this, name));
-			_page_table[name] = ptr;
-			return ptr.get();
-		}
-		template<typename datatype> ShellPage<datatype>* CreatePage(std::string name, datatype data)
-		{
-			std::shared_ptr<ShellPage<datatype>> ptr(new ShellPage<datatype>(this, name, data));
-			_page_table[name] = ptr;
-			return ptr.get();
-		}
-
-	};
+	template<typename datatype>
+	ShellPage<datatype>* CreateShellPage(GameShell& belonging_shell, std::string name, datatype data)
+	{
+		std::shared_ptr<ShellPage<datatype>> ptr(new ShellPage<datatype>(&belonging_shell, name, data));
+		belonging_shell.AddPage(name, ptr);
+		return ptr.get();
+	}
 }

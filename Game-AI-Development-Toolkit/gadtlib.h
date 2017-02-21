@@ -1,9 +1,27 @@
 /*
 * gadt lib include some basic function of Game Ai Development Toolkit.
 *
-* version: 2017/2/10
-* copyright: Junkai Lu
-* email: Junkai-Lu@outlook.com
+*/
+
+/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
 */
 
 
@@ -32,7 +50,7 @@
 
 //a marco use for parameters check.
 #ifdef GADT_WARNING
-	#define GADT_WARNING_CHECK(warning_condition, reason) gadt::console::WarningCheck(warning_condition, reason, __FILE__, __LINE__, __FUNCTION__)
+	#define GADT_WARNING_CHECK(warning_condition, reason) gadt::console::WarningCheck(warning_condition, reason, __FILE__, __LINE__, __FUNCTION__);
 #else
 	#define GADT_WARNING_CHECK(warning_condition, reason)
 #endif
@@ -114,6 +132,16 @@ namespace gadt
 			return ss.str();
 		}
 
+		inline void SystemPause()
+		{
+#ifdef GADT_UNIX
+			cout << "Press ENTER to continue." << endl;
+			while (!getchar());
+#else
+			system("pause");
+#endif
+		}
+
 		//show error in terminal.
 		inline void ShowError(std::string reason)
 		{
@@ -150,7 +178,7 @@ namespace gadt
 				std::cout << std::endl;
 				Cprintf("[Func]: " + function, color::gray);
 				std::cout << std::endl;
-				system("pause");
+				console::SystemPause();
 			}
 		}
 	}

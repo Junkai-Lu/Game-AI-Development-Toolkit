@@ -1,11 +1,27 @@
 /*
 * General MCTS Lib
-*
-* version: 2017/2/15
-* copyright: Junkai Lu
-* email: Junkai-Lu@outlook.com
 */
 
+/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 #include "gadtlib.h"
 
 #pragma once
@@ -91,7 +107,7 @@ namespace gadt
 		int _result_winner;
 
 	public:
-		MctsResult(t_State state, int winner):
+		MctsResult(t_State state, int winner) :
 			_result_state(state),
 			_result_winner(winner)
 		{
@@ -284,16 +300,16 @@ namespace gadt
 						back_propagate_func(result_state, result_winner, child->_win_time, child->player_index());
 						back_propagate_func(result_state, result_winner, this->_win_time, this->player_index());
 						return new t_MctsResult(result_state, result_winner);
-					}	
+					}
 				}
 			}
 
 			//do not return. find the child with best ucb value;
 			size_t best_child = GetBestChild(ucb_for_parent_func);
 			t_MctsResult* result = this->_child_node[best_child]->Extend(
-				back_propagate_func, 
-				ucb_for_parent_func, 
-				default_policy_func, 
+				back_propagate_func,
+				ucb_for_parent_func,
+				default_policy_func,
 				node_extend_func,
 				auto_clear_state_info
 				);
@@ -365,7 +381,7 @@ namespace gadt
 
 		typedef std::function<void(const t_State&, int, size_t&, int)> FuncBackpropagate;
 		typedef std::function<double(size_t, size_t, size_t, size_t)> FuncUcbForParent;
-		typedef std::function<void(const t_State&,int, t_State&, int&)> FuncDefaultPolicy;
+		typedef std::function<void(const t_State&, int, t_State&, int&)> FuncDefaultPolicy;
 		typedef std::function<bool(const t_State&, size_t, size_t)> FuncNodeExtend;
 		typedef std::function<void(t_State&)> FuncShowState;
 		typedef std::function<void(t_Action&)> FuncShowAction;
@@ -383,7 +399,7 @@ namespace gadt
 	private:
 		void FuncInit()
 		{
-			_func_back_propagate = [](const t_State& result_state, int result_winner, size_t& node_win_time, int node_player)->void 
+			_func_back_propagate = [](const t_State& result_state, int result_winner, size_t& node_win_time, int node_player)->void
 			{
 				if (result_winner == node_player)
 				{
@@ -391,14 +407,14 @@ namespace gadt
 				}
 			};
 
-			_func_ucb_for_parent = [](size_t child_visited_time, size_t child_win_time, size_t parent_visited_time, size_t parent_win_time)->double 
+			_func_ucb_for_parent = [](size_t child_visited_time, size_t child_win_time, size_t parent_visited_time, size_t parent_win_time)->double
 			{
-				double avg = 1-((double)child_win_time / (double)child_visited_time);
+				double avg = 1 - ((double)child_win_time / (double)child_visited_time);
 				double bound = sqrt(2 * log10(static_cast<double>(parent_visited_time)) / static_cast<double>(child_visited_time));
 				return avg + bound;
 			};
 
-			_func_default_policy = [](const t_State& original_state, int origianl_player, t_State& result_state, int& result_winner)->void 
+			_func_default_policy = [](const t_State& original_state, int origianl_player, t_State& result_state, int& result_winner)->void
 			{
 				t_State temp_state = original_state;
 				int temp_player = origianl_player;
@@ -412,7 +428,7 @@ namespace gadt
 				for (;;)
 				{
 					t_StateInfo state_info(temp_state);
-					
+
 					//reach a leaf node.
 					if (state_info.is_end_state())
 					{
@@ -426,7 +442,7 @@ namespace gadt
 				}
 			};
 
-			_func_node_extend = [](const t_State& node_state, size_t node_visited_time, size_t node_win_time)->bool 
+			_func_node_extend = [](const t_State& node_state, size_t node_visited_time, size_t node_win_time)->bool
 			{
 				return true;
 			};
@@ -457,9 +473,9 @@ namespace gadt
 			_auto_clear_state_info = b;
 		}
 	public:
-		
+
 		//Mcts Search.
-		MctsSearch():
+		MctsSearch() :
 			_auto_clear_state_info(true)
 		{
 			FuncInit();
@@ -490,7 +506,7 @@ namespace gadt
 			size_t best_child = root_node->GetBestChild(_func_ucb_for_parent);
 			if (debug_model)
 			{
-				std::cout << "MCTS DEBUG INFO ->"<< std::endl << std::endl;
+				std::cout << "MCTS DEBUG INFO ->" << std::endl << std::endl;
 				std::cout << ">> iteration = " << iteration_time << std::endl;
 				std::cout << ">> tree size = " << root_node->TreeSizeAsRoot() << std::endl;
 				std::cout << ">> time consume = " << (double)(clock() - f_start) / CLOCKS_PER_SEC << " s." << std::endl;
@@ -500,9 +516,9 @@ namespace gadt
 				{
 					std::cout << ">> node " << i << ": payoff = " << root_node->child_node_ref()[i]->exception() << " ( ";
 					std::cout << root_node->child_node_ref()[i]->win_time() << "/" << root_node->child_node_ref()[i]->visited_time();
-					std::cout <<" ) for player "<< root_node->child_node_ref()[i]->player_index()<< std::endl;
+					std::cout << " ) for player " << root_node->child_node_ref()[i]->player_index() << std::endl;
 				}
-				
+
 				std::cout << std::endl;
 				std::cout << ">> node exception = " << root_node->exception() << std::endl << std::endl;
 			}
@@ -511,4 +527,5 @@ namespace gadt
 			return root_info.action(best_child);
 		}
 	};
+
 }
