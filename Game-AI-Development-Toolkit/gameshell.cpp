@@ -24,7 +24,6 @@
 * THE SOFTWARE.
 */
 
-#include "gadtlib.h"
 #include "gameshell.h"
 
 namespace gadt

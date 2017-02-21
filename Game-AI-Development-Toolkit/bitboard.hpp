@@ -30,7 +30,7 @@
 * THE SOFTWARE.
 */
 
-#include "gadtlib.h"
+#include "gadtlib.hpp"
 
 #pragma once
 
