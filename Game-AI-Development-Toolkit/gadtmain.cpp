@@ -32,7 +32,7 @@
 * THE SOFTWARE.
 */
 
-#include "gadtlib.hpp"		//basic library of GADT
+#include "gadtlib.h"		//basic library of GADT
 #include "gadttest.h"		//a simple unittest
 #include "gameshell.h"		//game shell
 #include "bitboard.hpp"		//bit board data struct

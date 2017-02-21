@@ -1,4 +1,4 @@
-#include "gadtlib.hpp"
+#include "gadtlib.h"
 #include "bitboard.hpp"
 
 #pragma once
