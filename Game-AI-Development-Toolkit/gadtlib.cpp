@@ -26,6 +26,10 @@
 
 #include "gadtlib.h"
 
+using std::cout;
+using std::endl;
+using std::string;
+
 namespace gadt
 {
 	//a golbal color ostream 
@@ -41,7 +45,7 @@ namespace gadt
 			SetConsoleTextAttribute(handle, color);
 			return std::string("");
 #else
-			static string color_str[16] =
+			static std::string color_str[16] =
 			{
 				string(""),
 				string("\e[0;40;34m"),		//deep_blue = 1,

@@ -26,6 +26,9 @@
 
 #include "gadttest.h"
 
+using std::cout;
+using std::endl;
+
 namespace gadt
 {
 	namespace unittest

@@ -65,18 +65,6 @@
 
 #pragma once
 
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::ofstream;
-using std::ifstream;
-using std::string;
-using std::vector;
-using std::map;
-using std::stringstream;
-using std::function;
-using std::shared_ptr;
-
 namespace gadt
 {
 	namespace console
@@ -150,10 +138,10 @@ namespace gadt
 		}
 
 		//colorful print.
-		void Cprintf(string data, ConsoleColor color);
-		void Cprintf(double data, ConsoleColor color);
-		void Cprintf(int	data, ConsoleColor color);
-		void Cprintf(char	data, ConsoleColor color);
+		void Cprintf(std::string	data,	ConsoleColor color);
+		void Cprintf(double			data,	ConsoleColor color);
+		void Cprintf(int			data,	ConsoleColor color);
+		void Cprintf(char			data,	ConsoleColor color);
 
 		//show error in terminal.
 		void ShowError(std::string reason);
