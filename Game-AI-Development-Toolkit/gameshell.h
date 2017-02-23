@@ -23,7 +23,7 @@
 
 #pragma once
 
-#define GADT_CREATE_SHELL_PAGE(datatype, name, shell) auto* name = gadt::CreateShellPage<datatype>(shell, #name);
+#define GADT_SHELL_CREATE_PAGE(datatype, name, shell) auto* name = gadt::CreateShellPage<datatype>(shell, #name);
 
 namespace gadt
 {
@@ -116,17 +116,17 @@ namespace gadt
 					{
 						std::cout << "/";
 					}
-					console::Cprintf(tip, console::color::green);
+					console::Cprintf(tip, console::green);
 					std::cout << ": >> ";
 				}
 				else
 				{
-					console::Cprintf("ERROR: focus page not exist", console::color::purple);
+					console::Cprintf("ERROR: focus page not exist", console::purple);
 				}
 			}
 			else
 			{
-				console::Cprintf("ERROR: focus game not exist", console::color::purple);
+				console::Cprintf("ERROR: focus game not exist", console::purple);
 			}
 		}
 		static inline std::string GetInput()
@@ -195,11 +195,11 @@ namespace gadt
 			//add 'help' command.
 			AddFunction("help", [&](datatype& data)->void {
 				std::cout << std::endl << ">> ";
-				console::Cprintf("[ COMMAND LIST ]\n\n", console::color::yellow);
+				console::Cprintf("[ COMMAND LIST ]\n\n", console::yellow);
 				for (auto command : _des)
 				{
 					std::cout << "   '";
-					console::Cprintf(command.first, console::color::red);
+					console::Cprintf(command.first, console::red);
 					std::cout << "'" << std::string("          ").substr(0, 10 - command.first.length()) << command.second << std::endl;
 				}
 				std::cout << std::endl << std::endl;
@@ -307,7 +307,7 @@ namespace gadt
 				}
 
 				//error
-				console::Cprintf("ERROR: ", console::color::purple);
+				console::Cprintf("ERROR: ", console::purple);
 				std::cout << "command not found." << std::endl;
 			}
 		}
@@ -345,10 +345,10 @@ namespace gadt
 			}
 			else
 			{
-				console::Cprintf("INIT ERROR: ", console::color::purple);
-				console::Cprintf(" page ", console::color::gray);
-				console::Cprintf(name(), console::color::red);
-				console::Cprintf(" add itself as child page!\n", console::color::gray);
+				console::Cprintf("INIT ERROR: ", console::purple);
+				console::Cprintf(" page ", console::gray);
+				console::Cprintf(name(), console::red);
+				console::Cprintf(" add itself as child page!\n", console::gray);
 				console::SystemPause();
 			}
 		}

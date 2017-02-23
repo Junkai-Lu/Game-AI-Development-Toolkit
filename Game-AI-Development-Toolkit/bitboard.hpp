@@ -36,12 +36,6 @@
 
 namespace gadt
 {
-#ifndef GADT_UNIX
-	typedef uint64_t gadt_int64;
-#else
-	typedef uint64_t gadt_int64;
-#endif
-
 	template<size_t ub>
 	class BitBoard
 	{
@@ -227,7 +221,7 @@ namespace gadt
 #ifdef GADT_DEBUG_INFO
 		bool _debug_data[64];
 #endif
-		gadt_int64 _data;
+		uint64_t _data;
 	public:
 		inline BitBoard64() :
 			_data(0)
@@ -240,7 +234,7 @@ namespace gadt
 			}
 #endif
 		}
-		explicit inline BitBoard64(gadt_int64 board) :
+		explicit inline BitBoard64(uint64_t board) :
 			_data(board)
 		{
 #ifdef GADT_DEBUG_INFO
@@ -252,7 +246,7 @@ namespace gadt
 		}
 
 		//equal to the appointed value.
-		inline void operator=(gadt_int64 board)
+		inline void operator=(uint64_t board)
 		{
 			_data = board;
 #ifdef GADT_DEBUG_INFO
@@ -279,7 +273,7 @@ namespace gadt
 		inline void set(size_t index)
 		{
 			GADT_WARNING_CHECK(index >= 64, "out of range.");
-			gadt_int64 temp = 1;
+			uint64_t temp = 1;
 			temp = temp << index;
 			_data = _data | temp;
 #ifdef GADT_DEBUG_INFO
@@ -291,7 +285,7 @@ namespace gadt
 		inline void reset(size_t index)
 		{
 			GADT_WARNING_CHECK(index >= 64, "out of range.");
-			gadt_int64 temp = 1;
+			uint64_t temp = 1;
 			temp = ~(temp << index);
 			_data = _data & temp;
 #ifdef GADT_DEBUG_INFO
@@ -336,7 +330,7 @@ namespace gadt
 		inline size_t total() const
 		{
 			size_t n = _data & 0x1;	//the velue of first pos.
-			gadt_int64 temp = _data;
+			uint64_t temp = _data;
 			for (size_t i = 1; i < 64; i++)
 			{
 				temp = temp >> 1;	//next pos;
@@ -352,7 +346,7 @@ namespace gadt
 		}
 		
 		//get value
-		inline gadt_int64 to_ullong() const
+		inline uint64_t to_ullong() const
 		{
 			return _data;
 		}
@@ -412,7 +406,7 @@ namespace gadt
 #ifdef GADT_DEBUG_INFO
 		size_t _debug_data[16];
 #endif
-		gadt_int64 _data;
+		uint64_t _data;
 	public:
 		inline BitPoker() :
 			_data(0)
@@ -424,7 +418,7 @@ namespace gadt
 			}
 #endif
 		}
-		inline BitPoker(gadt_int64 board) :
+		inline BitPoker(uint64_t board) :
 			_data(board)
 		{
 #ifdef GADT_DEBUG_INFO
@@ -436,7 +430,7 @@ namespace gadt
 		}
 
 		//equal to the appointed value.
-		inline void operator=(gadt_int64 board)
+		inline void operator=(uint64_t board)
 		{
 			_data = board;
 #ifdef GADT_DEBUG_INFO
@@ -460,11 +454,11 @@ namespace gadt
 		}
 
 		//set appointed bit to true.
-		inline void set(size_t index, gadt_int64 value)
+		inline void set(size_t index, uint64_t value)
 		{
 			GADT_WARNING_CHECK(index >= 16, "out of range.");
 			GADT_WARNING_CHECK(value >= 16, "out of value.");
-			_data = (_data & (~((gadt_int64)0xF << index * 4))) | ((value & 0xF) << (index * 4));
+			_data = (_data & (~((uint64_t)0xF << index * 4))) | ((value & 0xF) << (index * 4));
 #ifdef GADT_DEBUG_INFO
 			_debug_data[index] = (uint8_t)value;
 #endif
@@ -474,7 +468,7 @@ namespace gadt
 		inline void reset(size_t index)
 		{
 			GADT_WARNING_CHECK(index >= 16, "out of range.");
-			gadt_int64 temp = 15;
+			uint64_t temp = 15;
 			temp = ~(temp << (index*4));
 			_data = _data & temp;
 #ifdef GADT_DEBUG_INFO
@@ -510,7 +504,7 @@ namespace gadt
 		//get total
 		inline size_t total() const
 		{
-			gadt_int64 temp = _data;
+			uint64_t temp = _data;
 			size_t t = 0;
 			for (size_t i = 0; i < 16; i++)
 			{
@@ -530,7 +524,7 @@ namespace gadt
 		}
 
 		//get value
-		inline gadt_int64 to_ullong() const
+		inline uint64_t to_ullong() const
 		{
 			return _data;
 		}
@@ -646,8 +640,8 @@ namespace gadt
 #ifdef GADT_DEBUG_INFO
 		size_t _debug_data[42];
 #endif
-		gadt_int64 _fir_data;
-		gadt_int64 _sec_data;
+		uint64_t _fir_data;
+		uint64_t _sec_data;
 	public:
 		inline BitMahjong() :
 			_fir_data(0),
@@ -660,7 +654,7 @@ namespace gadt
 			}
 #endif
 		}
-		inline BitMahjong(gadt_int64 fir_data, gadt_int64 sec_data) :
+		inline BitMahjong(uint64_t fir_data, uint64_t sec_data) :
 			_fir_data(fir_data),
 			_sec_data(sec_data)
 		{
@@ -685,17 +679,17 @@ namespace gadt
 		}
 
 		//set appointed bit to true.
-		inline void set(size_t index, gadt_int64 value)
+		inline void set(size_t index, uint64_t value)
 		{
 			GADT_WARNING_CHECK(index >= 42, "out of range.");
 			GADT_WARNING_CHECK(value >= 8, "out of value.");
 			if (index >= 21)
 			{
-				_sec_data = (_sec_data & (~((gadt_int64)0x7 << (index-21) * 3))) | ((value & 0x7) << ((index-21) * 3));
+				_sec_data = (_sec_data & (~((uint64_t)0x7 << (index-21) * 3))) | ((value & 0x7) << ((index-21) * 3));
 			}
 			else
 			{
-				_fir_data = (_fir_data & (~((gadt_int64)0x7 << index * 3))) | ((value & 0x7) << (index * 3));
+				_fir_data = (_fir_data & (~((uint64_t)0x7 << index * 3))) | ((value & 0x7) << (index * 3));
 			}
 #ifdef GADT_DEBUG_INFO
 			_debug_data[index] = (uint8_t)value;
@@ -706,7 +700,7 @@ namespace gadt
 		inline void reset(size_t index)
 		{
 			GADT_WARNING_CHECK(index >= 42, "out of range.");
-			gadt_int64 temp = 7;
+			uint64_t temp = 7;
 			if (index >= 21)
 			{
 				temp = ~(temp << ((index-21)*3));
@@ -755,7 +749,7 @@ namespace gadt
 		//get total
 		inline size_t total() const
 		{
-			gadt_int64 temp = _fir_data;
+			uint64_t temp = _fir_data;
 			size_t t = 0;
 			for (size_t i = 0; i < 21; i++)
 			{

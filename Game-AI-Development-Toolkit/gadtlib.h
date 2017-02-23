@@ -82,47 +82,59 @@ namespace gadt
 	namespace console
 	{
 		//console color type
-		namespace color
+		enum Color
 		{
-			enum Color
-			{
-				normal = 7,
-				deep_blue = 1,
-				deep_green = 2,
-				deep_cyan = 3,
-				brown = 4,
-				purple = 5,
-				deep_yellow = 6,
-				deep_white = 7,
-				gray = 8,
-				blue = 9,
-				green = 10,
-				cyan = 11,
-				red = 12,
-				pink = 13,
-				yellow = 14,
-				white = 15
-			};
-		}
-
+			normal = 7,
+			deep_blue = 1,
+			deep_green = 2,
+			deep_cyan = 3,
+			brown = 4,
+			purple = 5,
+			deep_yellow = 6,
+			deep_white = 7,
+			gray = 8,
+			blue = 9,
+			green = 10,
+			cyan = 11,
+			red = 12,
+			pink = 13,
+			yellow = 14,
+			white = 15
+		};
+		
 		//color ostream.
 		class costream
 		{
 		private:
 			std::ostream& _os;
-			color::Color _color;
+			Color _color;
 
 			//change colors by setting using winapi in windows or output string in linux.
-			static std::string change_color(color::Color color);
+			static std::string color_str(Color color);
+
 		public:
-			costream(std::ostream& os) : _os(os),_color(color::normal) {}
-			costream& operator<<(color::Color color)
+			//get current color;
+			inline Color color() const
 			{
-				_color = color;
-				_os << change_color(color);
-				return *this;
+				return _color;
 			}
 
+			//set current color;
+			inline void set_color(Color color)
+			{
+				_color = color;
+			}
+
+			//constructor function.
+			costream(std::ostream& os) : _os(os),_color(normal) {}
+			
+			//operator <<
+			costream& operator<<(Color color)
+			{
+				_color = color;
+				_os << color_str(color);
+				return *this;
+			}
 			template<typename datatype>
 			inline costream& operator<<(datatype d)
 			{
@@ -130,7 +142,13 @@ namespace gadt
 				return *this;
 			}
 
-			void print(std::string str, color::Color color);
+			//colorful print 
+			template<typename t_data>
+			void print(t_data data, Color color)
+			{
+				Color temp_color = _color;
+				ccout << color << data << temp_color;
+			}
 		};
 		
 		//bool to string. that can be replaced by '<< boolalpha'
@@ -152,7 +170,11 @@ namespace gadt
 		}
 
 		//colorful print.
-		void Cprintf(std::string tex, color::Color color);
+		void Cprintf(std::string data, Color color = console::normal);
+		void Cprintf(int data, Color color = console::normal);
+		void Cprintf(double data, Color color = console::normal);
+		void Cprintf(char* data, Color color = console::normal);
+		void Cprintf(char data, Color color = console::normal);
 
 		//show error in terminal.
 		void ShowError(std::string reason);
@@ -165,6 +187,7 @@ namespace gadt
 
 		//system pause.
 		void SystemPause();
+		
 	}
 
 	//a golbal color ostream 

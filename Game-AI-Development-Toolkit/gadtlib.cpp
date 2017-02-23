@@ -33,8 +33,7 @@ namespace gadt
 
 	namespace console
 	{
-		//change_color
-		std::string costream::change_color(color::Color color)
+		std::string costream::color_str(Color color)
 		{
 #ifndef GADT_UNIX
 			HANDLE handle = ::GetStdHandle(STD_OUTPUT_HANDLE);
@@ -64,25 +63,34 @@ namespace gadt
 			return color_str[color];
 #endif
 		}
-
-		//printf in costream.
-		void costream::print(std::string str, color::Color color)
-		{
-			color::Color temp_color = _color;
-			ccout << color << str << temp_color;
-		}
 		
 		void ShowError(std::string reason)
 		{
 			std::cout << std::endl;
-			Cprintf(">> ERROR: ", color::red);
-			Cprintf(reason, color::white);
+			Cprintf(">> ERROR: ", red);
+			Cprintf(reason, white);
 			std::cout << std::endl << std::endl;
 		}
 
-		void Cprintf(std::string tex, color::Color color)
+		void Cprintf(string data, Color color)
 		{
-			ccout.print(tex, color);
+			ccout.print<std::string>(data, color);
+		}
+		void Cprintf(int	data, Color color)
+		{
+			ccout.print<int>(data, color);
+		}
+		void Cprintf(double data, Color color)
+		{
+			ccout.print<double>(data, color);
+		}
+		void Cprintf(char * data, Color color)
+		{
+			ccout.print<char*>(data, color);
+		}
+		void Cprintf(char	data, Color color)
+		{
+			ccout.print<char>(data, color);
 		}
 
 		void ShowMessage(std::string message, bool show_MSG)
@@ -90,9 +98,9 @@ namespace gadt
 			std::cout << ">> ";
 			if (show_MSG)
 			{
-				Cprintf("MSG: ", color::deep_green);
+				Cprintf("MSG: ", deep_green);
 			}
-			Cprintf(message, color::green);
+			Cprintf(message, green);
 			std::cout << std::endl << std::endl;
 		}
 
@@ -101,14 +109,14 @@ namespace gadt
 			if (condition)
 			{
 				std::cout << std::endl << std::endl;
-				Cprintf(">> WARNING: ", color::purple);
-				Cprintf(reason, color::red);
+				Cprintf(">> WARNING: ", purple);
+				Cprintf(reason, red);
 				std::cout << std::endl;
-				Cprintf("[File]: " + file, color::gray);
+				Cprintf("[File]: " + file, gray);
 				std::cout << std::endl;
-				Cprintf("[Line]: " + I2S(line), color::gray);
+				Cprintf("[Line]: " + I2S(line), gray);
 				std::cout << std::endl;
-				Cprintf("[Func]: " + function, color::gray);
+				Cprintf("[Func]: " + function, gray);
 				std::cout << std::endl;
 				console::SystemPause();
 			}

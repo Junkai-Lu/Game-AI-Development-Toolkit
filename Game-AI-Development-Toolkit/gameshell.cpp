@@ -40,15 +40,15 @@ namespace gadt
 	{
 		if (_call_source == nullptr)
 		{
-			console::Cprintf(GameShell::focus_game()->name(), console::color::purple);
+			console::Cprintf(GameShell::focus_game()->name(), console::purple);
 			std::cout << " @ ";
-			console::Cprintf(_name, console::color::yellow);
+			console::Cprintf(_name, console::yellow);
 		}
 		else
 		{
 			_call_source->ShowPath();
 			std::cout << "/";
-			console::Cprintf(_name, console::color::green);
+			console::Cprintf(_name, console::green);
 		}
 	}
 	void ShellPageBase::CleanScreen() const
@@ -60,12 +60,12 @@ namespace gadt
 #endif
 		_info();
 		std::cout << ">> ";
-		console::Cprintf("[ Shell ", console::color::deep_yellow);
-		console::Cprintf("<" + _name + ">", console::color::yellow);
-		console::Cprintf(" ]\n", console::color::deep_yellow);
+		console::Cprintf("[ Shell ", console::deep_yellow);
+		console::Cprintf("<" + _name + ">", console::yellow);
+		console::Cprintf(" ]\n", console::deep_yellow);
 
 		std::cout << ">> ";
-		console::Cprintf("use 'help' to get more command\n\n", console::color::deep_green);
+		console::Cprintf("use 'help' to get more command\n\n", console::deep_green);
 	}
 	void ShellPageBase::BeFocus()
 	{

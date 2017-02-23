@@ -46,14 +46,14 @@ int main()
 	GameShell gadt("GADT");
 	auto* root = CreateShellPage<int>(gadt,"root");
 	//auto* test = CreateShellPage<int>(gadt, "test");
-	GADT_CREATE_SHELL_PAGE(int, test, gadt);
+	GADT_SHELL_CREATE_PAGE(int, test, gadt);
 
 	//Root Page.
 	root->AddInfoFunc([]() {
-		console::Cprintf("=============================================\n", console::color::gray);
-		console::Cprintf("       Game AI Development Toolkit\n", console::color::yellow);
-		console::Cprintf("       Copyright @ Junkai-Lu 2017\n", console::color::yellow);
-		console::Cprintf("=============================================", console::color::gray);
+		console::Cprintf("=============================================\n", console::gray);
+		console::Cprintf("       Game AI Development Toolkit\n", console::yellow);
+		console::Cprintf("       Copyright @ Junkai-Lu 2017\n", console::yellow);
+		console::Cprintf("=============================================", console::gray);
 		std::cout << endl << endl;
 	});
 	root->AddChildPage("test", "start unit test");
