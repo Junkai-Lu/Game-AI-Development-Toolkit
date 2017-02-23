@@ -109,7 +109,7 @@ namespace gadt
 			GADT_ASSERT(1, temp_vec.length());
 		}
 
-		static const std::vector<FuncPair> func_list = {
+		const std::vector<FuncPair> func_list = {
 			{ "bitboard", TestBitBoard }
 		};
 		void RunTest(FuncPair func_pair)
