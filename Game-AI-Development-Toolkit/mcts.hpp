@@ -165,7 +165,7 @@ namespace gadt
 			_state_info = nullptr;
 		}
 
-		//get whether the state info exist or had been cleared.
+		//get whether the state info exist or had been cleard.
 		inline bool exist_state_info()
 		{
 			return _state_info != nullptr;

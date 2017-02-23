@@ -36,12 +36,12 @@ namespace gadt
 		void RunTest(string file_name, function<void()> test_func)
 		{
 			Cprintf(">> start test ");
-			Cprintf("<" + file_name + ">", console::deep_green);
+			Cprintf("<" + file_name + ">", console::DEEP_GREEN);
 			cout << endl;
 			auto start = timer::GetClock();
 			test_func();
 			Cprintf(">> test finish, time = ");
-			Cprintf(timer::GetTimeDifference(start), console::red);
+			Cprintf(timer::GetTimeDifference(start), console::RED);
 			cout << endl << endl;
 		}
 

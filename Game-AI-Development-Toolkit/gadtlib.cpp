@@ -33,7 +33,7 @@ namespace gadt
 
 	namespace console
 	{
-		std::string costream::color_str(Color color)
+		std::string costream::color_str(ConColor color)
 		{
 #ifndef GADT_UNIX
 			HANDLE handle = ::GetStdHandle(STD_OUTPUT_HANDLE);
@@ -43,20 +43,20 @@ namespace gadt
 			static string color_str[16] =
 			{
 				string(""),
-				string("\e[0;40;34m"),		//deep_blue = 1,
-				string("\e[0;40;32m"),		//deep_green = 2,
+				string("\e[0;40;34m"),		//DEEP_BLUE = 1,
+				string("\e[0;40;32m"),		//DEEP_GREEN = 2,
 				string("\e[0;40;36m"),		//deep_cyan = 3,
 				string("\e[0;40;31m"),		//brown = 4,
-				string("\e[0;40;35m"),		//purple = 5,
-				string("\e[0;40;33m"),		//deep_yellow = 6,
+				string("\e[0;40;35m"),		//PURPLE = 5,
+				string("\e[0;40;33m"),		//DEEP_YELLOW = 6,
 				string("\e[0m"),			//deep_white = 7,
-				string("\e[0;40;37m"),		//gray = 8,
-				string("\e[0;40;34m"),		//blue = 9,
-				string("\e[0;40;32m"),		//green = 10,
+				string("\e[0;40;37m"),		//GRAY = 8,
+				string("\e[0;40;34m"),		//BLUE = 9,
+				string("\e[0;40;32m"),		//GREEN = 10,
 				string("\e[0;40;36m"),		//cyan = 11,
-				string("\e[0;40;31m"),		//red = 12,
+				string("\e[0;40;31m"),		//RED = 12,
 				string("\e[0;40;35m"),		//pink = 13,
-				string("\e[0;40;33m"),		//yellow = 14,
+				string("\e[0;40;33m"),		//YELLOW = 14,
 				string("\e[0;40;37m")		//white = 15
 											//string("\e[0;40;37m")		//white = 15
 			};
@@ -67,30 +67,9 @@ namespace gadt
 		void ShowError(std::string reason)
 		{
 			std::cout << std::endl;
-			Cprintf(">> ERROR: ", red);
-			Cprintf(reason, white);
+			Cprintf(">> ERROR: ", console::RED);
+			Cprintf(reason, console::WHITE);
 			std::cout << std::endl << std::endl;
-		}
-
-		void Cprintf(string data, Color color)
-		{
-			ccout.print<std::string>(data, color);
-		}
-		void Cprintf(int	data, Color color)
-		{
-			ccout.print<int>(data, color);
-		}
-		void Cprintf(double data, Color color)
-		{
-			ccout.print<double>(data, color);
-		}
-		void Cprintf(char * data, Color color)
-		{
-			ccout.print<char*>(data, color);
-		}
-		void Cprintf(char	data, Color color)
-		{
-			ccout.print<char>(data, color);
 		}
 
 		void ShowMessage(std::string message, bool show_MSG)
@@ -98,9 +77,9 @@ namespace gadt
 			std::cout << ">> ";
 			if (show_MSG)
 			{
-				Cprintf("MSG: ", deep_green);
+				Cprintf("MSG: ", console::DEEP_GREEN);
 			}
-			Cprintf(message, green);
+			Cprintf(message, console::GREEN);
 			std::cout << std::endl << std::endl;
 		}
 
@@ -109,14 +88,14 @@ namespace gadt
 			if (condition)
 			{
 				std::cout << std::endl << std::endl;
-				Cprintf(">> WARNING: ", purple);
-				Cprintf(reason, red);
+				Cprintf(">> WARNING: ", console::PURPLE);
+				Cprintf(reason, console::RED);
 				std::cout << std::endl;
-				Cprintf("[File]: " + file, gray);
+				Cprintf("[File]: " + file, console::GRAY);
 				std::cout << std::endl;
-				Cprintf("[Line]: " + I2S(line), gray);
+				Cprintf("[Line]: " + I2S(line), console::GRAY);
 				std::cout << std::endl;
-				Cprintf("[Func]: " + function, gray);
+				Cprintf("[Func]: " + function, console::GRAY);
 				std::cout << std::endl;
 				console::SystemPause();
 			}

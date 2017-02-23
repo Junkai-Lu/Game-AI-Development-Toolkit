@@ -50,10 +50,10 @@ int main()
 
 	//Root Page.
 	root->AddInfoFunc([]() {
-		console::Cprintf("=============================================\n", console::gray);
-		console::Cprintf("       Game AI Development Toolkit\n", console::yellow);
-		console::Cprintf("       Copyright @ Junkai-Lu 2017\n", console::yellow);
-		console::Cprintf("=============================================", console::gray);
+		console::Cprintf("=============================================\n", console::GRAY);
+		console::Cprintf("       Game AI Development Toolkit\n", console::YELLOW);
+		console::Cprintf("       Copyright @ Junkai-Lu 2017\n", console::YELLOW);
+		console::Cprintf("=============================================", console::GRAY);
 		std::cout << endl << endl;
 	});
 	root->AddChildPage("test", "start unit test");
