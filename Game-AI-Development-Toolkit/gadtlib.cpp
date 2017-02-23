@@ -33,7 +33,8 @@ namespace gadt
 
 	namespace console
 	{
-		std::string costream::color_str(ConColor color)
+		//change_color
+		std::string costream::change_color(color::Color color)
 		{
 #ifndef GADT_UNIX
 			HANDLE handle = ::GetStdHandle(STD_OUTPUT_HANDLE);
@@ -43,33 +44,45 @@ namespace gadt
 			static string color_str[16] =
 			{
 				string(""),
-				string("\e[0;40;34m"),		//DEEP_BLUE = 1,
-				string("\e[0;40;32m"),		//DEEP_GREEN = 2,
+				string("\e[0;40;34m"),		//deep_blue = 1,
+				string("\e[0;40;32m"),		//deep_green = 2,
 				string("\e[0;40;36m"),		//deep_cyan = 3,
 				string("\e[0;40;31m"),		//brown = 4,
-				string("\e[0;40;35m"),		//PURPLE = 5,
-				string("\e[0;40;33m"),		//DEEP_YELLOW = 6,
+				string("\e[0;40;35m"),		//purple = 5,
+				string("\e[0;40;33m"),		//deep_yellow = 6,
 				string("\e[0m"),			//deep_white = 7,
-				string("\e[0;40;37m"),		//GRAY = 8,
-				string("\e[0;40;34m"),		//BLUE = 9,
-				string("\e[0;40;32m"),		//GREEN = 10,
+				string("\e[0;40;37m"),		//gray = 8,
+				string("\e[0;40;34m"),		//blue = 9,
+				string("\e[0;40;32m"),		//green = 10,
 				string("\e[0;40;36m"),		//cyan = 11,
-				string("\e[0;40;31m"),		//RED = 12,
+				string("\e[0;40;31m"),		//red = 12,
 				string("\e[0;40;35m"),		//pink = 13,
-				string("\e[0;40;33m"),		//YELLOW = 14,
+				string("\e[0;40;33m"),		//yellow = 14,
 				string("\e[0;40;37m")		//white = 15
 											//string("\e[0;40;37m")		//white = 15
 			};
 			return color_str[color];
 #endif
 		}
+
+		//printf in costream.
+		void costream::print(std::string str, color::Color color)
+		{
+			color::Color temp_color = _color;
+			ccout << color << str << temp_color;
+		}
 		
 		void ShowError(std::string reason)
 		{
 			std::cout << std::endl;
-			Cprintf(">> ERROR: ", console::RED);
-			Cprintf(reason, console::WHITE);
+			Cprintf(">> ERROR: ", color::red);
+			Cprintf(reason, color::white);
 			std::cout << std::endl << std::endl;
+		}
+
+		void Cprintf(std::string tex, color::Color color)
+		{
+			ccout.print(tex, color);
 		}
 
 		void ShowMessage(std::string message, bool show_MSG)
@@ -77,9 +90,9 @@ namespace gadt
 			std::cout << ">> ";
 			if (show_MSG)
 			{
-				Cprintf("MSG: ", console::DEEP_GREEN);
+				Cprintf("MSG: ", color::deep_green);
 			}
-			Cprintf(message, console::GREEN);
+			Cprintf(message, color::green);
 			std::cout << std::endl << std::endl;
 		}
 
@@ -88,14 +101,14 @@ namespace gadt
 			if (condition)
 			{
 				std::cout << std::endl << std::endl;
-				Cprintf(">> WARNING: ", console::PURPLE);
-				Cprintf(reason, console::RED);
+				Cprintf(">> WARNING: ", color::purple);
+				Cprintf(reason, color::red);
 				std::cout << std::endl;
-				Cprintf("[File]: " + file, console::GRAY);
+				Cprintf("[File]: " + file, color::gray);
 				std::cout << std::endl;
-				Cprintf("[Line]: " + I2S(line), console::GRAY);
+				Cprintf("[Line]: " + I2S(line), color::gray);
 				std::cout << std::endl;
-				Cprintf("[Func]: " + function, console::GRAY);
+				Cprintf("[Func]: " + function, color::gray);
 				std::cout << std::endl;
 				console::SystemPause();
 			}

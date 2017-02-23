@@ -26,28 +26,13 @@
 
 #include "gadttest.h"
 
-using gadt::console::Cprintf;
-
 namespace gadt
 {
 	namespace unittest
 	{
-		//Run Test and output infos
-		void RunTest(string file_name, function<void()> test_func)
-		{
-			Cprintf(">> start test ");
-			Cprintf("<" + file_name + ">", console::DEEP_GREEN);
-			cout << endl;
-			auto start = timer::GetClock();
-			test_func();
-			Cprintf(">> test finish, time = ");
-			Cprintf(timer::GetTimeDifference(start), console::RED);
-			cout << endl << endl;
-		}
-
-		//Test BitBoard
 		void TestBitBoard()
 		{
+			clock_t start = timer::GetClock();
 			//test BitBoard<>
 			BitBoard<56> temp;
 			GADT_ASSERT(0, temp.total());
@@ -123,12 +108,14 @@ namespace gadt
 			GADT_ASSERT(0, temp_vec.length());
 			temp_vec.push(3);
 			GADT_ASSERT(1, temp_vec.length());
+
+			GADT_TEST_FINISH("bitboard.h", start);
+			
 		}
 
-		//RunAllTest
 		void RunAllTest()
 		{
-			RunTest("bitboard.hpp", TestBitBoard);
+			TestBitBoard();
 		}
 	}
 }

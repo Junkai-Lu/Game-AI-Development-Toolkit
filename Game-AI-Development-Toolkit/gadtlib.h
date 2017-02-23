@@ -82,59 +82,55 @@ namespace gadt
 	namespace console
 	{
 		//console color type
-		enum ConColor
+		namespace color
 		{
-			DEFAULT = 7,
-			DEEP_BLUE = 1,
-			DEEP_GREEN = 2,
-			DEEP_CYAN = 3,
-			BROWN = 4,
-			PURPLE = 5,
-			DEEP_YELLOW = 6,
-			DEEP_WHITE = 7,
-			GRAY = 8,
-			BLUE = 9,
-			GREEN = 10,
-			CYAN = 11,
-			RED = 12,
-			PINK = 13,
-			YELLOW = 14,
-			WHITE = 15
-		};
-		
+			enum Color
+			{
+				normal = 7,
+				deep_blue = 1,
+				deep_green = 2,
+				deep_cyan = 3,
+				brown = 4,
+				purple = 5,
+				deep_yellow = 6,
+				deep_white = 7,
+				gray = 8,
+				blue = 9,
+				green = 10,
+				cyan = 11,
+				red = 12,
+				pink = 13,
+				yellow = 14,
+				white = 15
+			};
+		}
+
 		//color ostream.
 		class costream
 		{
 		private:
 			std::ostream& _os;
-			ConColor _color;
+			color::Color _color;
 
 			//change colors by setting using winapi in windows or output string in linux.
-			static std::string color_str(console::ConColor color);
-
+			static std::string change_color(color::Color color);
 		public:
-			//get current color;
-			inline ConColor color() const
-			{
-				return _color;
-			}
-
-			//constructor function.
-			costream(std::ostream& os) : _os(os),_color(console::DEFAULT) {}
-			
-			//operator <<
-			costream& operator<<(ConColor color)
+			costream(std::ostream& os) : _os(os),_color(color::normal) {}
+			costream& operator<<(color::Color color)
 			{
 				_color = color;
-				_os << color_str(color);
+				_os << change_color(color);
 				return *this;
 			}
+
 			template<typename datatype>
 			inline costream& operator<<(datatype d)
 			{
 				_os << d;
 				return *this;
 			}
+
+			void print(std::string str, color::Color color);
 		};
 		
 		//bool to string. that can be replaced by '<< boolalpha'
@@ -155,31 +151,8 @@ namespace gadt
 			return ss.str();
 		}
 
-		//a golbal color ostream 
-		extern console::costream ccout;
-
 		//colorful print.
-		template<typename t_data> void CprintfBase(t_data data, ConColor color)
-		{
-			ConColor t = ccout.color();
-			ccout << color << data << t;
-		}
-		inline void Cprintf(std::string data, ConColor color = console::DEFAULT)
-		{
-			CprintfBase<string>(data, color);
-		}
-		inline void Cprintf(int data, ConColor color = console::DEFAULT)
-		{
-			CprintfBase<int>(data, color);
-		}
-		inline void Cprintf(double data, ConColor color = console::DEFAULT)
-		{
-			CprintfBase<double>(data, color);
-		}
-		inline void Cprintf(char data, ConColor color = console::DEFAULT)
-		{
-			CprintfBase<char>(data, color);
-		}
+		void Cprintf(std::string tex, color::Color color);
 
 		//show error in terminal.
 		void ShowError(std::string reason);
@@ -192,7 +165,10 @@ namespace gadt
 
 		//system pause.
 		void SystemPause();
-}
+	}
+
+	//a golbal color ostream 
+	extern console::costream ccout;
 
 	namespace timer
 	{
