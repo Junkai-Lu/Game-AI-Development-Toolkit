@@ -34,7 +34,7 @@ namespace gadt
 	namespace console
 	{
 		//change_color
-		std::string costream::change_color(color::Color color)
+		std::string costream::change_color(ConsoleColor color)
 		{
 #ifndef GADT_UNIX
 			HANDLE handle = ::GetStdHandle(STD_OUTPUT_HANDLE);
@@ -66,33 +66,46 @@ namespace gadt
 		}
 
 		//printf in costream.
-		void costream::print(std::string str, color::Color color)
+		template <typename t_data>
+		void costream::print(t_data data, ConsoleColor color)
 		{
-			color::Color temp_color = _color;
-			ccout << color << str << temp_color;
+			ConsoleColor temp_color = _color;
+			ccout << color << data << temp_color;
 		}
 		
 		void ShowError(std::string reason)
 		{
 			std::cout << std::endl;
-			Cprintf(">> ERROR: ", color::red);
-			Cprintf(reason, color::white);
+			Cprintf(">> ERROR: ", RED);
+			Cprintf(reason, WHITE);
 			std::cout << std::endl << std::endl;
 		}
 
-		void Cprintf(std::string tex, color::Color color)
+		void Cprintf(std::string tex, ConsoleColor color)
 		{
 			ccout.print(tex, color);
 		}
+		void Cprintf(int data, ConsoleColor color)
+		{
+			ccout.print(data, color);
+		}
+		void Cprintf(double data, ConsoleColor color)
+		{
+			ccout.print(data, color);
+		}
+		void Cprintf(char data, ConsoleColor color)
+		{
+			ccout.print(data, color);
+		}
 
-		void ShowMessage(std::string message, bool show_MSG)
+		void ShowMessage(std::string message, bool show_msg)
 		{
 			std::cout << ">> ";
-			if (show_MSG)
+			if (show_msg)
 			{
-				Cprintf("MSG: ", color::deep_green);
+				Cprintf("MSG: ", DEEP_GREEN);
 			}
-			Cprintf(message, color::green);
+			Cprintf(message, GREEN);
 			std::cout << std::endl << std::endl;
 		}
 
@@ -101,14 +114,14 @@ namespace gadt
 			if (condition)
 			{
 				std::cout << std::endl << std::endl;
-				Cprintf(">> WARNING: ", color::purple);
-				Cprintf(reason, color::red);
+				Cprintf(">> WARNING: ", PURPLE);
+				Cprintf(reason, RED);
 				std::cout << std::endl;
-				Cprintf("[File]: " + file, color::gray);
+				Cprintf("[File]: " + file, GRAY);
 				std::cout << std::endl;
-				Cprintf("[Line]: " + I2S(line), color::gray);
+				Cprintf("[Line]: " + I2S(line), GRAY);
 				std::cout << std::endl;
-				Cprintf("[Func]: " + function, color::gray);
+				Cprintf("[Func]: " + function, GRAY);
 				std::cout << std::endl;
 				console::SystemPause();
 			}
@@ -124,31 +137,40 @@ namespace gadt
 #endif
 		}
 	}
-}
 
-std::string gadt::timer::TimeString()
-{
-	time_t t = time(NULL);
-	char buf[128] = { 0 };
+	namespace timer
+	{
+		std::string TimeString()
+		{
+			time_t t = time(NULL);
+			char buf[128] = { 0 };
 #ifndef GADT_UNIX
-	tm local;
-	localtime_s(&local, &t);
-	strftime(buf, 64, "%Y.%m.%d-%H:%M:%S", &local);
-	return std::string(buf);
+			tm local;
+			localtime_s(&local, &t);
+			strftime(buf, 64, "%Y.%m.%d-%H:%M:%S", &local);
+			return std::string(buf);
 #else
-	tm* local;
-	local = localtime(&t);
-	strftime(buf, 64, "%Y.%m.%d-%H:%M:%S", local);
-	return std::string(buf);
+			tm* local;
+			local = localtime(&t);
+			strftime(buf, 64, "%Y.%m.%d-%H:%M:%S", local);
+			return std::string(buf);
 #endif
+		}
+
+		clock_t GetClock()
+		{
+			return clock();
+		}
+
+		double GetTimeDifference(const clock_t & start)
+		{
+			return (double)(clock() - start) / CLOCKS_PER_SEC;
+		}
+
+	}
 }
 
-clock_t gadt::timer::GetClock()
-{
-	return clock();
-}
 
-double gadt::timer::GetTimeDifference(const clock_t & start)
-{
-	return (double)(clock() - start) / CLOCKS_PER_SEC;
-}
+
+
+

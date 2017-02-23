@@ -31,7 +31,8 @@ namespace gadt
 {
 	namespace unittest
 	{
-		void TestBitBoard();
-		void RunAllTest();
+		typedef std::pair<std::string, std::function<void()>> FuncPair;
+		extern const std::vector<FuncPair> func_list;
+		void RunTest(FuncPair func_pair);
 	}
 }

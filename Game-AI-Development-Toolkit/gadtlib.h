@@ -82,41 +82,38 @@ namespace gadt
 	namespace console
 	{
 		//console color type
-		namespace color
+		enum ConsoleColor
 		{
-			enum Color
-			{
-				normal = 7,
-				deep_blue = 1,
-				deep_green = 2,
-				deep_cyan = 3,
-				brown = 4,
-				purple = 5,
-				deep_yellow = 6,
-				deep_white = 7,
-				gray = 8,
-				blue = 9,
-				green = 10,
-				cyan = 11,
-				red = 12,
-				pink = 13,
-				yellow = 14,
-				white = 15
-			};
-		}
+			DEFAULT = 7,
+			DEEP_BLUE = 1,
+			DEEP_GREEN = 2,
+			DEEP_CYAN = 3,
+			BROWN = 4,
+			PURPLE = 5,
+			DEEP_YELLOW = 6,
+			DEEP_WHITE = 7,
+			GRAY = 8,
+			BLUE = 9,
+			GREEN = 10,
+			CYAN = 11,
+			RED = 12,
+			PINK = 13,
+			YELLOW = 14,
+			WHITE = 15
+		};
 
 		//color ostream.
 		class costream
 		{
 		private:
 			std::ostream& _os;
-			color::Color _color;
+			ConsoleColor _color;
 
 			//change colors by setting using winapi in windows or output string in linux.
-			static std::string change_color(color::Color color);
+			static std::string change_color(ConsoleColor color);
 		public:
-			costream(std::ostream& os) : _os(os),_color(color::normal) {}
-			costream& operator<<(color::Color color)
+			costream(std::ostream& os) : _os(os),_color(DEFAULT) {}
+			costream& operator<<(ConsoleColor color)
 			{
 				_color = color;
 				_os << change_color(color);
@@ -130,7 +127,8 @@ namespace gadt
 				return *this;
 			}
 
-			void print(std::string str, color::Color color);
+			template <typename t_data>
+			void print(t_data data, ConsoleColor color);
 		};
 		
 		//bool to string. that can be replaced by '<< boolalpha'
@@ -152,13 +150,16 @@ namespace gadt
 		}
 
 		//colorful print.
-		void Cprintf(std::string tex, color::Color color);
+		void Cprintf(string data, ConsoleColor color);
+		void Cprintf(double data, ConsoleColor color);
+		void Cprintf(int	data, ConsoleColor color);
+		void Cprintf(char	data, ConsoleColor color);
 
 		//show error in terminal.
 		void ShowError(std::string reason);
 
 		//show message in terminal.
-		void ShowMessage(std::string message, bool show_MSG = true);
+		void ShowMessage(std::string message, bool show_msg = true);
 
 		//if 'condition' is true that report detail.
 		void WarningCheck(bool condition, std::string reason, std::string file, int line, std::string function);

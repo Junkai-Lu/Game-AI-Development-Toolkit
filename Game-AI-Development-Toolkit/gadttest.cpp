@@ -32,7 +32,6 @@ namespace gadt
 	{
 		void TestBitBoard()
 		{
-			clock_t start = timer::GetClock();
 			//test BitBoard<>
 			BitBoard<56> temp;
 			GADT_ASSERT(0, temp.total());
@@ -108,14 +107,21 @@ namespace gadt
 			GADT_ASSERT(0, temp_vec.length());
 			temp_vec.push(3);
 			GADT_ASSERT(1, temp_vec.length());
-
-			GADT_TEST_FINISH("bitboard.h", start);
-			
 		}
 
-		void RunAllTest()
+		static const std::vector<FuncPair> func_list = {
+			{ "bitboard", TestBitBoard }
+		};
+		void RunTest(FuncPair func_pair)
 		{
-			TestBitBoard();
+			cout << endl << ">> test start, target = ";
+			ccout << console::GREEN << "<" << func_pair.first << ">" << console::DEFAULT;
+			auto t = timer::GetClock();
+			cout << endl;
+			func_pair.second();
+			cout << ">> test comlete, time = ";
+			console::Cprintf(timer::GetTimeDifference(t), console::RED);
+			cout << endl;
 		}
 	}
 }

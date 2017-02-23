@@ -43,24 +43,36 @@ using namespace gadt;
 
 int main()
 {
+	//Create Shell
 	GameShell gadt("GADT");
-	auto* root = CreateShellPage<int>(gadt,"root");
-	//auto* test = CreateShellPage<int>(gadt, "test");
-	GADT_CREATE_SHELL_PAGE(int, test, gadt);
+	GADT_CREATE_SHELL_PAGE(int, root, gadt);			//use macro to create page.
+	auto* test = CreateShellPage<int>(gadt, "test");	//directly create page.
 
-	//Root Page.
+	//Define Root Page.
 	root->AddInfoFunc([]() {
-		console::Cprintf("=============================================\n", console::color::gray);
-		console::Cprintf("       Game AI Development Toolkit\n", console::color::yellow);
-		console::Cprintf("       Copyright @ Junkai-Lu 2017\n", console::color::yellow);
-		console::Cprintf("=============================================", console::color::gray);
+		console::Cprintf("=============================================\n", console::GRAY);
+		console::Cprintf("       Game AI Development Toolkit\n", console::YELLOW);
+		console::Cprintf("       Copyright @ Junkai-Lu 2017\n", console::YELLOW);
+		console::Cprintf("=============================================", console::GRAY);
 		std::cout << endl << endl;
 	});
 	root->AddChildPage("test", "start unit test");
 
 	//Unit Test Page
-	test->AddFunction("all", [](int)->void { unittest::RunAllTest(); }, "run all test");
-	test->AddFunction("bitboard", [](int)->void { unittest::TestBitBoard(); }, "run bitboard test");
+	for (auto p : unittest::func_list)
+	{
+		test->AddFunction(p.first, [=](int)->void { 	
+			unittest::RunTest(p); 
+		}, "test lib " + p.first);
+	}
+	test->AddFunction("all", [](int)->void {
+		for (auto p : unittest::func_list)
+		{
+			unittest::RunTest(p);
+		}
+	}, "run all test");
+
+	//Start Shell
 	gadt.RunPage("root");
 	return 0;
 }
