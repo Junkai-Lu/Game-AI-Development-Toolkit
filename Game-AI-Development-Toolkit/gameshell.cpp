@@ -53,11 +53,7 @@ namespace gadt
 	}
 	void ShellPageBase::CleanScreen() const
 	{
-#ifdef GADT_UNIX
-		system("clear");
-#else
-		system("cls");
-#endif
+		console::SystemClear();
 		_info();
 		std::cout << ">> ";
 		console::Cprintf("[ Shell ", console::DEEP_YELLOW);

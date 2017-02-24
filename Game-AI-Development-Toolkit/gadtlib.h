@@ -21,19 +21,24 @@
 
 // exclude unsupported compilers and define some marco by compiler.
 #ifdef _MSC_VER
+	#define __GADT_MSVC
 	#include <SDKDDKVer.h>
 	#include <Windows.h>
+	#include <io.h>
+	#include <direct.h>
 	#include <tchar.h>
-#elif defined(__clang__)
-	#define GADT_UNIX
-	#if (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__) < 30400
-		#error "unsupported Clang version"
-	#endif
 #elif defined(__GNUC__)
-	#define GADT_UNIX
+	#define __GADT_GNUC
 	#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40900
 		#error "unsupported GCC version"
 	#endif
+	#include <sys/stat.h>  
+	#include <sys/types.h>
+	#include <errno.h> 
+	#include <unistd.h>
+	#include <dirent.h>
+#else
+	#error "unsupported compiler"
 #endif
 
 //open debug-info option to include extra info , this would lead to little performance penalties.
@@ -154,6 +159,9 @@ namespace gadt
 
 		//system pause.
 		void SystemPause();
+
+		//system clear
+		void SystemClear();
 	}
 
 	//a golbal color ostream 
@@ -164,6 +172,23 @@ namespace gadt
 		std::string TimeString();
 		clock_t GetClock();
 		double GetTimeDifference(const clock_t& start);
+	}
+
+	namespace file
+	{
+		//return true if the folder exists.
+		bool DirExist(std::string path);
+		
+		//create dir and return true if create successfully.
+		bool MakeDir(std::string path);
+
+		//remove dir and return true if remove successfully. 
+		bool RemoveDir(std::string path);
+	}
+
+	namespace cache
+	{
+
 	}
 }
 

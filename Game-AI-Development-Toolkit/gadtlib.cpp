@@ -40,11 +40,11 @@ namespace gadt
 		//change_color
 		std::string costream::change_color(ConsoleColor color)
 		{
-#ifndef GADT_UNIX
+#ifdef __GADT_MSVC
 			HANDLE handle = ::GetStdHandle(STD_OUTPUT_HANDLE);
 			SetConsoleTextAttribute(handle, color);
 			return std::string("");
-#else
+#elif defined(__GADT_GNUC)
 			static std::string color_str[16] =
 			{
 				string(""),
@@ -133,11 +133,19 @@ namespace gadt
 
 		void SystemPause()
 		{
-#ifdef GADT_UNIX
+#ifdef __GADT_GNUC
 			cout << "Press ENTER to continue." << endl;
 			while (!getchar());
-#else
+#elif defined(__GADT_MSVC)
 			system("pause");
+#endif
+		}
+		void SystemClear()
+		{
+#ifdef __GADT_GNUC
+			system("clear");
+#elif defined(__GADT_MSVC)
+			system("cls");
 #endif
 		}
 	}
@@ -148,7 +156,7 @@ namespace gadt
 		{
 			time_t t = time(NULL);
 			char buf[128] = { 0 };
-#ifndef GADT_UNIX
+#ifdef __GADT_MSVC
 			tm local;
 			localtime_s(&local, &t);
 			strftime(buf, 64, "%Y.%m.%d-%H:%M:%S", &local);
@@ -170,6 +178,51 @@ namespace gadt
 		{
 			return (double)(clock() - start) / CLOCKS_PER_SEC;
 		}
+
+	}
+
+	namespace file
+	{
+		bool DirExist(std::string path)
+		{
+#ifdef __GADT_GNUC
+			return (access(path.c_str(), 0) != -1);
+#elif defined(__GADT_MSVC)
+			return (_access(path.c_str(), 0) != -1);
+#endif
+		}
+
+		bool MakeDir(std::string path)
+		{
+			if (DirExist(path))
+			{
+				return true;
+			}
+#ifdef __GADT_GNUC
+			return mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != -1;
+			//return false;
+#elif defined(__GADT_MSVC)
+			return _mkdir(path.c_str()) != -1;
+#endif
+		}
+
+		bool RemoveDir(std::string path)
+		{
+			if (!DirExist(path))
+			{
+				return false;
+			}
+#ifdef __GADT_GNUC
+			return rmdir(path.c_str()) != -1;
+			//return false;
+#elif defined(__GADT_MSVC)
+			return _rmdir(path.c_str()) != -1;
+#endif
+		}
+	}
+
+	namespace cache
+	{
 
 	}
 }

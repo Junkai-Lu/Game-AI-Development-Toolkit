@@ -36,11 +36,7 @@
 
 namespace gadt
 {
-#ifndef GADT_UNIX
 	typedef uint64_t gadt_int64;
-#else
-	typedef uint64_t gadt_int64;
-#endif
 
 	template<size_t ub>
 	class BitBoard

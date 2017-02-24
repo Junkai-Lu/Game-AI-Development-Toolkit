@@ -23,8 +23,6 @@
 
 #pragma once
 
-#define GADT_CREATE_SHELL_PAGE(datatype, name, shell) auto* name = gadt::CreateShellPage<datatype>(shell, #name);
-
 namespace gadt
 {
 	//Shell Page Interface

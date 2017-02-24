@@ -48,8 +48,8 @@ int main()
 {
 	//Create Shell
 	GameShell gadt("GADT");
-	GADT_CREATE_SHELL_PAGE(int, root, gadt);			//use macro to create page.
-	auto* test = CreateShellPage<int>(gadt, "test");	//directly create page.
+	auto* root = CreateShellPage<int>(gadt, "root");
+	auto* test = CreateShellPage<int>(gadt, "test");
 
 	//Define Root Page.
 	root->AddInfoFunc([]() {

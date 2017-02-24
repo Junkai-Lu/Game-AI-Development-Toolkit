@@ -111,9 +111,22 @@ namespace gadt
 			temp_vec.push(3);
 			GADT_ASSERT(1, temp_vec.length());
 		}
+		void TestFileLib()
+		{
+			srand((unsigned int)time(NULL));
+			std::string path = "./test_dir"  + console::I2S(rand() % 99999999);
+			if (!file::DirExist(path))
+			{
+				GADT_ASSERT(true, file::MakeDir(path));
+				GADT_ASSERT(true, file::DirExist(path));
+				GADT_ASSERT(true, file::RemoveDir(path));
+				GADT_ASSERT(false, file::DirExist(path));
+			}
+		}
 
 		const std::vector<FuncPair> func_list = {
-			{ "bitboard", TestBitBoard }
+			{ "bitboard", TestBitBoard },
+			{ "file", TestFileLib }
 		};
 		void RunTest(FuncPair func_pair)
 		{
