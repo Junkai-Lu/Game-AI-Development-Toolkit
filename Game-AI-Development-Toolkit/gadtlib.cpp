@@ -220,11 +220,6 @@ namespace gadt
 #endif
 		}
 	}
-
-	namespace cache
-	{
-
-	}
 }
 
 

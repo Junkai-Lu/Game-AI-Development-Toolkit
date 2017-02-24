@@ -186,9 +186,5 @@ namespace gadt
 		bool RemoveDir(std::string path);
 	}
 
-	namespace cache
-	{
-
-	}
 }
 
