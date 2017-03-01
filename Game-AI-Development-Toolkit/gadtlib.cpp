@@ -152,19 +152,19 @@ namespace gadt
 
 	namespace timer
 	{
-		std::string TimeString()
+		std::string TimeString(std::string format)
 		{
 			time_t t = time(NULL);
 			char buf[128] = { 0 };
 #ifdef __GADT_MSVC
 			tm local;
 			localtime_s(&local, &t);
-			strftime(buf, 64, "%Y.%m.%d-%H:%M:%S", &local);
+			strftime(buf, 64, format.c_str(), &local);
 			return std::string(buf);
 #else
 			tm* local;
 			local = localtime(&t);
-			strftime(buf, 64, "%Y.%m.%d-%H:%M:%S", local);
+			strftime(buf, 64, format.c_str(), local);
 			return std::string(buf);
 #endif
 		}
@@ -221,8 +221,3 @@ namespace gadt
 		}
 	}
 }
-
-
-
-
-

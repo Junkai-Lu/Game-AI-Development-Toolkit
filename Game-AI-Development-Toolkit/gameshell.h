@@ -320,8 +320,8 @@ namespace gadt
 		}
 		ShellPage(GameShell* belonging_shell, std::string name, datatype data) :
 			ShellPageBase(belonging_shell, name),
-			_data(data),
-			_extra_command([](std::string a, datatype& b)->bool {return false; })
+			_extra_command([](std::string a, datatype& b)->bool {return false; }),
+			_data(data)
 		{
 			ShellInit();
 		}

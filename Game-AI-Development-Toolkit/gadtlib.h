@@ -169,7 +169,7 @@ namespace gadt
 
 	namespace timer
 	{
-		std::string TimeString();
+		std::string TimeString(std::string format = "%Y.%m.%d-%H:%M:%S");
 		clock_t GetClock();
 		double GetTimeDifference(const clock_t& start);
 	}
@@ -187,4 +187,3 @@ namespace gadt
 	}
 
 }
-

@@ -357,7 +357,7 @@ namespace gadt
 		inline std::string to_string() const
 		{
 			char c[64];
-			for (size_t i = 64 - 1; i >= 0 && i <= 64; i--)
+			for (size_t i = 64 - 1; i <= 64; i--)
 			{
 				if (get(i))
 				{
@@ -547,7 +547,7 @@ namespace gadt
 		inline std::string to_bit_string() const
 		{
 			char c[64];
-			for (size_t i = 64 - 1; i >= 0 && i <= 64; i--)
+			for (size_t i = 64 - 1; i <= 64; i--)
 			{
 				if (get(i))
 				{
@@ -808,7 +808,7 @@ namespace gadt
 		{
 			char c[129];
 			c[64] = 10;
-			for (size_t i = 64 - 1; i >= 0 && i <= 64; i--)
+			for (size_t i = 64 - 1; i <= 64; i--)
 			{
 				if ((_fir_data>>i) & 1)
 				{
@@ -819,7 +819,7 @@ namespace gadt
 					c[63 - i] = '0';
 				}
 			}
-			for (size_t i = 64 - 1; i >= 0 && i <= 64; i--)
+			for (size_t i = 64 - 1; i <= 64; i--)
 			{
 				if ((_sec_data >> i) & 1)
 				{
