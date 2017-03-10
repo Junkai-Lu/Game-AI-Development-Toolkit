@@ -516,13 +516,36 @@ namespace gadt
 			return t;
 		}
 
+		//self increament.
+		inline void increase(size_t index)
+		{
+			GADT_WARNING_CHECK(index >= 16, "out of range.");
+			GADT_WARNING_CHECK(get(index) == 15, "overflow.");
+#ifdef GADT_DEBUG_INFO
+			_debug_data[index] ++;
+#endif
+			uint64_t temp = 1;
+			temp = temp << (index * 4);
+			_data += temp;
+		}
+
+		//self decreament.
+		inline void decrease(size_t index)
+		{
+			GADT_WARNING_CHECK(index >= 16, "out of range.");
+			GADT_WARNING_CHECK(get(index) == 0, "overflow.");
+#ifdef GADT_DEBUG_INFO
+			_debug_data[index] --;
+#endif
+			uint64_t temp = 1;
+			temp = temp << (index * 4);
+			_data -= temp;
+		}
+
 		//add one card in this card group.
 		inline void push(size_t index)
 		{
-			GADT_WARNING_CHECK(index >= 16, "out of range.");
-			size_t value = get(index);
-			GADT_WARNING_CHECK(value == 15, "overflow.");
-			set(index, value + 1);
+			increase(index);
 		}
 
 		//get value
@@ -765,6 +788,48 @@ namespace gadt
 				temp = temp >> 3;
 			}
 			return t;
+		}
+
+		//self increament.
+		inline void increase(size_t index)
+		{
+			GADT_WARNING_CHECK(index >= 42, "out of range.");
+			GADT_WARNING_CHECK(get(index) == 7, "overflow.");
+#ifdef GADT_DEBUG_INFO
+			_debug_data[index] ++;
+#endif
+			uint64_t temp = 1;
+			if (index >= 21)
+			{
+				temp = temp << ((index-21) * 3);
+				_sec_data += temp;
+			}
+			else
+			{
+				temp = temp << (index * 3);
+				_fir_data += temp;
+			}
+			
+		}
+
+		//self decreament.
+		inline void decrease(size_t index)
+		{
+			GADT_WARNING_CHECK(get(index) == 0, "overflow.");
+#ifdef GADT_DEBUG_INFO
+			_debug_data[index] --;
+#endif
+			uint64_t temp = 1;
+			if (index >= 21)
+			{
+				temp = temp << ((index - 21) * 3);
+				_sec_data -= temp;
+			}
+			else
+			{
+				temp = temp << (index * 3);
+				_fir_data -= temp;
+			}
 		}
 
 		//add one card in this card group.

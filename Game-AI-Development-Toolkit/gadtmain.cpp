@@ -38,15 +38,15 @@
 #include "gameshell.h"		//game shell
 #include "bitboard.hpp"		//bit board data struct
 #include "mcts.hpp"			//monte carlo tree search for games.
+#include "minimax.hpp"		//minimax,and alphabeta for games.
 
 using namespace gadt;
 
 using std::cout;
 using std::endl;
 
-int main()
+void ShellDefine()
 {
-	//Create Shell
 	GameShell gadt("GADT");
 	auto* root = CreateShellPage<int>(gadt, "root");
 	auto* test = CreateShellPage<int>(gadt, "test");
@@ -64,8 +64,8 @@ int main()
 	//Unit Test Page
 	for (auto p : unittest::func_list)
 	{
-		test->AddFunction(p.first, [=](int)->void { 	
-			unittest::RunTest(p); 
+		test->AddFunction(p.first, [=](int)->void {
+			unittest::RunTest(p);
 		}, "test lib " + p.first);
 	}
 	test->AddFunction("all", [](int)->void {
@@ -77,5 +77,11 @@ int main()
 
 	//Start Shell
 	gadt.RunPage("root");
+}
+
+int main()
+{
+	//Create Shell
+	ShellDefine();
 	return 0;
 }

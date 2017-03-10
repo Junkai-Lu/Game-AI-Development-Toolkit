@@ -145,6 +145,7 @@
     <ClInclude Include="gadttest.h" />
     <ClInclude Include="gameshell.h" />
     <ClInclude Include="mcts.hpp" />
+    <ClInclude Include="minimax.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gadtlib.cpp" />
