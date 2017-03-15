@@ -189,10 +189,13 @@ namespace gadt
 		inline std::string to_ushort_string() const
 		{
 			std::stringstream ss;
-			for (size_t i = 0; i < data_ub; i++)
+			ss << "(";
+			for (size_t i = 0; i < data_ub-1; i++)
 			{
-				ss << _data[i] << "\n";
+				ss << _data[i] << ",";
 			}
+			ss << _data[data_ub - 1];
+			ss << ")";
 			return ss.str();
 		}
 
@@ -864,7 +867,7 @@ namespace gadt
 		inline std::string to_ullong_string() const
 		{
 			std::stringstream ss;
-			ss << _fir_data << " " << _sec_data;
+			ss << "(" << _fir_data << "," << _sec_data << ")";
 			return ss.str();
 		}
 
