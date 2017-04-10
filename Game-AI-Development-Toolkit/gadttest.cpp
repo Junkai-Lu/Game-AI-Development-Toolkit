@@ -138,10 +138,23 @@ namespace gadt
 				GADT_ASSERT(false, file::DirExist(path));
 			}
 		}
+		void TestIndex()
+		{
+			player::PlayerIndex<1, 5> index(2);
+			index.to_next();
+			GADT_ASSERT(3, index.current());
+			GADT_ASSERT(4, index.get_next());
+			GADT_ASSERT(2, index.get_prev());
+			GADT_ASSERT(5, index.get_jump(2));
+			GADT_ASSERT(1, index.get_jump(3));
+			GADT_ASSERT(2, index.get_jump(14));
+			GADT_ASSERT(2, index.get_jump(24));
+		}
 
 		const std::vector<FuncPair> func_list = {
 			{ "bitboard", TestBitBoard },
-			{ "file", TestFileLib }
+			{ "file", TestFileLib },
+			{ "index", TestIndex}
 		};
 		void RunTest(FuncPair func_pair)
 		{

@@ -839,9 +839,8 @@ namespace gadt
 		inline void push(size_t index)
 		{
 			GADT_WARNING_CHECK(index >= 42, "out of range.");
-			size_t value = get(index);
-			GADT_WARNING_CHECK(value == 7, "overflow.");
-			set(index, value + 1);
+			GADT_WARNING_CHECK(get(index) == 7, "overflow.");
+			increase(index);
 		}
 
 		//get string

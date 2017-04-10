@@ -67,6 +67,7 @@
 #include <memory>
 #include <functional>
 #include <set>
+#include <type_traits>
 
 #pragma once
 
@@ -172,6 +173,100 @@ namespace gadt
 		std::string TimeString(std::string format = "%Y.%m.%d-%H:%M:%S");
 		clock_t GetClock();
 		double GetTimeDifference(const clock_t& start);
+	}
+
+	namespace player
+	{
+		
+		//PlayerIndex allows to define a index start from any number and with any length.
+		template<int begin, size_t length>
+		class PlayerIndex
+		{
+		protected:
+			int _index = 0;
+
+		public:
+
+			PlayerIndex() :_index(0) {}
+			PlayerIndex(int index) :_index(index) {}
+
+			//get next index. 
+			inline int get_next() const
+			{
+				constexpr int end = length != 0 ? begin + (int)length : begin + 1;
+				return _index + 1 < end ? _index + 1 : begin;
+			}
+
+			//get prev index.
+			inline int get_prev() const
+			{
+				constexpr int end = length != 0 ? begin + (int)length : begin + 1;
+				return _index - 1 < begin ? end - 1 : _index - 1;
+			}
+
+			//get index after jump.
+			inline int get_jump(int value) const
+			{
+				constexpr int end = (length != 0 ? begin + (int)length : begin + 1);
+				value = value % length;
+				return _index + value >= end ? _index - (length - value) : _index + value;
+			}
+
+			//set index
+			inline void set(int index)
+			{
+				_index = index;
+			}
+
+			//jump index.
+			inline void jump(int value)
+			{
+				_index = get_jump(value);
+			}
+
+			//change to next index.
+			inline void to_next()
+			{
+				_index = get_next();
+			}
+
+			//change to prev index.
+			inline void to_prev()
+			{
+				_index = get_prev();
+			}
+
+			//get current index.
+			inline int current() const
+			{
+				return _index;
+			}
+		};
+
+		//PlayerGroup is an ordered container of player data that derived from PlayerIndex.
+		template<int begin_index, size_t length, typename Tdata>
+		class PlayerGroup: public PlayerIndex<begin_index, length>
+		{
+		protected:
+			Tdata _data[length];
+
+		public:
+
+			inline Tdata& now()
+			{
+				return _data[_index - begin_index];
+			}
+
+			inline Tdata& data(size_t index)
+			{
+				return _data[index - begin_index];
+			}
+
+			inline Tdata& operator[](size_t index)
+			{
+				return data(index);
+			}
+		};
 	}
 
 	namespace file
