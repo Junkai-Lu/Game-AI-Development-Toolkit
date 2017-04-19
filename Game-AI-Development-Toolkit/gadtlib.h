@@ -173,6 +173,35 @@ namespace gadt
 		std::string TimeString(std::string format = "%Y.%m.%d-%H:%M:%S");
 		clock_t GetClock();
 		double GetTimeDifference(const clock_t& start);
+		
+		class TimePoint
+		{
+		private:
+			clock_t _clock;
+			time_t _time;
+		public:
+
+			inline TimePoint()
+			{
+				reset();
+			}
+
+			//get string of this time point.
+			std::string get_string(std::string format = "%Y.%m.%d-%H:%M:%S") const;
+
+			//get the time difference between current time and the time point.
+			inline double time_difference() const
+			{
+				return (double)(clock() - _clock) / CLOCKS_PER_SEC;
+			}
+
+			//set this time point to current time.
+			inline void reset()
+			{
+				_clock = clock();
+				_time = time(NULL);
+			}
+		};
 	}
 
 	namespace player

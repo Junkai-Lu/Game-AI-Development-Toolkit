@@ -179,6 +179,23 @@ namespace gadt
 			return (double)(clock() - start) / CLOCKS_PER_SEC;
 		}
 
+		std::string TimePoint::get_string(std::string format) const
+		{
+			time_t t = _time;
+			char buf[128] = { 0 };
+#ifdef __GADT_MSVC
+			tm local;
+			localtime_s(&local, &t);
+			strftime(buf, 64, format.c_str(), &local);
+			return std::string(buf);
+#else
+			tm* local;
+			local = localtime(&t);
+			strftime(buf, 64, format.c_str(), local);
+			return std::string(buf);
+#endif
+		}
+
 	}
 
 	namespace file
