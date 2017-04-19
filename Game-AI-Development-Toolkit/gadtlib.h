@@ -252,16 +252,19 @@ namespace gadt
 
 		public:
 
-			inline Tdata& now()
+			//get data of current player.
+			inline Tdata& data()
 			{
 				return _data[_index - begin_index];
 			}
 
+			//get data of apointed index.
 			inline Tdata& data(size_t index)
 			{
 				return _data[index - begin_index];
 			}
 
+			//operateor[]
 			inline Tdata& operator[](size_t index)
 			{
 				return data(index);
@@ -280,5 +283,7 @@ namespace gadt
 		//remove dir and return true if remove successfully. 
 		bool RemoveDir(std::string path);
 	}
+
+	
 
 }
