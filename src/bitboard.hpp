@@ -182,13 +182,27 @@ namespace gadt
 		//return true if target is subset of this.
 		inline bool exist_subset(const BitBoard& target)
 		{
-
+			for (size_t i = 0; i < target.upper_bound(); i++)
+			{
+				if (target[i] == true && get(i) == false)
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 
 		//return true if this is a subset of target.
 		inline bool is_subset_of(const BitBoard& target)
 		{
-
+			for (size_t i = 0; i < upper_bound(); i++)
+			{
+				if (get(i) == true && target[i] == false)
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 
 		//get data
@@ -362,6 +376,32 @@ namespace gadt
 			return 64;
 		}
 		
+		//return true if target is subset of this.
+		inline bool exist_subset(const BitBoard64& target)
+		{
+			for (size_t i = 0; i < target.upper_bound(); i++)
+			{
+				if (target[i] == true && get(i) == false)
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		//return true if this is a subset of target.
+		inline bool is_subset_of(const BitBoard64& target)
+		{
+			for (size_t i = 0; i < upper_bound(); i++)
+			{
+				if (get(i) == true && target[i] == false)
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
 		//get value
 		inline gadt_int64 to_ullong() const
 		{
@@ -420,8 +460,10 @@ namespace gadt
 	class BitPoker
 	{
 	private:
+		static const size_t upper_bound = 16;
+
 #ifdef GADT_DEBUG_INFO
-		size_t _debug_data[16];
+		size_t _debug_data[upper_bound];
 #endif
 		gadt_int64 _data;
 	public:
@@ -429,7 +471,7 @@ namespace gadt
 			_data(0)
 		{
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 16; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				_debug_data[i] = 0;
 			}
@@ -439,7 +481,7 @@ namespace gadt
 			_data(board)
 		{
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 16; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				_debug_data[i] = (uint8_t)get(i);
 			}
@@ -451,7 +493,7 @@ namespace gadt
 		{
 			_data = board;
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 16; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				_debug_data[i] = (uint8_t)get(i);
 			}
@@ -473,8 +515,8 @@ namespace gadt
 		//set appointed bit to true.
 		inline void set(size_t index, gadt_int64 value)
 		{
-			GADT_WARNING_CHECK(index >= 16, "out of range.");
-			GADT_WARNING_CHECK(value >= 16, "out of value.");
+			GADT_WARNING_CHECK(index >= upper_bound, "out of range.");
+			GADT_WARNING_CHECK(value >= upper_bound, "out of value.");
 			_data = (_data & (~((gadt_int64)0xF << index * 4))) | ((value & 0xF) << (index * 4));
 #ifdef GADT_DEBUG_INFO
 			_debug_data[index] = (uint8_t)value;
@@ -484,7 +526,7 @@ namespace gadt
 		//reset appointed bit.
 		inline void reset(size_t index)
 		{
-			GADT_WARNING_CHECK(index >= 16, "out of range.");
+			GADT_WARNING_CHECK(index >= upper_bound, "out of range.");
 			gadt_int64 temp = 15;
 			temp = ~(temp << (index*4));
 			_data = _data & temp;
@@ -498,7 +540,7 @@ namespace gadt
 		{
 			_data = 0;
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 16; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				_debug_data[i] = 0;
 			}
@@ -508,7 +550,7 @@ namespace gadt
 		//get bit.
 		inline size_t get(size_t index) const
 		{
-			GADT_WARNING_CHECK(index >= 16, "out of range.");
+			GADT_WARNING_CHECK(index >= upper_bound, "out of range.");
 			return (_data >> (index * 4)) & 0xF;
 		}
 
@@ -523,7 +565,7 @@ namespace gadt
 		{
 			gadt_int64 temp = _data;
 			size_t t = 0;
-			for (size_t i = 0; i < 16; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				t += (temp & 0xF);
 				temp = temp >> 4;
@@ -534,8 +576,8 @@ namespace gadt
 		//self increament.
 		inline void increase(size_t index)
 		{
-			GADT_WARNING_CHECK(index >= 16, "out of range.");
-			GADT_WARNING_CHECK(get(index) == 15, "overflow.");
+			GADT_WARNING_CHECK(index >= upper_bound, "out of range.");
+			GADT_WARNING_CHECK(get(index) == upper_bound - 1, "overflow.");
 #ifdef GADT_DEBUG_INFO
 			_debug_data[index] ++;
 #endif
@@ -547,7 +589,7 @@ namespace gadt
 		//self decreament.
 		inline void decrease(size_t index)
 		{
-			GADT_WARNING_CHECK(index >= 16, "out of range.");
+			GADT_WARNING_CHECK(index >= upper_bound, "out of range.");
 			GADT_WARNING_CHECK(get(index) == 0, "overflow.");
 #ifdef GADT_DEBUG_INFO
 			_debug_data[index] --;
@@ -561,6 +603,32 @@ namespace gadt
 		inline void push(size_t index)
 		{
 			increase(index);
+		}
+
+		//return true if target is subset of this.
+		inline bool exist_subset(const BitPoker& target)
+		{
+			for (size_t i = 0; i < target.upper_bound; i++)
+			{
+				if (target[i] > get(i))
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		//return true if this is a subset of target.
+		inline bool is_subset_of(const BitPoker& target)
+		{
+			for (size_t i = 0; i < upper_bound; i++)
+			{
+				if (get(i) > target[i])
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 
 		//get value
@@ -602,13 +670,13 @@ namespace gadt
 		inline void operator+=(const BitPoker& target)
 		{
 #ifdef GADT_WARNING
-			for (size_t i = 0; i < 16; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				GADT_WARNING_CHECK(get(i) + target.get(i) > 0xF, ">> WARNING:: function BITGROUP::Plus overflow.");
 			}
 #endif
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 16; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				_debug_data[i] += target._debug_data[i];
 			}
@@ -618,13 +686,13 @@ namespace gadt
 		inline void operator-=(const BitPoker& target)
 		{
 #ifdef GADT_WARNING
-			for (size_t i = 0; i < 16; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				GADT_WARNING_CHECK(get(i) < target.get(i), ">> WARNING:: function BITGROUP::Plus overflow.");
 			}
 #endif
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 16; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				_debug_data[i] -= target._debug_data[i];
 			}
@@ -634,7 +702,7 @@ namespace gadt
 		inline BitPoker operator+(const BitPoker& target) const
 		{
 #ifdef GADT_WARNING
-			for (size_t i = 0; i < 16; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				GADT_WARNING_CHECK(get(i) + target.get(i) > 0xF, ">> WARNING:: function BITGROUP::Plus overflow.");
 			}
@@ -642,7 +710,7 @@ namespace gadt
 
 			BitPoker temp(_data + target._data);
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 16; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				temp._debug_data[i] = _debug_data[i] + target._debug_data[i];
 			}
@@ -652,7 +720,7 @@ namespace gadt
 		inline BitPoker operator-(const BitPoker& target) const
 		{
 #ifdef GADT_WARNING
-			for (size_t i = 0; i < 16; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				GADT_WARNING_CHECK(get(i) < target.get(i), ">> WARNING:: function BITGROUP::Plus overflow.");
 			}
@@ -660,7 +728,7 @@ namespace gadt
 
 			BitPoker temp(_data - target._data);
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 16; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				temp._debug_data[i] = _debug_data[i] - target._debug_data[i];
 			}
@@ -677,8 +745,9 @@ namespace gadt
 	class BitMahjong
 	{
 	private:
+		static const size_t upper_bound = 42;
 #ifdef GADT_DEBUG_INFO
-		size_t _debug_data[42];
+		size_t _debug_data[upper_bound];
 #endif
 		gadt_int64 _fir_data;
 		gadt_int64 _sec_data;
@@ -688,7 +757,7 @@ namespace gadt
 			_sec_data(0)
 		{
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 42; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				_debug_data[i] = 0;
 			}
@@ -699,7 +768,7 @@ namespace gadt
 			_sec_data(sec_data)
 		{
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 42; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				_debug_data[i] = (uint8_t)get(i);
 			}
@@ -721,7 +790,7 @@ namespace gadt
 		//set appointed bit to true.
 		inline void set(size_t index, gadt_int64 value)
 		{
-			GADT_WARNING_CHECK(index >= 42, "out of range.");
+			GADT_WARNING_CHECK(index >= upper_bound, "out of range.");
 			GADT_WARNING_CHECK(value >= 8, "out of value.");
 			if (index >= 21)
 			{
@@ -739,7 +808,7 @@ namespace gadt
 		//reset appointed bit.
 		inline void reset(size_t index)
 		{
-			GADT_WARNING_CHECK(index >= 42, "out of range.");
+			GADT_WARNING_CHECK(index >= upper_bound, "out of range.");
 			gadt_int64 temp = 7;
 			if (index >= 21)
 			{
@@ -762,7 +831,7 @@ namespace gadt
 			_fir_data = 0;
 			_sec_data = 0;
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 42; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				_debug_data[i] = 0;
 			}
@@ -772,7 +841,7 @@ namespace gadt
 		//get bit.
 		inline size_t get(size_t index) const
 		{
-			GADT_WARNING_CHECK(index >= 42, "out of range.");
+			GADT_WARNING_CHECK(index >= upper_bound, "out of range.");
 			if (index >= 21)
 			{
 				return (_sec_data >> ((index - 21) * 3)) & 0x7;
@@ -808,7 +877,7 @@ namespace gadt
 		//self increament.
 		inline void increase(size_t index)
 		{
-			GADT_WARNING_CHECK(index >= 42, "out of range.");
+			GADT_WARNING_CHECK(index >= upper_bound, "out of range.");
 			GADT_WARNING_CHECK(get(index) == 7, "overflow.");
 #ifdef GADT_DEBUG_INFO
 			_debug_data[index] ++;
@@ -850,9 +919,35 @@ namespace gadt
 		//add one card in this card group.
 		inline void push(size_t index)
 		{
-			GADT_WARNING_CHECK(index >= 42, "out of range.");
+			GADT_WARNING_CHECK(index >= upper_bound, "out of range.");
 			GADT_WARNING_CHECK(get(index) == 7, "overflow.");
 			increase(index);
+		}
+
+		//return true if target is subset of this.
+		inline bool exist_subset(const BitMahjong& target)
+		{
+			for (size_t i = 0; i < target.upper_bound; i++)
+			{
+				if (target[i] > get(i))
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		//return true if this is a subset of target.
+		inline bool is_subset_of(const BitMahjong& target)
+		{
+			for (size_t i = 0; i < upper_bound; i++)
+			{
+				if (get(i) > target[i])
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 
 		//get string
@@ -916,13 +1011,13 @@ namespace gadt
 		inline void operator+=(const BitMahjong& target)
 		{
 #ifdef GADT_WARNING
-			for (size_t i = 0; i < 42; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				GADT_WARNING_CHECK(get(i) + target.get(i) > 0x7, "overflow.");
 			}
 #endif
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 42; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				_debug_data[i] += target._debug_data[i];
 			}
@@ -933,13 +1028,13 @@ namespace gadt
 		inline void operator-=(const BitMahjong& target)
 		{
 #ifdef GADT_WARNING
-			for (size_t i = 0; i < 42; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				GADT_WARNING_CHECK(get(i) < target.get(i), "overflow.");
 			}
 #endif
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 42; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				_debug_data[i] -= target._debug_data[i];
 			}
@@ -950,7 +1045,7 @@ namespace gadt
 		inline BitMahjong operator+(const BitMahjong& target) const
 		{
 #ifdef GADT_WARNING
-			for (size_t i = 0; i < 42; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				GADT_WARNING_CHECK(get(i) + target.get(i) > 0xF, "overflow.");
 			}
@@ -958,7 +1053,7 @@ namespace gadt
 
 			BitMahjong temp(_fir_data + target._fir_data, _sec_data + target._sec_data);
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 42; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				temp._debug_data[i] = _debug_data[i] + target._debug_data[i];
 			}
@@ -968,14 +1063,14 @@ namespace gadt
 		inline BitMahjong operator-(const BitMahjong& target) const
 		{
 #ifdef GADT_WARNING
-			for (size_t i = 0; i < 42; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				GADT_WARNING_CHECK(get(i) < target.get(i), "overflow.");
 			}
 #endif
 			BitMahjong temp(_fir_data - target._fir_data, _sec_data - target._sec_data);
 #ifdef GADT_DEBUG_INFO
-			for (size_t i = 0; i < 42; i++)
+			for (size_t i = 0; i < upper_bound; i++)
 			{
 				temp._debug_data[i] = _debug_data[i] - target._debug_data[i];
 			}

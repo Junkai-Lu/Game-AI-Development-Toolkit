@@ -37,20 +37,29 @@ namespace gadt
 		{
 			//test BitBoard<>
 			BitBoard<56> temp;
+			BitBoard<56> subtemp;
+			subtemp.set(1);
 			GADT_ASSERT(0, temp.total());
 			GADT_ASSERT(false, temp.any());
 			GADT_ASSERT(true, temp.none());
 			temp.set(1);
+			GADT_ASSERT(true, subtemp.is_subset_of(temp));
+			GADT_ASSERT(true, temp.exist_subset(subtemp));
 			GADT_ASSERT(true, temp.any());
 			GADT_ASSERT(false, temp.none());
 			temp.set(51);
 			temp.set(26);
+			subtemp.set(51);
+			GADT_ASSERT(true, subtemp.is_subset_of(temp));
+			GADT_ASSERT(true, temp.exist_subset(subtemp));
 			GADT_ASSERT(3, temp.total());
 			temp.reset(1);
 			temp.write(26, 0);
 			GADT_ASSERT(1, temp.total());
 			GADT_ASSERT(true, temp.get(51));
 			GADT_ASSERT(56, temp.upper_bound());
+
+
 
 			//test BitBoard64
 			BitBoard64 temp_64;
@@ -71,6 +80,7 @@ namespace gadt
 
 			//test BitPoker
 			BitPoker temp_poker;
+			BitPoker subtemp_poker;
 			GADT_ASSERT(0, temp_poker.total());
 			GADT_ASSERT(false, temp_poker.any());
 			GADT_ASSERT(true, temp_poker.none());
@@ -79,6 +89,11 @@ namespace gadt
 			GADT_ASSERT(false, temp_poker.none());
 			temp_poker.set(2, 2);
 			temp_poker.set(3, 3);
+			subtemp_poker.set(1, 1);
+			subtemp_poker.set(2, 1);
+			subtemp_poker.set(3, 1);
+			GADT_ASSERT(true,temp_poker.exist_subset(subtemp_poker));
+			GADT_ASSERT(true,subtemp_poker.is_subset_of(temp_poker));
 			GADT_ASSERT(6, temp_poker.total());
 			temp_poker.reset(1);
 			GADT_ASSERT(5, temp_poker.total());
