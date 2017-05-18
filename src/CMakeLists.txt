@@ -4,7 +4,7 @@ project(General-AI-Development-Toolkit VERSION 1.0.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-SET(SRC_LIST Game-AI-Development-Toolkit.cpp
+SET(SRC_LIST 
         gadtlib.h
         gadtlib.cpp
         bitboard.hpp
@@ -12,7 +12,9 @@ SET(SRC_LIST Game-AI-Development-Toolkit.cpp
         gadttest.cpp
         gameshell.h 
         gameshell.cpp 
-        mcts.hpp 
+        mcts.hpp
+		minimax.hpp
+		gadtmain.cpp
         )
  
 ADD_EXECUTABLE(GADT ${SRC_LIST})
