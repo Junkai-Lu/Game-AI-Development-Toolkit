@@ -149,6 +149,20 @@ namespace gadt
 			GADT_ASSERT(1, index.get_jump(3));
 			GADT_ASSERT(2, index.get_jump(14));
 			GADT_ASSERT(2, index.get_jump(24));
+
+			player::PlayerGroup<1, 5, int> players(2);
+			players.data(2) = 1;
+			GADT_ASSERT(1, players.data());
+
+			players.to_next();
+			GADT_ASSERT(3, players.current());
+			GADT_ASSERT(4, players.get_next());
+			GADT_ASSERT(2, players.get_prev());
+			GADT_ASSERT(5, players.get_jump(2));
+			GADT_ASSERT(1, players.get_jump(3));
+			GADT_ASSERT(2, players.get_jump(14));
+			GADT_ASSERT(2, players.get_jump(24));
+
 		}
 
 		const std::vector<FuncPair> func_list = {

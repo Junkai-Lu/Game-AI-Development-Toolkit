@@ -208,11 +208,11 @@ namespace gadt
 	{
 		
 		//PlayerIndex allows to define a index start from any number and with any length.
-		template<int begin, size_t length>
+		template<int begin_index, size_t length>
 		class PlayerIndex
 		{
 		protected:
-			int _index = 0;
+			int _index;
 
 		public:
 
@@ -222,23 +222,23 @@ namespace gadt
 			//get next index. 
 			inline int get_next() const
 			{
-				constexpr int end = length != 0 ? begin + (int)length : begin + 1;
-				return _index + 1 < end ? _index + 1 : begin;
+				constexpr int end = length != 0 ? begin_index + (int)length : begin_index + 1;
+				return _index + 1 < end ? _index + 1 : begin_index;
 			}
 
 			//get prev index.
 			inline int get_prev() const
 			{
-				constexpr int end = length != 0 ? begin + (int)length : begin + 1;
-				return _index - 1 < begin ? end - 1 : _index - 1;
+				constexpr int end = length != 0 ? begin_index + (int)length : begin_index + 1;
+				return _index - 1 < begin_index ? end - 1 : _index - 1;
 			}
 
 			//get index after jump.
 			inline int get_jump(int value) const
 			{
-				constexpr int end = (length != 0 ? begin + (int)length : begin + 1);
-				value = value % length;
-				return _index + value >= end ? _index - (length - value) : _index + value;
+				constexpr int end = (length != 0 ? begin_index + (int)length : begin_index + 1);
+				value = value % (int)length;
+				return _index + value >= end ? _index - ((int)length - value) : _index + value;
 			}
 
 			//set index
@@ -281,10 +281,13 @@ namespace gadt
 
 		public:
 
+			PlayerGroup(){}
+			PlayerGroup(int index) :PlayerIndex<begin_index, length>(index) {}
+
 			//get data of current player.
 			inline Tdata& data()
 			{
-				return _data[_index - begin_index];
+				return _data[this->_index - begin_index];
 			}
 
 			//get data of apointed index.

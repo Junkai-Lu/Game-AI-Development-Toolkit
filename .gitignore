@@ -4,3 +4,10 @@
 
 /.vs
 /.gitignore
+/Game-AI-Development-Toolkit
+*.sln
+*.vcxproj
+*.filters
+/Debug
+*.ilk
+/Debug/Game-AI-Development-Toolkit.pdb

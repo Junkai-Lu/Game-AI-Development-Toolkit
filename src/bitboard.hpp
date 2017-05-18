@@ -179,6 +179,18 @@ namespace gadt
 			return ub;
 		}
 
+		//return true if target is subset of this.
+		inline bool exist_subset(const BitBoard& target)
+		{
+
+		}
+
+		//return true if this is a subset of target.
+		inline bool is_subset_of(const BitBoard& target)
+		{
+
+		}
+
 		//get data
 		inline uint16_t to_ushort(size_t data_index) const
 		{
