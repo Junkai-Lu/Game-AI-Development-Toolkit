@@ -144,7 +144,7 @@ namespace gadt
 		void TestFileLib()
 		{
 			srand((unsigned int)time(NULL));
-			std::string path = "./test_dir"  + console::I2S(rand() % 99999999);
+			std::string path = "./test_dir"  + console::IntergerToString(rand() % 99999999);
 			if (!file::DirExist(path))
 			{
 				GADT_ASSERT(true, file::MakeDir(path));

@@ -123,7 +123,7 @@ namespace gadt
 				std::cout << std::endl;
 				Cprintf("[File]: " + file, GRAY);
 				std::cout << std::endl;
-				Cprintf("[Line]: " + I2S(line), GRAY);
+				Cprintf("[Line]: " + IntergerToString(line), GRAY);
 				std::cout << std::endl;
 				Cprintf("[Func]: " + function, GRAY);
 				std::cout << std::endl;

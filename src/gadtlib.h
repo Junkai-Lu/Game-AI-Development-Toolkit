@@ -126,7 +126,7 @@ namespace gadt
 		};
 		
 		//bool to string. that can be replaced by '<< boolalpha'
-		inline std::string B2S(bool b)
+		inline std::string BoolToString(bool b)
 		{
 			if (b)
 			{
@@ -136,11 +136,19 @@ namespace gadt
 		}
 
 		//interger to string.
-		inline std::string I2S(size_t i)
+		inline std::string IntergerToString(size_t i)
 		{
-			std::stringstream ss;
-			ss << i;
-			return ss.str();
+			std::ostringstream os;
+			if (os << i) return os.str();
+			return "invalid conversion";
+		}
+
+		//double to string
+		inline std::string DoubleToString(double d)
+		{
+			std::ostringstream os;
+			if (os << d) return os.str();
+			return "invalid conversion";
 		}
 
 		//colorful print.
