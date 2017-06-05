@@ -27,7 +27,6 @@ namespace gadt
 {
 	//Shell Page Interface
 	class GameShell;
-	class SHELL;
 	class ShellPageBase
 	{
 		friend class GameShell;
@@ -36,45 +35,84 @@ namespace gadt
 		std::string _name;				//name, each name correspond to one page in a game shell.
 		size_t _index;					//page index, each page have a unique index.
 		ShellPageBase* _call_source;	//call source point to the page that call this page.
-	protected:
-		std::function<void()> _info;	//point to a function that shows infos about page. default is empty. 
 
 	protected:
+		std::function<void()> _info_func;			//info function. would be called before show menu.
+		std::function<void()> _constructor_func;	//constructor func. would be called when enter the page.
+		std::function<void()> _destructor_func;		//destructror func. would be called when quit the page.
+
+		//static paramaters.
+		static const char* g_HELP_COMMAND;
+		static const char* g_EXIT_COMMAND;
+		static const char* g_CLEAN_COMMAND;
+
+
+	protected:
+
+		inline void set_info_func(std::function<void()> info_func)
+		{
+			_info_func = info_func;
+		}
+
+		inline void set_constructor_func(std::function<void()> constructor_func)
+		{
+			_constructor_func = constructor_func;
+		}
+
+		inline void set_destructor_func(std::function<void()> destructor_func)
+		{
+			_destructor_func = destructor_func;
+		}
 
 		inline void set_call_source(ShellPageBase* call_source)
 		{
 			_call_source = call_source;
 		}
-		inline void set_info_func(std::function<void()> info)
-		{
-			_info = info;
-		}
+
+		//get belonging shell.
 		inline GameShell* belonging_shell() const
 		{
 			return _belonging_shell;
 		}
+
+		//get call source.
 		inline ShellPageBase* call_source() const
 		{
 			return _call_source;
 		}
+
+		//get page name.
 		inline std::string name() const
 		{
 			return _name;
 		}
+
+		//get page index.
 		inline size_t index() const
 		{
 			return _index;
 		}
 
+		//print path.
 		void ShowPath() const;
+		
+		//To be focus.
 		void BeFocus();
+
+		//allocate page index.
 		static inline size_t AllocPageIndex()
 		{
 			static size_t page_index = 0;
 			return page_index++;
 		}
+
+		//create a new page.
 		ShellPageBase(GameShell* belonging_shell, std::string name);
+		
+		//copy constructor function is disallowed.
 		ShellPageBase(ShellPageBase& sb) = delete;
+
+		//a virtural function.
 		virtual void Run(ShellPageBase* call_source) = 0;
 
 	public:
@@ -103,6 +141,8 @@ namespace gadt
 		{
 			return _g_focus_game;
 		}
+
+		//print input tips.
 		static inline void InputTip(std::string tip = "")
 		{
 			if (focus_game() != nullptr)
@@ -127,6 +167,8 @@ namespace gadt
 				console::Cprintf("ERROR: focus game not exist", console::PURPLE);
 			}
 		}
+
+		//get input line by string format.
 		static inline std::string GetInput()
 		{
 			char buffer[50];
@@ -136,29 +178,41 @@ namespace gadt
 
 		//public function
 		GameShell(std::string name);
+
+		//copy constructor is disallowed.
 		GameShell(GameShell&) = delete;
 
+		//get name of shell.
 		inline std::string name() const
 		{
 			return _name;
 		}
+
+		//get focus_page of this shell.
 		inline ShellPageBase* focus_page() const
 		{
 			return _focus_page;
 		}
+
+		//return true if the page name exist.
 		inline bool page_exist(std::string name) const
 		{
 			return _page_table.count(name) > 0;
 		}
+
+		//add new page to this shell.
 		inline void AddPage(std::string name, std::shared_ptr<ShellPageBase> new_page)
 		{
 			_page_table[name] = new_page;
 		}
 
+		//to be the focus.
 		inline void BeFocus()
 		{
 			_g_focus_game = this;
 		}
+
+		//run page.
 		inline void RunPage(std::string name, ShellPageBase* call_source = nullptr)
 		{
 			if (page_exist(name))
@@ -180,18 +234,22 @@ namespace gadt
 	{
 		friend class ShellCreator;
 	private:
-		std::map<std::string, std::function<void(datatype&)> > _func;
-		std::map<std::string, std::string> _des;
-		std::set<std::string> _child;
-		std::function<bool(std::string, datatype&)> _extra_command;
+		std::map<std::string, std::function<void(datatype&)> > _func;			//dict of commands.
+		std::map<std::string, std::string> _des;								//dict of describes.
+		std::set<std::string> _child;											//dict of child pages
+		std::function<bool(std::string, datatype&)> _custom_command_check_func;	//custom command check func
 		datatype _data;
+
+		
 
 	private:
 		inline void ShellInit()
 		{
-			AddDescript("return", "return to previous menu.");
-			//add 'help' command.
-			AddFunction("help", [&](datatype& data)->void {
+			//add exit describe
+			AddDescript(g_EXIT_COMMAND, "return to previous menu.");
+
+			//add help command.
+			AddFunction(g_HELP_COMMAND, [&](datatype& data)->void {
 				std::cout << std::endl << ">> ";
 				console::Cprintf("[ COMMAND LIST ]\n\n", console::YELLOW);
 				for (auto command : _des)
@@ -203,8 +261,8 @@ namespace gadt
 				std::cout << std::endl << std::endl;
 			}, "get command list");
 
-			//add 'cls' command.
-			AddFunction("cls", [&](datatype& data)->void {
+			//add clean command.
+			AddFunction(g_CLEAN_COMMAND, [&](datatype& data)->void {
 				this->CleanScreen();
 			}, "clean screen.");
 		}
@@ -214,18 +272,26 @@ namespace gadt
 		{
 			return _data;
 		}
+
+		//return true if the func name exist
 		inline bool func_exist(std::string command) const
 		{
 			return _func.count(command) > 0;
 		}
+
+		//return true if the child page exist.
 		inline bool child_exist(std::string command) const
 		{
 			return _child.count(command) > 0;
 		}
+		
+		//return true if the describe exist.
 		inline bool des_exist(std::string command) const
 		{
 			return _des.count(command) > 0;
 		}
+
+		//get func by name.
 		inline std::function<void(datatype&)> get_func(std::string command)
 		{
 			if (!func_exist(command))
@@ -235,6 +301,8 @@ namespace gadt
 			}
 			return _func[command];
 		}
+		
+		//get describe by name.
 		inline std::string get_des(std::string command) const
 		{
 			if (!func_exist(command))
@@ -245,11 +313,15 @@ namespace gadt
 			return _des.at(command);
 		}
 
+		//run page.
 		void Run(ShellPageBase* call_source) override
 		{
 			set_call_source(call_source);
 			BeFocus();
 			CleanScreen();
+
+			//excute constructor func.
+			_constructor_func();
 
 			for (;;)
 			{
@@ -275,7 +347,7 @@ namespace gadt
 				}
 
 				//return command
-				if (command == "return")
+				if (command == g_EXIT_COMMAND)
 				{
 					if (call_source != nullptr)
 					{
@@ -299,7 +371,7 @@ namespace gadt
 				}
 
 				//extra command check
-				if (_extra_command(command, _data))
+				if (_custom_command_check_func(command, _data))
 				{
 					continue;
 				}
@@ -308,23 +380,29 @@ namespace gadt
 				console::Cprintf("ERROR: ", console::PURPLE);
 				std::cout << "command not found." << std::endl;
 			}
+
+			_destructor_func();	//excute destructor func.
 		}
 
 	public:
 		//default function.
 		ShellPage(GameShell* belonging_shell, std::string name) :
 			ShellPageBase(belonging_shell, name),
-			_extra_command([](std::string a, datatype& b)->bool {return false; })
+			_custom_command_check_func([](std::string a, datatype& b)->bool {return false; })
 		{
 			ShellInit();
 		}
+
+		//create a new shell page.
 		ShellPage(GameShell* belonging_shell, std::string name, datatype data) :
 			ShellPageBase(belonging_shell, name),
-			_extra_command([](std::string a, datatype& b)->bool {return false; }),
+			_custom_command_check_func([](std::string a, datatype& b)->bool {return false; }),
 			_data(data)
 		{
 			ShellInit();
 		}
+
+		//copy constructor is disallowed.
 		ShellPage(ShellPage&) = delete;
 
 		//deconstor function, DO NOT EXECUTE ALONE.
@@ -365,16 +443,28 @@ namespace gadt
 		}
 
 		//use a extend function to check and execute command, if the command is legal that the function should return 'true'.
-		inline void AddExtarCommand(std::function<bool(std::string, datatype&)> func, std::string command, std::string des)
+		inline void AddCustomCommandCheck(std::function<bool(std::string, datatype&)> func, std::string command, std::string des)
 		{
 			AddDescript(command, des);
-			_extra_command = func;
+			_custom_command_check_func = func;
 		}
 
 		//add info function about this page, the func would be execute before the page works. 
-		inline void AddInfoFunc(std::function<void()> info)
+		inline void AddInfoFunc(std::function<void()> info_func)
 		{
-			set_info_func(info);
+			set_info_func(info_func);
+		}
+
+		//add constructor func, it would be called when enter page. 
+		inline void AddConstructorFunc(std::function<void()> constructor_func)
+		{
+			set_constructor_func(constructor_func);
+		}
+
+		//add destructor func, it would be called when quit page.
+		inline void AddDestructorFunc(std::function<void()> destructor_func)
+		{
+			set_destructor_func(destructor_func);
 		}
 	};
 

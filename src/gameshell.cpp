@@ -29,11 +29,18 @@
 namespace gadt
 {
 	//ShellPageBase
+
+	const char* ShellPageBase::g_HELP_COMMAND	= "help";
+	const char* ShellPageBase::g_EXIT_COMMAND	= "return";
+	const char* ShellPageBase::g_CLEAN_COMMAND	= "clean";
+
 	ShellPageBase::ShellPageBase(GameShell* belonging_shell, std::string name) :
 		_belonging_shell(belonging_shell),
 		_name(name),
 		_index(AllocPageIndex()),
-		_info([]()->void {})
+		_info_func([]()->void {}),
+		_constructor_func([]()->void {}),
+		_destructor_func([]()->void {})
 	{
 	}
 	void ShellPageBase::ShowPath() const
@@ -54,14 +61,13 @@ namespace gadt
 	void ShellPageBase::CleanScreen() const
 	{
 		console::SystemClear();
-		_info();
+		_info_func();
 		std::cout << ">> ";
 		console::Cprintf("[ Shell ", console::DEEP_YELLOW);
 		console::Cprintf("<" + _name + ">", console::YELLOW);
 		console::Cprintf(" ]\n", console::DEEP_YELLOW);
-
 		std::cout << ">> ";
-		console::Cprintf("use 'help' to get more command\n\n", console::DEEP_GREEN);
+		console::Cprintf(std::string("use '") + std::string(g_HELP_COMMAND) + std::string("' to get more command\n\n"), console::DEEP_GREEN);
 	}
 	void ShellPageBase::BeFocus()
 	{
