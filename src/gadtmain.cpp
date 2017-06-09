@@ -40,6 +40,8 @@
 #include "mcts.hpp"			//monte carlo tree search for games.
 #include "minimax.hpp"		//minimax,and alphabeta for games.
 
+#include "mcts_new.hpp"
+
 using namespace gadt;
 
 using std::cout;
@@ -74,6 +76,10 @@ void ShellDefine()
 			unittest::RunTest(p);
 		}
 	}, "run all test");
+
+	test->AddFunction("do", [](int)->void {
+
+	}, "test ");
 
 	//Start Shell
 	gadt.RunPage("root");
