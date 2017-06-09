@@ -42,9 +42,9 @@ namespace gadt
 		std::function<void()> _destructor_func;		//destructror func. would be called when quit the page.
 
 		//static paramaters.
-		static const char* g_HELP_COMMAND;
-		static const char* g_EXIT_COMMAND;
-		static const char* g_CLEAN_COMMAND;
+		static const char* g_HELP_COMMAND;			//help command, default is 'help'
+		static const char* g_EXIT_COMMAND;			//exit page command, default is 'return'
+		static const char* g_CLEAN_COMMAND;			//clean screen command, default is 'clear'
 
 
 	protected:
