@@ -68,26 +68,64 @@ namespace gadt
 
 		};
 
-
+		/*
+		* MctsNode is the node class in the monte carlo tree search.
+		* [state_type] is the game-state class, which is defined by the user.
+		* [action_type] is the game-action class, which is defined by the user.
+		* [enable_debug_model] means enable the debug model, if it is enabled, some debug info would not be ignored. this may result in the degradation of performance.
+		*/
 		template<typename state_type, typename action_type, bool enable_debug_model = false>
 		class MctsNode
 		{
-		public:
-			using AgentIndex = int8_t;
-			using State = state_type;
-			using Action = action_type;
-			using ActionSet = std::vector<Action>;
-			using MakeActionFunc = std::function<void(const State&, ActionSet&)>;
-			using CheckResultFunc = std::function<int(const State&)>;
-			
+		public:											
+			using State = state_type;												//State is the game-state class, which is defined by the user.
+			using Action = action_type;												//Action is the game-action class which is defined by the user.
+			using ActionSet = std::vector<Action>;									//ActionSet is the set of Action, each action would lead to a new state.
+			using AgentIndex = int8_t;												//AgentIndex is the type index of each player, default is int8_t.
+			using MakeActionFunc = std::function<void(const State&, ActionSet&)>;	//the function which create action set by the state.
+			using CheckResultFunc = std::function<int(const State&)>;				//the function that check the simulation result in the backpropagation stage.
 
 		private:
 			State		_state;				//state of this node.
 			ActionSet	_action_set;		//action set of this node.
 			uint8_t		_next_action_index;	//the index of next action.
-			AgentIndex	_winner;			//the winner of the state.
+			AgentIndex	_winner_index;		//the winner index of the state.
+			AgentIndex	_player_index;		//the belonging player index of this index.
+			uint32_t	_visited_time;		//how many times that this node had been visited.
+			uint32_t	_win_time;			//win time accmulated by the simulation.
 
 		public:
+			const State&		state()				const { return _state; }
+			const ActionSet&	action_set()		const { return _action_set; }
+			const uint8_t		next_action_index()	const { return _next_action_index; }
+			const AgentIndex	winner_index()		const { return _winner_index; }
+			const AgentIndex	player_index()		const { return _player_index; }
+			const uint32_t		visited_time()		const { return _visited_time; }
+			const uint32_t		win_time()			const { return _win_time; }
+
+		private:
+			//a value means no winner, which is differ from any other AgentIndex.
+			static const AgentIndex _no_winner_index = 0;
+
+			//exist unactived action in the action set.
+			inline bool exist_unactivated_action() const
+			{
+				return _next_action_index < _action_set.size();
+			}
+
+			//get next action.
+			inline const Action& next_action()
+			{
+				return _action_set[_next_action_index++];
+			}
+
+			//return true if the state is the terminal-state of the game.
+			inline bool is_end_state() const
+			{
+				return _winner_index != _no_winner_index;
+			}
+
+			
 
 		};
 
