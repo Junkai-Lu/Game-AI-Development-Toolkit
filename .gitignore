@@ -11,3 +11,5 @@
 /Debug
 *.ilk
 /Debug/Game-AI-Development-Toolkit.pdb
+/x64/Release
+/Release
