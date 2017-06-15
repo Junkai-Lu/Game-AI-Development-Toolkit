@@ -179,11 +179,48 @@ namespace gadt
 			GADT_ASSERT(2, players.get_jump(24));
 
 		}
+		void TestMctsAlloc()
+		{
+			struct t
+			{
+				int a;
+				int b;
+				int c;
+
+				t(int _a, int _b, int _c):a(_a),b(_b),c(_c)
+				{
+					//print();
+				}
+			};
+			t temp(1,2,3);
+			const size_t ub = 10000000;
+			mcts_new::MctsAllocator<t, ub,false> hey;
+			for (int i = 0; i <ub; i++)
+			{
+				t* p = hey.construct(i,i*i,i*i*i);
+				GADT_ASSERT(p->a, i);
+			}
+			GADT_ASSERT(hey.construct(1,2,3), nullptr);
+			GADT_ASSERT(hey.get_by_index(0)->a, 0);
+			GADT_ASSERT(hey.get_by_index(0)->b, 0);
+			GADT_ASSERT(hey.get_by_index(0)->c, 0);
+			GADT_ASSERT(hey.get_by_index(ub - 1)->a, ub - 1);
+			GADT_ASSERT(hey.remain_size(), 0);
+			GADT_ASSERT(hey.total_size(), ub);
+			GADT_ASSERT(hey.free_by_index(ub), false);
+			GADT_ASSERT(hey.free(&temp), false);
+			GADT_ASSERT(hey.free(hey.get_by_index(ub -1)), true);
+			GADT_ASSERT(hey.remain_size(), 1);
+			GADT_ASSERT(hey.construct(1, 2, 3) != nullptr, true);
+			GADT_ASSERT(hey.get_by_index(ub - 1)->a, 1);
+
+		}
 
 		const std::vector<FuncPair> func_list = {
 			{ "bitboard", TestBitBoard },
 			{ "file", TestFileLib },
-			{ "index", TestIndex}
+			{ "index", TestIndex},
+			{ "alloc", TestMctsAlloc}
 		};
 		void RunTest(FuncPair func_pair)
 		{

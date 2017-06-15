@@ -39,48 +39,131 @@ namespace gadt
 	{
 		//AgentIndex is the type index of each player, default is int8_t.
 		using AgentIndex = int8_t;
+		using UcbValueType = double;
 
-		//MctsResult is the simulation result in the mcts. it include the index of winner and the final state of the game;
-		template<typename State, bool enable_debug_model = false>
-		class MctsResult
+		/*
+		* MemAllocator is a memory allocator, whose memory is preallocate at the time when the object is created.
+		* [T] is the class type.
+		* [size] is the max size of the allocator.
+		* [is_debug] means some debug info would not be ignored. this may result in the degradation of performance.
+		*/
+		template<typename T, size_t size, bool is_debug>
+		class MctsAllocator
 		{
 		private:
-			const State	_state;			//the final state of the simulation.
-			const AgentIndex _winner;	//winner in the result.
+			using pointer = T*;
+			using reference = T&;
+
+			std::queue<T*>		_available_ptr;
+			pointer				_elements;
 
 		public:
-			inline MctsResult(const State& state, int winner):
-				_state(state),
-				_winner(winner)
+			//default constructor function.
+			MctsAllocator()
 			{
+				_elements = reinterpret_cast<T*>(new char[size * sizeof(T)]);
+				flush();
 			}
 
-			const State& state() const
+			//destructor function.
+			~MctsAllocator()
 			{
-				return _state;
+				delete[] _elements;
 			}
 
-			int winner() const
+			//free space by index.
+			bool free_by_index(size_t index)
 			{
-				return _winner;
+				if (index < size)
+				{
+					_available_ptr.push(_elements + index);
+					return true;
+				}
+				return false;
 			}
 
+			//free space by ptr, return true if free successfully.
+			bool free(pointer target)
+			{
+				uintptr_t t = uintptr_t(target);
+				uintptr_t fir = uintptr_t(_elements);
+				uintptr_t last = uintptr_t(_elements + size);
+				if (target != nullptr && t >= fir && t < last && ((t - fir) % sizeof(T) == 0))
+				{
+					_available_ptr.push(target);
+					return true;
+				}
+				return false;
+			}
+
+			//copy source object to a empty space and return the pointer, return nullptr if there are not available space.
+			template<class... Types>
+			pointer construct(Types&&... args)
+				//T* constructor(const T& source)
+			{
+				if (_available_ptr.empty() != true)
+				{
+					pointer temp = _available_ptr.back();
+					*temp = T(std::forward<Types>(args)...);
+					_available_ptr.pop();
+					return temp;
+				}
+				return nullptr;
+			}
+
+			//get objecy prt by index. return nullptr if the index is overflow.
+			T* get_by_index(size_t index) const
+			{
+				if (index < size)
+				{
+					return _elements + index;
+				}
+				return nullptr;
+			}
+
+			//total size of alloc.
+			size_t total_size() const
+			{
+				return size;
+			}
+
+			//remain size in the alloc.
+			size_t remain_size() const
+			{
+				return _available_ptr.size();
+			}
+
+			//return true if there is not available space in this allocator.
+			bool is_full() const
+			{
+				return _available_ptr.size() == 0;
+			}
+
+			//flush all datas in the allocator.
+			void flush()
+			{
+				for (size_t i = 0; i <size; i++)
+				{
+					_available_ptr.push(_elements + i);
+				}
+			}
 		};
 
 		/*
 		* MctsNode is the node class in the monte carlo tree search.
-		* [state_type] is the game-state class, which is defined by the user.
-		* [action_type] is the game-action class, which is defined by the user.
-		* [enable_debug_model] means enable the debug model, if it is enabled, some debug info would not be ignored. this may result in the degradation of performance.
+		* [State] is the game-state class, which is defined by the user.
+		* [Action] is the game-action class, which is defined by the user.
+		* [is_debug] mean some debug info would not be ignored. this may result in the degradation of performance.
 		*/
-		template<typename State, typename Action, typename Result, bool enable_debug_model = false>
+		template<typename State, typename Action, typename Result, bool is_debug>
 		class MctsNode
 		{
 		public:											
-			using ActionSet = std::vector<Action>;									//ActionSet is the set of Action, each action would lead to a new state.
-			using NodePtrSet = std::vector<MctsNode*>;								//ChildSet is the set of ptrs to child nodes.
-			using MakeActionFunc = std::function<void(const State&, ActionSet&)>;	//the function which create action set by the state.
-			using CheckResultFunc = std::function<int(const State&)>;				//the function that check the simulation result in the backpropagation stage.
+			using ActionSet			= std::vector<Action>;								//ActionSet is the set of Action.
+			using NodePtrSet		= std::vector<MctsNode*>;							//ChildSet is the set of ptrs to child nodes.
+			using MakeActionFunc	= std::function<void(const State&, ActionSet&)>;	//the function which create action set by the state.
+			using CheckResultFunc	= std::function<int(const State&)>;					//the function that check the simulation result in the backpropagation stage.
+			using FreeSelfFunc		= std::function<void(MctsNode*)>;					//free self from allocator.
 
 		private:
 			State			_state;				//state of this node.
@@ -104,6 +187,9 @@ namespace gadt
 			const uint8_t		next_action_index()		const { return _next_action_index; }
 			const Action&		action(size_t i)		const { return _action_set[i]; }
 			const MctsNode*		child_node(size_t i)	const { return _child_nodes[i]; }
+			const size_t		child_num()				const { return _child_nodes.size(); }
+			const NodePtrSet&	child_set()				const { return _child_nodes; }
+			const ActionSet&	action_set()			const { return _action_set; }
 
 		private:
 			//a value means no winner, which is differ from any other AgentIndex.
@@ -139,78 +225,63 @@ namespace gadt
 				_child_nodes.resize(_action_set.size(), nullptr);
 			}
 
-
+			void FreeFromAllocator(FreeSelfFunc FreeSelf)
+			{
+				for (auto p : _child_nodes)
+				{
+					if (p != nullptr)
+					{
+						p->FreeFromAllocator(FreeSelf);
+					}
+				}
+				FreeSelf(this);
+			}
 		};
 
-		/*
-		* MemAllocator is a memory allocator, whose memory is preallocate at the time when the object is created.
-		* [T] is the class type.
-		*/
-		template<typename T, size_t size>
-		class MctsAllocator
+		
+
+		template<typename State, typename Action, typename Result, size_t max_node, bool is_debug = false>
+		class MctsSearch
 		{
+		public:
+			using NodeType = MctsNode<State, Action, Result, is_debug>;							
+			using AlloctorType = MctsAllocator<NodeType, max_node, is_debug>;					
+
+			using ActionSet				= std::vector<Action>;									//ActionSet is the set of Action
+			using NodePtrSet			= std::vector<NodeType*>;								//ChildSet is the set of ptrs to child nodes.
+			using MakeActionFunc		= std::function<void(const State&, ActionSet&)>;		//the function which create action set by the state.
+			using CheckResultFunc		= std::function<AgentIndex(const State&)>;				//deal with the the simulation result in the backpropagation stage.
+			using DetemineWinnerFunc	= std::function<AgentIndex(const NodeType&)>;			//detemine the winner of the giving node.
+			using BackPropagateFunc		= std::function<void(const Result&, NodeType&)>;		//modify values in the node by the result.
+			using UcbForParentFunc		= std::function<UcbValueType(const NodeType&)>;			//return ucb value for parent node.
+			using DefaultPolicyFunc		= std::function<Result(const NodeType&)>;				//get a result from node by excute default policy.
+			using AllowExtendFunc		= std::function<bool(const NodeType&)>;					//allow node to extend child node.
+
 		private:
-			std::allocator<T>	alloc;
-			std::stack<T*>		available_ptr;
+			AlloctorType			_alloctor;
 
 		public:
-			MemAllocator()
+			const MakeActionFunc	MakeAction;
+			const CheckResultFunc	CheckResult;
+			DetemineWinnerFunc		DetemineWinner;
+			BackPropagateFunc		BackPropagate;
+			UcbForParentFunc		UcbForParent;
+			DefaultPolicyFunc		DefaultPolicy;
+			AllowExtendFunc			AllowExtend;
+
+		private:
+			//define functions as default.
+			void FuncInit()
 			{
-				auto p = alloc.allocate(size);
-				for (size_t i = 0; i < size; i++)
-				{
-					_available_space.push(p + i);
-				}
+
 			}
 
-			//to free a space by index.
-			void free(size_t index)
+		public:
+			Action Excute(const State root_state, double timeout, size_t max_iteration = max_node)
 			{
-				GADT_WARNING_CHECK(index < size, "index overflow");
-				_available_space.push(&_memory[index]);
+				
 			}
 
-			//to free a space by ptr.
-			void free(T* target)
-			{
-				_available_space.push(target);
-			}
-
-			//copy source object to a empty space and return the pointer, return nullptr if there are not available space.
-			T* get(const T& source)
-			{
-				if (_available_space.empty() != true)
-				{
-					T* temp = _available_space.top();
-					_available_space.pop();
-					*temp = source;
-					return temp;
-				}
-				return nullptr;
-			}
-
-			//
-			const T& get_object(size_t index) const
-			{
-				GADT_WARNING_CHECK(index >= size, "index overflow");
-				return _memory[index];
-			}
-
-			size_t total_size() const
-			{
-				return size;
-			}
-
-			size_t available_size() const
-			{
-				return _available_space.size();
-			}
-		};
-
-		template<typename State, typename Action, typename Result, bool enable_debug_model = false>
-		class McteSearch
-		{
-			
 		};
 
 	}

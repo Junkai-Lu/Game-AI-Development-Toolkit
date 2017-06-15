@@ -21,6 +21,7 @@
 
 #include "gadtlib.h"
 #include "bitboard.hpp"
+#include "mcts_new.hpp"
 
 #pragma once
 

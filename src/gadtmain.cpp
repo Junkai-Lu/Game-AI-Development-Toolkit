@@ -77,22 +77,8 @@ void ShellDefine()
 		}
 	}, "run all test");
 
-	test->AddFunction("do", [](int)->void {
-		struct t
-		{
-			int a;
-			int b;
-			int c;
-
-			void print() const
-			{
-				cout << a << b << c << endl;
-			}
-		};
-
-		
-
-	}, "test ");
+	test->AddFunction("hey", [](int)->void {
+	}, "hey");
 
 	//Start Shell
 	gadt.RunPage("root");
