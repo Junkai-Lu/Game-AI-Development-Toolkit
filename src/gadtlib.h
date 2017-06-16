@@ -199,17 +199,17 @@ namespace gadt
 			//get string of this time point.
 			std::string get_string(std::string format = "%Y.%m.%d-%H:%M:%S") const;
 
-			//get the time difference between current time and the time point.
-			inline double time_difference() const
-			{
-				return (double)(clock() - _clock) / CLOCKS_PER_SEC;
-			}
-
 			//set this time point to current time.
 			inline void reset()
 			{
 				_clock = clock();
 				_time = time(NULL);
+			}
+
+			//get the time since this time point was created.
+			inline double time_since_created() const
+			{
+				return (double)(clock() - _clock) / CLOCKS_PER_SEC;
 			}
 		};
 	}

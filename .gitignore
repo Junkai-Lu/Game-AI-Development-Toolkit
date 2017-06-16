@@ -2,14 +2,13 @@
 # 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
 ################################################################################
 
-/.vs
-/.gitignore
-/Game-AI-Development-Toolkit
 *.sln
 *.vcxproj
 *.filters
-/Debug
 *.ilk
-/Debug/Game-AI-Development-Toolkit.pdb
-/x64/Release
+/.vs
+/.gitignore
+/Game-AI-Development-Toolkit
+/Debug
 /Release
+/x64

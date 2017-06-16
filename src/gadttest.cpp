@@ -193,27 +193,33 @@ namespace gadt
 				}
 			};
 			t temp(1,2,3);
-			const size_t ub = 10000000;
-			mcts_new::MctsAllocator<t, ub,false> hey;
+			const size_t ub = 100;
+			mcts_new::MctsAllocator<t,false> hey(ub);
+			t* p;
 			for (int i = 0; i <ub; i++)
 			{
-				t* p = hey.construct(i,i*i,i*i*i);
+				p = hey.construct(i,i*i,i*i*i);
 				GADT_ASSERT(p->a, i);
 			}
 			GADT_ASSERT(hey.construct(1,2,3), nullptr);
-			GADT_ASSERT(hey.get_by_index(0)->a, 0);
-			GADT_ASSERT(hey.get_by_index(0)->b, 0);
-			GADT_ASSERT(hey.get_by_index(0)->c, 0);
-			GADT_ASSERT(hey.get_by_index(ub - 1)->a, ub - 1);
 			GADT_ASSERT(hey.remain_size(), 0);
 			GADT_ASSERT(hey.total_size(), ub);
-			GADT_ASSERT(hey.free_by_index(ub), false);
 			GADT_ASSERT(hey.free(&temp), false);
-			GADT_ASSERT(hey.free(hey.get_by_index(ub -1)), true);
+			GADT_ASSERT(hey.is_full(), true);
+			GADT_ASSERT(hey.free(p), true);
 			GADT_ASSERT(hey.remain_size(), 1);
 			GADT_ASSERT(hey.construct(1, 2, 3) != nullptr, true);
-			GADT_ASSERT(hey.get_by_index(ub - 1)->a, 1);
-
+			GADT_ASSERT(hey.free(p - 2), true);
+			GADT_ASSERT(hey.free(p - 1), true);
+			mcts_new::MctsAllocator<t, false> new_hey = hey;
+			GADT_ASSERT(hey.remain_size(), 2);
+			GADT_ASSERT(new_hey.remain_size(), 2);
+			GADT_ASSERT(new_hey.is_full(), false);
+			GADT_ASSERT(new_hey.construct(3, 2, 1) != nullptr, true);
+			GADT_ASSERT(new_hey.construct(3, 2, 1) != nullptr, true);
+			GADT_ASSERT(new_hey.construct(3, 2, 1) != nullptr, false);
+			GADT_ASSERT(new_hey.remain_size(), 0);
+			GADT_ASSERT(new_hey.is_full(), true);
 		}
 
 		const std::vector<FuncPair> func_list = {
