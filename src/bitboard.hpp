@@ -739,6 +739,22 @@ namespace gadt
 		{
 			return _data == target._data;
 		}
+		inline bool operator<(const BitPoker& target)
+		{
+			return _data < target._data;
+		}
+		inline bool operator>(const BitPoker& target)
+		{
+			return _data > target._data;
+		}
+		inline bool operator<=(const BitPoker& target)
+		{
+			return _data <= target._data;
+		}
+		inline bool operator>=(const BitPoker& target)
+		{
+			return _data >= target._data;
+		}
 	};
 
 	//bit Mahjong
@@ -973,7 +989,7 @@ namespace gadt
 		inline std::string to_ullong_string() const
 		{
 			std::stringstream ss;
-			ss << "( " << _fir_data << " , " << _sec_data << " )";
+			ss << _fir_data << " " << _sec_data;
 			return ss.str();
 		}
 
@@ -1080,6 +1096,54 @@ namespace gadt
 		inline bool operator==(const BitMahjong& target)
 		{
 			return _fir_data == target._fir_data && _sec_data == target._sec_data;
+		}
+		inline bool operator<(const BitMahjong& target)
+		{
+			if (_fir_data < target._fir_data)
+			{
+				return true;
+			}
+			else if (_fir_data == target._fir_data && _sec_data < target._sec_data)
+			{
+				return true;
+			}
+			return false;
+		}
+		inline bool operator>(const BitMahjong& target)
+		{
+			if (_fir_data > target._fir_data)
+			{
+				return true;
+			}
+			else if (_fir_data == target._fir_data && _sec_data > target._sec_data)
+			{
+				return true;
+			}
+			return false;
+		}
+		inline bool operator<=(const BitMahjong& target)
+		{
+			if (_fir_data < target._fir_data)
+			{
+				return true;
+			}
+			else if (_fir_data == target._fir_data && _sec_data <= target._sec_data)
+			{
+				return true;
+			}
+			return false;
+		}
+		inline bool operator>=(const BitMahjong& target)
+		{
+			if (_fir_data > target._fir_data)
+			{
+				return true;
+			}
+			else if (_fir_data == target._fir_data && _sec_data >= target._sec_data)
+			{
+				return true;
+			}
+			return false;
 		}
 	};
 
