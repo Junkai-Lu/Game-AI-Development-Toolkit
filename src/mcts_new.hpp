@@ -199,11 +199,18 @@ namespace gadt
 		class MctsNode
 		{
 		public:											
-			using ActionSet			= std::vector<Action>;								//ActionSet is the set of Action.
-			using NodePtrSet		= std::vector<MctsNode*>;							//ChildSet is the set of ptrs to child nodes.
-			using MakeActionFunc	= std::function<void(const State&, ActionSet&)>;	//the function which create action set by the state.
-			using CheckResultFunc	= std::function<int(const State&)>;					//the function that check the simulation result in the backpropagation stage.
-			using FreeSelfFunc		= std::function<void(MctsNode*)>;					//free self from allocator.
+			using Node					= MctsNode<State, Action, Result, is_debug>;			//MctsNode
+			using Allocator				= MctsAllocator<MctsNode, is_debug>;					//MctsAllocate 
+			using ActionSet				= std::vector<Action>;									//ActionSet is the set of Action.
+			using NodePtrSet			= std::vector<MctsNode*>;								//ChildSet is the set of ptrs to child nodes.
+			using GetNewStateFunc		= std::function<State(const State&, const Action&)>;	//get a new state from previous state and action.
+			using MakeActionFunc		= std::function<void(const State&, ActionSet&)>;		//the function which create action set by the state.
+			using DetemineWinnerFunc	= std::function<AgentIndex(const Node&)>;				//detemine the winner of the giving node.
+			using CheckResultFunc		= std::function<AgentIndex(const State&)>;				//deal with the the simulation result in the backpropagation stage.
+			using BackPropagateFunc		= std::function<void(const Result&, Node&)>;			//modify values in the node by the result.
+			using UcbForParentFunc		= std::function<UcbValueType(const Node&)>;				//return ucb value for parent node.
+			using DefaultPolicyFunc		= std::function<Result(const Node&)>;					//get a result from node by excute default policy.
+			using AllowExtendFunc		= std::function<bool(const Node&)>;						//allow node to extend child node.
 
 		private:
 			State			_state;				//state of this node.
@@ -253,6 +260,30 @@ namespace gadt
 				return _winner_index != _no_winner_index;
 			}
 
+			//free the node from allocator.
+			void FreeFromAllocator(Allocator& allocator)
+			{
+				//free all child node if possible.
+				for (auto p : _child_nodes)
+				{
+					if (p != nullptr)
+					{
+						p->FreeFromAllocator(allocator);
+					}
+				}
+
+				//free the node itself.
+				if (is_debug)
+				{
+					bool b = allocator.free(this);
+					GADT_WARNING_CHECK(b == false, "free child node failed.");
+				}
+				else
+				{
+					allocator.free(this);
+				}
+			}
+
 		public:
 			MctsNode(const State& state, AgentIndex owner_index) :
 				_state(state),
@@ -265,28 +296,33 @@ namespace gadt
 				_child_nodes.resize(_action_set.size(), nullptr);
 			}
 
-			//free the node from allocator.
-			void FreeFromAllocator(MctsAllocator<MctsNode,is_debug>& allocator)
+			//TODO free child node from allocator by index. return true if free successfully.
+			bool FreeChildNode(size_t index, Allocator& allocator)
 			{
-				//free all child node if possible.
-				for (auto p : _child_nodes)
-				{
-					if (p != nullptr)
-					{
-						p->FreeFromAllocator(allocator);
-					}
-				}
+				//TODO
+			}
+
+			//4.the simulation result is back propagated through the selected nodes to update their statistics.
+			void BackPropagation(const Result& result, BackPropagateFunc back_propagation)
+			{
+				back_propagation(result, *this);
+			}
+
+			//3.simulation is run from the new node according to the default policy to produce a result.
+			Result SimulationProcess(DefaultPolicyFunc default_policy)
+			{
+				return default_policy(*this);
+			}
+
+			//2.one child node would be added to expand the tree, acccording to the available actions.
+			Result Expandsion()
+			{
+			}
+
+			//1. select the most urgent expandable node,and get the result to update statistic.
+			Result Selection(Result& result)
+			{
 				
-				//free the node itself.
-				if (is_debug)
-				{
-					bool b = allocator.free(this);
-					GADT_WARNING_CHECK(b == false, "free child node failed.");
-				}
-				else
-				{
-					allocator.free(this);
-				}
 			}
 		};
 
@@ -302,20 +338,20 @@ namespace gadt
 		class MctsSearch
 		{
 		public:
-			using Node = MctsNode<State, Action, Result, is_debug>;							
-			using Allocator = MctsAllocator<Node, is_debug>;					
+			using Node					= MctsNode<State, Action, Result, is_debug>;							
+			using Allocator				= MctsAllocator<Node, is_debug>;					
 
 			using ActionSet				= std::vector<Action>;									//ActionSet is the set of Action
-			using NodePtrSet			= std::vector<Node*>;								//ChildSet is the set of ptrs to child nodes.
+			using NodePtrSet			= std::vector<Node*>;									//ChildSet is the set of ptrs to child nodes.
 			using GetNewStateFunc		= std::function<State(const State&, const Action&)>;	//get a new state from previous state and action.
 			using MakeActionFunc		= std::function<void(const State&, ActionSet&)>;		//the function which create action set by the state.
-			using DetemineWinnerFunc	= std::function<AgentIndex(const Node&)>;			//detemine the winner of the giving node.
+			using DetemineWinnerFunc	= std::function<AgentIndex(const Node&)>;				//detemine the winner of the giving node.
 			using CheckResultFunc		= std::function<AgentIndex(const State&)>;				//deal with the the simulation result in the backpropagation stage.
-			using BackPropagateFunc		= std::function<void(const Result&, Node&)>;		//modify values in the node by the result.
-			using UcbForParentFunc		= std::function<UcbValueType(const Node&)>;			//return ucb value for parent node.
-			using DefaultPolicyFunc		= std::function<Result(const Node&)>;				//get a result from node by excute default policy.
-			using AllowExtendFunc		= std::function<bool(const Node&)>;					//allow node to extend child node.
-			
+			using BackPropagateFunc		= std::function<void(const Result&, Node&)>;			//modify values in the node by the result.
+			using UcbForParentFunc		= std::function<UcbValueType(const Node&)>;				//return ucb value for parent node.
+			using DefaultPolicyFunc		= std::function<Result(const Node&)>;					//get a result from node by excute default policy.
+			using AllowExtendFunc		= std::function<bool(const Node&)>;						//allow node to extend child node.
+
 		public:
 			const GetNewStateFunc		GetNewState;
 			const MakeActionFunc		MakeAction;		
@@ -347,24 +383,31 @@ namespace gadt
 				size_t iteration_time = 0;
 				for (iteration_time = 0; iteration_time < max_iteration; iteration_time++)
 				{
+					//stop search if timout.
 					if (start_tp.time_since_created() > timeout)
 					{
 						break;//timeout, stop search.
 					}
+
+					//excute garbage collection if need.
 					if (_allocator.is_full())
 					{
 						if (enable_gc)
 						{
 							//do garbage collection.
+
+							if (_allocator.is_full())
+							{
+								break;//stop search if gc failed.
+							}
 						}
 						else
 						{
 							break;//run out of memory, stop search.
 						}
 					}
-					
-					//do iteration to extend search tree.
 
+					
 				}
 
 				//log info if is debuging.
@@ -414,6 +457,8 @@ namespace gadt
 				}
 			}
 
+		
+
 			//do search with default parameters.
 			Action DoMcts(const State root_state, AgentIndex owner_index)
 			{
@@ -426,6 +471,5 @@ namespace gadt
 				return ExcuteMCTS(root_state, owner_index, timeout, max_iteration, enable_gc);
 			}
 		};
-
 	}
 }

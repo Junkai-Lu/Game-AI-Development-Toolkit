@@ -430,23 +430,23 @@ namespace gadt
 		{
 			return get(index);
 		}
-		inline bool operator<(const BitBoard64& target)
+		inline bool operator<(const BitBoard64 target) const
 		{
 			return _data < target._data;
 		}
-		inline bool operator>(const BitBoard64& target)
+		inline bool operator>(const BitBoard64 target) const
 		{
 			return _data > target._data;
 		}
-		inline bool operator<=(const BitBoard64& target)
+		inline bool operator<=(const BitBoard64 target) const
 		{
 			return _data <= target._data;
 		}
-		inline bool operator>=(const BitBoard64& target)
+		inline bool operator>=(const BitBoard64 target) const
 		{
 			return _data >= target._data;
 		}
-		inline bool operator==(const BitBoard64& target)
+		inline bool operator==(const BitBoard64 target) const
 		{
 			return _data == target._data;
 		}
@@ -667,7 +667,7 @@ namespace gadt
 			return std::string(c);
 		}
 
-		inline void operator+=(const BitPoker& target)
+		inline void operator+=(const BitPoker target)
 		{
 #ifdef GADT_WARNING
 			for (size_t i = 0; i < upper_bound; i++)
@@ -683,7 +683,7 @@ namespace gadt
 #endif
 			_data += target._data;
 		}
-		inline void operator-=(const BitPoker& target)
+		inline void operator-=(const BitPoker target)
 		{
 #ifdef GADT_WARNING
 			for (size_t i = 0; i < upper_bound; i++)
@@ -699,7 +699,7 @@ namespace gadt
 #endif
 			_data -= target._data;
 		}
-		inline BitPoker operator+(const BitPoker& target) const
+		inline BitPoker operator+(const BitPoker target) const
 		{
 #ifdef GADT_WARNING
 			for (size_t i = 0; i < upper_bound; i++)
@@ -717,7 +717,7 @@ namespace gadt
 #endif
 			return temp;
 		}
-		inline BitPoker operator-(const BitPoker& target) const
+		inline BitPoker operator-(const BitPoker target) const
 		{
 #ifdef GADT_WARNING
 			for (size_t i = 0; i < upper_bound; i++)
@@ -735,23 +735,23 @@ namespace gadt
 #endif
 			return temp;
 		}
-		inline bool operator==(const BitPoker& target)
+		inline bool operator==(const BitPoker target) const
 		{
 			return _data == target._data;
 		}
-		inline bool operator<(const BitPoker& target)
+		inline bool operator<(const BitPoker target) const
 		{
 			return _data < target._data;
 		}
-		inline bool operator>(const BitPoker& target)
+		inline bool operator>(const BitPoker target) const
 		{
 			return _data > target._data;
 		}
-		inline bool operator<=(const BitPoker& target)
+		inline bool operator<=(const BitPoker target) const
 		{
 			return _data <= target._data;
 		}
-		inline bool operator>=(const BitPoker& target)
+		inline bool operator>=(const BitPoker target) const
 		{
 			return _data >= target._data;
 		}
@@ -1024,7 +1024,7 @@ namespace gadt
 		}
 
 		//operation.
-		inline void operator+=(const BitMahjong& target)
+		inline void operator+=(const BitMahjong target)
 		{
 #ifdef GADT_WARNING
 			for (size_t i = 0; i < upper_bound; i++)
@@ -1041,7 +1041,7 @@ namespace gadt
 			_fir_data += target._fir_data;
 			_sec_data += target._sec_data;
 		}
-		inline void operator-=(const BitMahjong& target)
+		inline void operator-=(const BitMahjong target)
 		{
 #ifdef GADT_WARNING
 			for (size_t i = 0; i < upper_bound; i++)
@@ -1058,7 +1058,7 @@ namespace gadt
 			_fir_data -= target._fir_data;
 			_sec_data -= target._sec_data;
 		}
-		inline BitMahjong operator+(const BitMahjong& target) const
+		inline BitMahjong operator+(const BitMahjong target) const
 		{
 #ifdef GADT_WARNING
 			for (size_t i = 0; i < upper_bound; i++)
@@ -1076,7 +1076,7 @@ namespace gadt
 #endif
 			return temp;
 		}
-		inline BitMahjong operator-(const BitMahjong& target) const
+		inline BitMahjong operator-(const BitMahjong target) const
 		{
 #ifdef GADT_WARNING
 			for (size_t i = 0; i < upper_bound; i++)
@@ -1093,11 +1093,11 @@ namespace gadt
 #endif
 			return temp;
 		}
-		inline bool operator==(const BitMahjong& target)
+		inline bool operator==(const BitMahjong target) const
 		{
 			return _fir_data == target._fir_data && _sec_data == target._sec_data;
 		}
-		inline bool operator<(const BitMahjong& target)
+		inline bool operator<(const BitMahjong target) const
 		{
 			if (_fir_data < target._fir_data)
 			{
@@ -1109,7 +1109,7 @@ namespace gadt
 			}
 			return false;
 		}
-		inline bool operator>(const BitMahjong& target)
+		inline bool operator>(const BitMahjong target) const
 		{
 			if (_fir_data > target._fir_data)
 			{
@@ -1121,7 +1121,7 @@ namespace gadt
 			}
 			return false;
 		}
-		inline bool operator<=(const BitMahjong& target)
+		inline bool operator<=(const BitMahjong target) const
 		{
 			if (_fir_data < target._fir_data)
 			{
@@ -1133,7 +1133,7 @@ namespace gadt
 			}
 			return false;
 		}
-		inline bool operator>=(const BitMahjong& target)
+		inline bool operator>=(const BitMahjong target) const
 		{
 			if (_fir_data > target._fir_data)
 			{
