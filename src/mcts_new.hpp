@@ -38,8 +38,8 @@ namespace gadt
 	namespace mcts_new
 	{
 		//AgentIndex is the type index of each player, default is int8_t.
-		using AgentIndex = int8_t;
-		using UcbValueType = double;
+		using AgentIndex		= int8_t;
+		using UcbValueType		= double;
 
 		/*
 		* MemAllocator is a memory allocator, whose memory is preallocate at the time when the object is created.
@@ -199,18 +199,60 @@ namespace gadt
 		class MctsNode
 		{
 		public:											
-			using Node					= MctsNode<State, Action, Result, is_debug>;			//MctsNode
-			using Allocator				= MctsAllocator<MctsNode, is_debug>;					//MctsAllocate 
-			using ActionSet				= std::vector<Action>;									//ActionSet is the set of Action.
-			using NodePtrSet			= std::vector<MctsNode*>;								//ChildSet is the set of ptrs to child nodes.
-			using GetNewStateFunc		= std::function<State(const State&, const Action&)>;	//get a new state from previous state and action.
-			using MakeActionFunc		= std::function<void(const State&, ActionSet&)>;		//the function which create action set by the state.
-			using DetemineWinnerFunc	= std::function<AgentIndex(const Node&)>;				//detemine the winner of the giving node.
-			using CheckResultFunc		= std::function<AgentIndex(const State&)>;				//deal with the the simulation result in the backpropagation stage.
-			using BackPropagateFunc		= std::function<void(const Result&, Node&)>;			//modify values in the node by the result.
-			using UcbForParentFunc		= std::function<UcbValueType(const Node&)>;				//return ucb value for parent node.
-			using DefaultPolicyFunc		= std::function<Result(const Node&)>;					//get a result from node by excute default policy.
-			using AllowExtendFunc		= std::function<bool(const Node&)>;						//allow node to extend child node.
+			using Node			= typename MctsNode<State, Action, Result, is_debug>;		//MctsNode
+			using Allocator		= typename MctsAllocator<Node, is_debug>;					//MctsAllocate 
+			using ActionSet		= typename std::vector<Action>;								//ActionSet is the set of Action.
+			using NodePtrSet	= typename std::vector<MctsNode*>;							//ChildSet is the set of ptrs to child nodes.
+
+			//function package
+			struct FuncPackage
+			{
+			public:
+				using GetNewStateFunc		= std::function<State(const State&, const Action&)>;	//get a new state from previous state and action.
+				using MakeActionFunc		= std::function<void(const State&, ActionSet&)>;		//the function which create action set by the state.
+				using DetemineWinnerFunc	= std::function<AgentIndex(const State&)>;				//detemine the winner of the giving node.
+				using GetResultFunc			= std::function<Result(const State&, AgentIndex)>;		//get a result from state and winner.
+				using CheckResultFunc		= std::function<AgentIndex(const State&)>;				//deal with the the simulation result in the backpropagation stage.
+				using AllowUpdateValueFunc	= std::function<bool(const Result&, Node&)>;			//update values in the node by the result.
+				using UcbForParentFunc		= std::function<UcbValueType(const Node&)>;				//return ucb value for parent node.
+				using DefaultPolicyFunc		= std::function<Result(const Node&)>;					//get a result from node by excute default policy.
+				using AllowExtendFunc		= std::function<bool(const Node&)>;						//allow node to extend child node.
+
+			public:
+				const GetNewStateFunc		GetNewState;
+				const MakeActionFunc		MakeAction;
+				const DetemineWinnerFunc	DetemineWinner;
+				const GetResultFunc			GetResult;
+				const CheckResultFunc		CheckResult;
+				AllowUpdateValueFunc		AllowUpdateValue;
+				UcbForParentFunc			UcbForParent;
+				DefaultPolicyFunc			DefaultPolicy;
+				AllowExtendFunc				AllowExtend;
+
+			public:
+				FuncPackage(
+					GetNewStateFunc			_GetNewState,
+					MakeActionFunc			_MakeAction,
+					DetemineWinnerFunc		_DetemineWinner,
+					GetResultFunc			_GetResult,
+					CheckResultFunc			_CheckResult,
+					AllowUpdateValueFunc	_AllowUpdateValue,
+					UcbForParentFunc		_UcbForParent,
+					DefaultPolicyFunc		_DefaultPolicy,
+					AllowExtendFunc			_AllowExtend
+				):
+					GetNewState			(_GetNewState),
+					MakeAction			(_MakeAction),
+					DetemineWinner		(_DetemineWinner),
+					GetResult			(_GetResult),
+					CheckResult			(_CheckResult),
+					AllowUpdateValue	(_AllowUpdateValue),
+					UcbForParent		(_UcbForParent),
+					DefaultPolicy		(_DefaultPolicy),
+					AllowExtend			(_AllowExtend)
+				{
+				}
+			};
 
 		private:
 			State			_state;				//state of this node.
@@ -221,9 +263,6 @@ namespace gadt
 			uint8_t			_next_action_index;	//the index of next action.
 			ActionSet		_action_set;		//action set of this node.
 			NodePtrSet		_child_nodes;		//the ptr of child nodes.
-
-			const MakeActionFunc	_make_action;	//make action function would generate actions from current state.		
-			const CheckResultFunc	_check_result;	//check result function would return the winner of current state. 
 
 		public:
 			const State&		state()					const { return _state; }
@@ -284,6 +323,18 @@ namespace gadt
 				}
 			}
 
+			//increase visited time.
+			inline void incr_visited_time()
+			{
+				_visited_time++;
+			}
+
+			//increase win time.
+			inline void incr_win_time()
+			{
+				_win_time++;
+			}
+
 		public:
 			MctsNode(const State& state, AgentIndex owner_index) :
 				_state(state),
@@ -303,26 +354,58 @@ namespace gadt
 			}
 
 			//4.the simulation result is back propagated through the selected nodes to update their statistics.
-			void BackPropagation(const Result& result, BackPropagateFunc back_propagation)
+			void BackPropagation(const Result& result, const FuncPackage& func)
 			{
-				back_propagation(result, *this);
+				if (func.AllowUpdateValue(result, *this))
+				{
+					incr_win_time();
+				}
 			}
 
 			//3.simulation is run from the new node according to the default policy to produce a result.
-			Result SimulationProcess(DefaultPolicyFunc default_policy)
+			void SimulationProcess(Result& result, const FuncPackage& func)
 			{
-				return default_policy(*this);
+				result = func.DefaultPolicy(*this);
 			}
 
 			//2.one child node would be added to expand the tree, acccording to the available actions.
-			Result Expandsion()
+			void Expandsion(Result& result, const FuncPackage& func)
 			{
+				if (is_end_state())
+				{
+					result = func.GetResult(_state, _winner_index);//return the result of this node.
+				}
+
+
 			}
 
 			//1. select the most urgent expandable node,and get the result to update statistic.
-			Result Selection(Result& result)
+			void Selection(Result& result, const FuncPackage& func)
 			{
-				
+				incr_visited_time();
+
+				if (exist_unactivated_action())
+				{
+					Expandsion(result, func);
+				}
+				else
+				{
+					Node* max_ucb_child_node = _child_nodes[0];
+					UcbValueType max_ucb_value = 0;
+					for (Node* child_node : _child_nodes)
+					{
+						UcbValueType child_node_ucb_value = func.UcbForParent(*child_node);
+						if (child_node_ucb_value > max_ucb_value)
+						{
+							max_ucb_child_node = child_node;
+							max_ucb_value = child_node_ucb_value;
+						}
+					}
+					max_ucb_child_node->Selection(result, func);
+				}
+
+				//backpropagation process for this node.update value;
+				BackPropagation(result, func);
 			}
 		};
 
@@ -338,41 +421,48 @@ namespace gadt
 		class MctsSearch
 		{
 		public:
-			using Node					= MctsNode<State, Action, Result, is_debug>;							
-			using Allocator				= MctsAllocator<Node, is_debug>;					
-
-			using ActionSet				= std::vector<Action>;									//ActionSet is the set of Action
-			using NodePtrSet			= std::vector<Node*>;									//ChildSet is the set of ptrs to child nodes.
-			using GetNewStateFunc		= std::function<State(const State&, const Action&)>;	//get a new state from previous state and action.
-			using MakeActionFunc		= std::function<void(const State&, ActionSet&)>;		//the function which create action set by the state.
-			using DetemineWinnerFunc	= std::function<AgentIndex(const Node&)>;				//detemine the winner of the giving node.
-			using CheckResultFunc		= std::function<AgentIndex(const State&)>;				//deal with the the simulation result in the backpropagation stage.
-			using BackPropagateFunc		= std::function<void(const Result&, Node&)>;			//modify values in the node by the result.
-			using UcbForParentFunc		= std::function<UcbValueType(const Node&)>;				//return ucb value for parent node.
-			using DefaultPolicyFunc		= std::function<Result(const Node&)>;					//get a result from node by excute default policy.
-			using AllowExtendFunc		= std::function<bool(const Node&)>;						//allow node to extend child node.
-
-		public:
-			const GetNewStateFunc		GetNewState;
-			const MakeActionFunc		MakeAction;		
-			const DetemineWinnerFunc	DetemineWinner;
-			CheckResultFunc				CheckResult;
-			BackPropagateFunc			BackPropagate;
-			UcbForParentFunc			UcbForParent;
-			DefaultPolicyFunc			DefaultPolicy;
-			AllowExtendFunc				AllowExtend;
+			using Node			= typename MctsNode<State, Action, Result, is_debug>;							
+			using Allocator		= typename Node::Allocator;
+			using ActionSet		= typename Node::ActionSet;								//ActionSet is the set of Action
+			using NodePtrSet	= typename Node::NodePtrSet;								//ChildSet is the set of ptrs to child nodes.
+			
+		private:
+			using FuncPackage	= typename Node::FuncPackage;
+			struct DefaultFuncPackage
+			{
+				typename FuncPackage::GetResultFunc			GetResult;
+				typename FuncPackage::CheckResultFunc		CheckResult;
+				typename FuncPackage::AllowUpdateValueFunc	AllowUpdateValue;
+				typename FuncPackage::UcbForParentFunc		UcbForParent;
+				typename FuncPackage::DefaultPolicyFunc		DefaultPolicy;
+				typename FuncPackage::AllowExtendFunc		AllowExtendFunc;
+			};
 
 		private:
+			FuncPackage		_func_package;			//function package of the search.
 			Allocator&		_allocator;				//the allocator for the search.
 			const bool		_private_allocator;		//use private allocator.
 			double			_timeout;				//set timeout (seconds).
 			size_t			_max_iteration;			//set max iteration times.
 			bool			_enable_gc;				//allow garbage collection if the tree run out of memory.
 			
+		public:
+			//package of default functions.
+			static const DefaultFuncPackage	DefaultFunc =
+			{
+				typename FuncPackage::GetResultFunc(),
+				typename FuncPackage::CheckResultFunc(),
+				typename FuncPackage::AllowUpdateValueFunc(),
+				typename FuncPackage::UcbForParentFunc(),
+				typename FuncPackage::DefaultPolicyFunc(),
+				typename FuncPackage::AllowExtendFunc()
+			};
+
 		private:
 			//define functions as default.
 			void FuncInit()
 			{
+				//initilize functions.
 			}
 
 			//excute iteration function.
@@ -419,9 +509,9 @@ namespace gadt
 		public:
 			//use private allocator.
 			MctsSearch(
-				MakeActionFunc _MakeAction, 
-				CheckResultFunc _CheckResult, 
-				DetemineWinnerFunc _DetemineWinner,
+				typename FuncPackage::MakeActionFunc _MakeAction,
+				typename FuncPackage::CheckResultFunc _CheckResult,
+				typename FuncPackage::DetemineWinnerFunc _DetemineWinner,
 				size_t max_node
 			):
 				_allocator(*(new Allocator(max_node))),
@@ -435,9 +525,9 @@ namespace gadt
 
 			//use public allocator.
 			MctsSearch(
-				MakeActionFunc _MakeAction,
-				CheckResultFunc _CheckResult,
-				DetemineWinnerFunc _DetemineWinner,
+				typename FuncPackage::MakeActionFunc _MakeAction,
+				typename FuncPackage::CheckResultFunc _CheckResult,
+				typename FuncPackage::DetemineWinnerFunc _DetemineWinner,
 				Allocator allocator
 			):
 				_allocator(allocator),
@@ -456,8 +546,6 @@ namespace gadt
 					delete &_allocator;
 				}
 			}
-
-		
 
 			//do search with default parameters.
 			Action DoMcts(const State root_state, AgentIndex owner_index)

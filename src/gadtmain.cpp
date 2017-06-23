@@ -78,6 +78,10 @@ void ShellDefine()
 	}, "run all test");
 
 	test->AddFunction("hey", [](int)->void {
+		auto GetNewState = [](const int& a, const int& b)->int {return 1; };
+		auto MakeAction = [](const int& a, std::vector<int>)->void {};
+		auto DetemineWinner = [](const int& a)->mcts_new::AgentIndex {return 1; };
+		mcts_new::MctsSearch<int, int, int> ms(GetNewState, MakeAction, DetemineWinner, 10000);
 	}, "hey");
 
 	//Start Shell
