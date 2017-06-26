@@ -39,7 +39,7 @@ namespace gadt
 	{
 		//AgentIndex is the type index of each player, default is int8_t.
 		using AgentIndex		= int8_t;
-		using UcbValueType		= double;
+		using UcbValue			= double;
 
 		/*
 		* MemAllocator is a memory allocator, whose memory is preallocate at the time when the object is created.
@@ -210,53 +210,74 @@ namespace gadt
 			public:
 				using GetNewStateFunc		= std::function<State(const State&, const Action&)>;	//get a new state from previous state and action.
 				using MakeActionFunc		= std::function<void(const State&, ActionSet&)>;		//the function which create action set by the state.
-				using DetemineWinnerFunc	= std::function<AgentIndex(const State&)>;				//detemine the winner of the giving node.
-				using GetResultFunc			= std::function<Result(const State&, AgentIndex)>;		//get a result from state and winner.
-				using CheckResultFunc		= std::function<AgentIndex(const State&)>;				//deal with the the simulation result in the backpropagation stage.
-				using AllowUpdateValueFunc	= std::function<bool(const Result&, Node&)>;			//update values in the node by the result.
-				using UcbForParentFunc		= std::function<UcbValueType(const Node&)>;				//return ucb value for parent node.
-				using DefaultPolicyFunc		= std::function<Result(const Node&)>;					//get a result from node by excute default policy.
+				using DetemineWinnerFunc	= std::function<AgentIndex(const State&)>;				//return no_winner_index if a state is not terminal state.
+				using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;		//get a result from state and winner.
+				using AllowUpdateValueFunc	= std::function<bool(const Result&, const State&)>;		//update values in the node by the result.
+				using UcbForParentFunc		= std::function<UcbValue(const Node&, const Node&)>;	//return ucb value for parent node.
+				using DefaultPolicyFunc		= std::function<const Action&(const ActionSet&)>;		//the default policy to select action.
 				using AllowExtendFunc		= std::function<bool(const Node&)>;						//allow node to extend child node.
+				using AllowExcuteGcFunc		= std::function<bool(const Node&)>;						//the condition to excute gc in a node.
+				using ValueForRootFunc		= std::function<UcbValue(const Node&)>;					//select best action of root node after iterations finished.
 
 			public:
+				//necessary functions.
 				const GetNewStateFunc		GetNewState;
 				const MakeActionFunc		MakeAction;
 				const DetemineWinnerFunc	DetemineWinner;
-				const GetResultFunc			GetResult;
-				const CheckResultFunc		CheckResult;
-				AllowUpdateValueFunc		AllowUpdateValue;
+				const StateToResultFunc		StateToResult;
+				const AllowUpdateValueFunc	AllowUpdateValue;
+
+				//default functions.
 				UcbForParentFunc			UcbForParent;
 				DefaultPolicyFunc			DefaultPolicy;
 				AllowExtendFunc				AllowExtend;
+				AllowExcuteGcFunc			AllowExcuteGc;
+				ValueForRootFunc			ValueForRoot;
 
 			public:
 				FuncPackage(
 					GetNewStateFunc			_GetNewState,
 					MakeActionFunc			_MakeAction,
 					DetemineWinnerFunc		_DetemineWinner,
-					GetResultFunc			_GetResult,
-					CheckResultFunc			_CheckResult,
+					StateToResultFunc		_StateToResult,
 					AllowUpdateValueFunc	_AllowUpdateValue,
 					UcbForParentFunc		_UcbForParent,
 					DefaultPolicyFunc		_DefaultPolicy,
-					AllowExtendFunc			_AllowExtend
+					AllowExtendFunc			_AllowExtend,
+					AllowExcuteGcFunc		_AllowExcuteGc,
+					ValueForRootFunc		_ValueForRoot
 				):
 					GetNewState			(_GetNewState),
 					MakeAction			(_MakeAction),
 					DetemineWinner		(_DetemineWinner),
-					GetResult			(_GetResult),
-					CheckResult			(_CheckResult),
+					StateToResult		(_StateToResult),
 					AllowUpdateValue	(_AllowUpdateValue),
 					UcbForParent		(_UcbForParent),
 					DefaultPolicy		(_DefaultPolicy),
-					AllowExtend			(_AllowExtend)
+					AllowExtend			(_AllowExtend),
+					AllowExcuteGc		(_AllowExcuteGc),
+					ValueForRoot		(_ValueForRoot)
+				{
+				}
+
+				FuncPackage(
+					GetNewStateFunc			_GetNewState,
+					MakeActionFunc			_MakeAction,
+					DetemineWinnerFunc		_DetemineWinner,
+					StateToResultFunc		_StateToResult,
+					AllowUpdateValueFunc	_AllowUpdateValue
+				):
+					GetNewState(_GetNewState),
+					MakeAction(_MakeAction),
+					DetemineWinner(_DetemineWinner),
+					StateToResult(_StateToResult),
+					AllowUpdateValue(_AllowUpdateValue)
 				{
 				}
 			};
 
 		private:
 			State			_state;				//state of this node.
-			AgentIndex		_owner_index;		//the belonging player index of this index.
 			AgentIndex		_winner_index;		//the winner index of the state.
 			uint32_t		_visited_time;		//how many times that this node had been visited.
 			uint32_t		_win_time;			//win time accmulated by the simulation.
@@ -266,7 +287,6 @@ namespace gadt
 
 		public:
 			const State&		state()					const { return _state; }
-			const AgentIndex	owner_index()			const { return _owner_index; }
 			const AgentIndex	winner_index()			const { return _winner_index; }
 			const uint32_t		visited_time()			const { return _visited_time; }
 			const uint32_t		win_time()				const { return _win_time; }
@@ -280,6 +300,7 @@ namespace gadt
 		private:
 			//a value means no winner, which is differ from any other AgentIndex.
 			static const AgentIndex _no_winner_index = 0;
+			static const size_t		_default_policy_warning_length = 1000;
 
 			//exist unactived action in the action set.
 			inline bool exist_unactivated_action() const
@@ -291,6 +312,18 @@ namespace gadt
 			inline const Action& next_action()
 			{
 				return _action_set[_next_action_index++];
+			}
+
+			//set the ptr of next child.
+			inline void set_next_child(Node* ptr)
+			{
+				_child_nodes[_next_action_index] = ptr;
+			}
+
+			//move the cursor to next action.
+			inline void to_next_action()
+			{
+				_next_action_index++;
 			}
 
 			//return true if the state is the terminal-state of the game.
@@ -339,7 +372,7 @@ namespace gadt
 			MctsNode(const State& state, AgentIndex owner_index) :
 				_state(state),
 				_owner_index(owner_index),
-				_visited_time(0),
+				_visited_time(1),
 				_win_time(0),
 				_next_action_index(0)
 			{
@@ -365,22 +398,45 @@ namespace gadt
 			//3.simulation is run from the new node according to the default policy to produce a result.
 			void SimulationProcess(Result& result, const FuncPackage& func)
 			{
-				result = func.DefaultPolicy(*this);
+				State state = _state;	//copy
+				ActionSet actions;
+				for (size_t i = 0;;i++)
+				{
+					if (is_debug){GADT_WARNING_CHECK(i > _default_policy_warning_length, "MW: out of default policy process max length");}
+					AgentIndex winner = func.DetemineWinner(state);
+					if (winner != _no_winner_index)
+					{
+						result = func.StateToResult(state, winner);
+						break;
+					}
+					actions.clear();
+					actions = func.MakeAction(state, actions);
+					const Action& action = func.DefaultPolicy(actions);
+					state = func.GetNewState(state, action);
+				}
+
+				BackPropagation(result, func);		//update the new value itself.
 			}
 
 			//2.one child node would be added to expand the tree, acccording to the available actions.
-			void Expandsion(Result& result, const FuncPackage& func)
+			void Expandsion(Result& result, Allocator& allocator ,const FuncPackage& func)
 			{
 				if (is_end_state())
 				{
-					result = func.GetResult(_state, _winner_index);//return the result of this node.
+					result = func.StateToResult(_state, _winner_index);//return the result of this node.
+					return;
 				}
-
-
+				else
+				{
+					Node* new_node = allocator.construct(func.GetNewState(_state, next_action()));
+					set_next_child(new_node);
+					to_next_action();
+					new_node->SimulationProcess(result, func);
+				}
 			}
 
 			//1. select the most urgent expandable node,and get the result to update statistic.
-			void Selection(Result& result, const FuncPackage& func)
+			void Selection(Result& result, Allocator& allocator,const FuncPackage& func)
 			{
 				incr_visited_time();
 
@@ -391,10 +447,10 @@ namespace gadt
 				else
 				{
 					Node* max_ucb_child_node = _child_nodes[0];
-					UcbValueType max_ucb_value = 0;
+					UcbValue max_ucb_value = 0;
 					for (Node* child_node : _child_nodes)
 					{
-						UcbValueType child_node_ucb_value = func.UcbForParent(*child_node);
+						UcbValue child_node_ucb_value = func.UcbForParent(*this, *child_node);
 						if (child_node_ucb_value > max_ucb_value)
 						{
 							max_ucb_child_node = child_node;
@@ -430,12 +486,11 @@ namespace gadt
 			using FuncPackage	= typename Node::FuncPackage;
 			struct DefaultFuncPackage
 			{
-				typename FuncPackage::GetResultFunc			GetResult;
-				typename FuncPackage::CheckResultFunc		CheckResult;
-				typename FuncPackage::AllowUpdateValueFunc	AllowUpdateValue;
 				typename FuncPackage::UcbForParentFunc		UcbForParent;
 				typename FuncPackage::DefaultPolicyFunc		DefaultPolicy;
 				typename FuncPackage::AllowExtendFunc		AllowExtendFunc;
+				typename FuncPackage::AllowExcuteGcFunc		AllowExcuteGc;
+				typename FuncPackage::ValueForRootFunc	ValueForRoot;
 			};
 
 		private:
@@ -448,21 +503,48 @@ namespace gadt
 			
 		public:
 			//package of default functions.
-			static const DefaultFuncPackage	DefaultFunc =
-			{
-				typename FuncPackage::GetResultFunc(),
-				typename FuncPackage::CheckResultFunc(),
-				typename FuncPackage::AllowUpdateValueFunc(),
-				typename FuncPackage::UcbForParentFunc(),
-				typename FuncPackage::DefaultPolicyFunc(),
-				typename FuncPackage::AllowExtendFunc()
-			};
+			const DefaultFuncPackage DefaultFunc;
 
 		private:
 			//define functions as default.
-			void FuncInit()
+			DefaultFuncPackage DefaultFuncInit()
 			{
-				//initilize functions.
+				auto UcbForParent = [](const Node& parent, const Node& child)->UcbValue
+				{
+					UcbValue avg = 1 - (static_cast<UcbValue>(child.win_time()) / static_cast<UcbValue>(child.visited_time()));
+					UcbValue bound = sqrt(2 * log10(static_cast<UcbValue>(parent.visited_time())) / static_cast<UcbValue>(child.visited_time()));
+					return avg + bound;
+				};
+				auto DefaultPolicy = [](const ActionSet& actions)->const Action&
+				{
+					if (is_debug) 
+					{
+						GADT_WARNING_CHECK(actions.size() == 0, "MW:empty action set");
+					}
+					return actions[rand() % actions.size()];
+				};
+				auto AllowExtend = [](const Node& node)->bool { return true; };
+				auto AllowExcuteGc = [](const Node& node)->bool
+				{
+					if (node.visited_time() < 10)
+					{
+						return true;
+					}
+					return false;
+				};
+				auto ValueForRoot = [](const Node& node)->UcbValue
+				{
+					return static_cast<UcbValue>(node.visited_time());
+				};
+
+				//TODO
+				return {
+					UcbForParent,
+					DefaultPolicy,
+					AllowExtend,
+					AllowExcuteGc,
+					ValueForRoot
+				};
 			}
 
 			//excute iteration function.
@@ -497,44 +579,62 @@ namespace gadt
 						}
 					}
 
-					
+					Result new_result;
+					root_node.Selection(new_result, _allocator, _func_package);
 				}
 
 				//log info if is debuging.
 
 
 				//return the best result
+				UcbValue max_value = func.ValueForRoot(*root_node.child_node(0));
+				
+				
 			}
 
 		public:
 			//use private allocator.
 			MctsSearch(
+				typename FuncPackage::GetNewStateFunc _GetNewState,
 				typename FuncPackage::MakeActionFunc _MakeAction,
-				typename FuncPackage::CheckResultFunc _CheckResult,
 				typename FuncPackage::DetemineWinnerFunc _DetemineWinner,
+				typename FuncPackage::StateToResultFunc _StateToResult,
+				typename FuncPackage::AllowUpdateValueFunc _AllowUpdateValue,
+				//typename FuncPackage::CheckResultFunc _CheckResult,
 				size_t max_node
 			):
 				_allocator(*(new Allocator(max_node))),
 				_private_allocator(true),
-				MakeAction(_MakeAction),
-				CheckResult(_CheckResult),
-				DetemineWinner(_DetemineWinner)
+				_func_package(
+					_GetNewState,
+					_MakeAction,
+					_DetemineWinner,
+					_StateToResult,
+					_AllowUpdateValue
+				),
+				DefaultFunc(DefaultFuncInit())
 			{
-				FuncInit();
 			}
 
 			//use public allocator.
 			MctsSearch(
+				typename FuncPackage::GetNewStateFunc _GetNewState,
 				typename FuncPackage::MakeActionFunc _MakeAction,
-				typename FuncPackage::CheckResultFunc _CheckResult,
 				typename FuncPackage::DetemineWinnerFunc _DetemineWinner,
+				typename FuncPackage::StateToResultFunc _StateToResult,
+				typename FuncPackage::AllowUpdateValueFunc _AllowUpdateValue,
 				Allocator allocator
 			):
 				_allocator(allocator),
-				_private_allocator(false),
-				MakeAction(_MakeAction),
-				CheckResult(_CheckResult),
-				DetemineWinner(_DetemineWinner)
+				_private_allocator(false), 
+				_func_package(
+					_GetNewState,
+					_MakeAction,
+					_DetemineWinner,
+					_StateToResult,
+					_AllowUpdateValue
+				),
+				DefaultFunc(DefaultFuncInit())
 			{
 			}
 

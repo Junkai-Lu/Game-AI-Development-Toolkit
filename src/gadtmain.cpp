@@ -81,7 +81,9 @@ void ShellDefine()
 		auto GetNewState = [](const int& a, const int& b)->int {return 1; };
 		auto MakeAction = [](const int& a, std::vector<int>)->void {};
 		auto DetemineWinner = [](const int& a)->mcts_new::AgentIndex {return 1; };
-		mcts_new::MctsSearch<int, int, int> ms(GetNewState, MakeAction, DetemineWinner, 10000);
+		auto StateToResult = [](const int& a, int b)->int {return 1; };
+		auto AllowUpdateValue = [](const int& a, const int& b)->bool {return true; };
+		mcts_new::MctsSearch<int, int, int> ms(GetNewState, MakeAction, DetemineWinner, StateToResult, AllowUpdateValue, 10000);
 	}, "hey");
 
 	//Start Shell
