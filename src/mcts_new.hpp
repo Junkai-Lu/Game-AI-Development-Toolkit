@@ -37,9 +37,19 @@ namespace gadt
 {
 	namespace mcts_new
 	{
+		
+
 		//AgentIndex is the type index of each player, default is int8_t.
 		using AgentIndex		= int8_t;
 		using UcbValue			= double;
+
+		namespace policy
+		{
+			inline UcbValue UCB1(UcbValue average_reward, UcbValue overall_time, UcbValue played_time, UcbValue c = 1)
+			{
+				return average_reward + c * static_cast<UcbValue>(sqrt(2 * log10(overall_time) / played_time));
+			}
+		}
 
 		/*
 		* MemAllocator is a memory allocator, whose memory is preallocate at the time when the object is created.
@@ -213,11 +223,11 @@ namespace gadt
 				using DetemineWinnerFunc	= std::function<AgentIndex(const State&)>;				//return no_winner_index if a state is not terminal state.
 				using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;		//get a result from state and winner.
 				using AllowUpdateValueFunc	= std::function<bool(const Result&, const State&)>;		//update values in the node by the result.
-				using UcbForParentFunc		= std::function<UcbValue(const Node&, const Node&)>;	//return ucb value for parent node.
+				using TreePolicyValueFunc	= std::function<UcbValue(const Node&, const Node&)>;	//value of child node in selection process. the highest would be seleced.
 				using DefaultPolicyFunc		= std::function<const Action&(const ActionSet&)>;		//the default policy to select action.
 				using AllowExtendFunc		= std::function<bool(const Node&)>;						//allow node to extend child node.
 				using AllowExcuteGcFunc		= std::function<bool(const Node&)>;						//the condition to excute gc in a node.
-				using ValueForRootFunc		= std::function<UcbValue(const Node&)>;					//select best action of root node after iterations finished.
+				using ValueForRootNodeFunc	= std::function<UcbValue(const Node&)>;					//select best action of root node after iterations finished.
 
 			public:
 				//necessary functions.
@@ -228,11 +238,11 @@ namespace gadt
 				const AllowUpdateValueFunc	AllowUpdateValue;
 
 				//default functions.
-				UcbForParentFunc			UcbForParent;
+				TreePolicyValueFunc			TreePolicyValue;
 				DefaultPolicyFunc			DefaultPolicy;
 				AllowExtendFunc				AllowExtend;
 				AllowExcuteGcFunc			AllowExcuteGc;
-				ValueForRootFunc			ValueForRoot;
+				ValueForRootNodeFunc		ValueForRootNode;
 
 			public:
 				FuncPackage(
@@ -241,22 +251,22 @@ namespace gadt
 					DetemineWinnerFunc		_DetemineWinner,
 					StateToResultFunc		_StateToResult,
 					AllowUpdateValueFunc	_AllowUpdateValue,
-					UcbForParentFunc		_UcbForParent,
+					TreePolicyValueFunc		_TreePolicyValue,
 					DefaultPolicyFunc		_DefaultPolicy,
 					AllowExtendFunc			_AllowExtend,
 					AllowExcuteGcFunc		_AllowExcuteGc,
-					ValueForRootFunc		_ValueForRoot
+					ValueForRootNodeFunc		_ValueForRootNode
 				):
 					GetNewState			(_GetNewState),
 					MakeAction			(_MakeAction),
 					DetemineWinner		(_DetemineWinner),
 					StateToResult		(_StateToResult),
 					AllowUpdateValue	(_AllowUpdateValue),
-					UcbForParent		(_UcbForParent),
+					TreePolicyValue		(_TreePolicyValue),
 					DefaultPolicy		(_DefaultPolicy),
 					AllowExtend			(_AllowExtend),
 					AllowExcuteGc		(_AllowExcuteGc),
-					ValueForRoot		(_ValueForRoot)
+					ValueForRootNode	(_ValueForRootNode)
 				{
 				}
 
@@ -267,11 +277,11 @@ namespace gadt
 					StateToResultFunc		_StateToResult,
 					AllowUpdateValueFunc	_AllowUpdateValue
 				):
-					GetNewState(_GetNewState),
-					MakeAction(_MakeAction),
-					DetemineWinner(_DetemineWinner),
-					StateToResult(_StateToResult),
-					AllowUpdateValue(_AllowUpdateValue)
+					GetNewState			(_GetNewState),
+					MakeAction			(_MakeAction),
+					DetemineWinner		(_DetemineWinner),
+					StateToResult		(_StateToResult),
+					AllowUpdateValue	(_AllowUpdateValue)
 				{
 				}
 			};
@@ -332,6 +342,18 @@ namespace gadt
 				return _winner_index != _no_winner_index;
 			}
 
+			//increase visited time.
+			inline void incr_visited_time()
+			{
+				_visited_time++;
+			}
+
+			//increase win time.
+			inline void incr_win_time()
+			{
+				_win_time++;
+			}
+
 			//free the node from allocator.
 			void FreeFromAllocator(Allocator& allocator)
 			{
@@ -348,7 +370,7 @@ namespace gadt
 				if (is_debug)
 				{
 					bool b = allocator.free(this);
-					GADT_WARNING_CHECK(b == false, "free child node failed.");
+					GADT_CHECK_WARNING(b == false, "MW105: free child node failed.");
 				}
 				else
 				{
@@ -356,22 +378,9 @@ namespace gadt
 				}
 			}
 
-			//increase visited time.
-			inline void incr_visited_time()
-			{
-				_visited_time++;
-			}
-
-			//increase win time.
-			inline void incr_win_time()
-			{
-				_win_time++;
-			}
-
 		public:
-			MctsNode(const State& state, AgentIndex owner_index) :
+			MctsNode(const State& state) :
 				_state(state),
-				_owner_index(owner_index),
 				_visited_time(1),
 				_win_time(0),
 				_next_action_index(0)
@@ -402,7 +411,7 @@ namespace gadt
 				ActionSet actions;
 				for (size_t i = 0;;i++)
 				{
-					if (is_debug){GADT_WARNING_CHECK(i > _default_policy_warning_length, "MW: out of default policy process max length");}
+					if (is_debug){GADT_CHECK_WARNING(i > _default_policy_warning_length, "MW103: out of default policy process max length.");}
 					AgentIndex winner = func.DetemineWinner(state);
 					if (winner != _no_winner_index)
 					{
@@ -450,7 +459,7 @@ namespace gadt
 					UcbValue max_ucb_value = 0;
 					for (Node* child_node : _child_nodes)
 					{
-						UcbValue child_node_ucb_value = func.UcbForParent(*this, *child_node);
+						UcbValue child_node_ucb_value = func.TreePolicyValue(*this, *child_node);
 						if (child_node_ucb_value > max_ucb_value)
 						{
 							max_ucb_child_node = child_node;
@@ -486,11 +495,11 @@ namespace gadt
 			using FuncPackage	= typename Node::FuncPackage;
 			struct DefaultFuncPackage
 			{
-				typename FuncPackage::UcbForParentFunc		UcbForParent;
-				typename FuncPackage::DefaultPolicyFunc		DefaultPolicy;
-				typename FuncPackage::AllowExtendFunc		AllowExtendFunc;
-				typename FuncPackage::AllowExcuteGcFunc		AllowExcuteGc;
-				typename FuncPackage::ValueForRootFunc	ValueForRoot;
+				typename FuncPackage::TreePolicyValueFunc		TreePolicyValue;
+				typename FuncPackage::DefaultPolicyFunc			DefaultPolicy;
+				typename FuncPackage::AllowExtendFunc			AllowExtend;
+				typename FuncPackage::AllowExcuteGcFunc			AllowExcuteGc;
+				typename FuncPackage::ValueForRootNodeFunc		ValueForRootNode;
 			};
 
 		private:
@@ -509,48 +518,53 @@ namespace gadt
 			//define functions as default.
 			DefaultFuncPackage DefaultFuncInit()
 			{
-				auto UcbForParent = [](const Node& parent, const Node& child)->UcbValue
-				{
-					UcbValue avg = 1 - (static_cast<UcbValue>(child.win_time()) / static_cast<UcbValue>(child.visited_time()));
-					UcbValue bound = sqrt(2 * log10(static_cast<UcbValue>(parent.visited_time())) / static_cast<UcbValue>(child.visited_time()));
-					return avg + bound;
+				auto TreePolicyValue = [](const Node& parent, const Node& child)->UcbValue{
+					UcbValue avg = static_cast<UcbValue>(child.win_time()) / static_cast<UcbValue>(child.visited_time());
+					return policy::UCB1(avg, static_cast<UcbValue>(parent.visited_time()), static_cast<UcbValue>(child.visited_time()));
 				};
-				auto DefaultPolicy = [](const ActionSet& actions)->const Action&
-				{
+				auto DefaultPolicy = [](const ActionSet& actions)->const Action&{
 					if (is_debug) 
 					{
-						GADT_WARNING_CHECK(actions.size() == 0, "MW:empty action set");
+						GADT_CHECK_WARNING(actions.size() == 0, "MW104: empty action set during default policy.");
 					}
 					return actions[rand() % actions.size()];
 				};
-				auto AllowExtend = [](const Node& node)->bool { return true; };
-				auto AllowExcuteGc = [](const Node& node)->bool
-				{
+				auto AllowExtend = [](const Node& node)->bool {
+					return true; 
+				};
+				auto AllowExcuteGc = [](const Node& node)->bool{
 					if (node.visited_time() < 10)
 					{
 						return true;
 					}
 					return false;
 				};
-				auto ValueForRoot = [](const Node& node)->UcbValue
-				{
+				auto ValueForRootNode = [](const Node& node)->UcbValue{
 					return static_cast<UcbValue>(node.visited_time());
 				};
-
-				//TODO
 				return {
-					UcbForParent,
+					TreePolicyValue,
 					DefaultPolicy,
 					AllowExtend,
 					AllowExcuteGc,
-					ValueForRoot
+					ValueForRootNode
 				};
 			}
 
-			//excute iteration function.
-			Action ExcuteMCTS(State root_state, AgentIndex owner_index, double timeout, size_t max_iteration, bool enable_gc)
+			void FuncInit()
 			{
-				Node root_node(root_state, owner_index);
+				_func_package.TreePolicyValue	= DefaultFunc.TreePolicyValue;
+				_func_package.DefaultPolicy		= DefaultFunc.DefaultPolicy;
+				_func_package.AllowExtend		= DefaultFunc.AllowExtend;
+				_func_package.AllowExcuteGc		= DefaultFunc.AllowExcuteGc;
+				_func_package.ValueForRootNode	= DefaultFunc.ValueForRootNode;
+			}
+
+			//excute iteration function.
+			Action ExcuteMCTS(State root_state, double timeout, size_t max_iteration, bool enable_gc)
+			{
+				Node root_node(root_state);
+				ActionSet root_actions = root_node.action_set();
 				timer::TimePoint start_tp;
 				size_t iteration_time = 0;
 				for (iteration_time = 0; iteration_time < max_iteration; iteration_time++)
@@ -587,20 +601,34 @@ namespace gadt
 
 
 				//return the best result
-				UcbValue max_value = func.ValueForRoot(*root_node.child_node(0));
-				
-				
+				if (is_debug) { GADT_CHECK_WARNING(root_actions.size() == 0, "MW101: root node do not exist any available action."); }
+				UcbValue max_value = func.ValueForRootNode(*root_node.child_node(0));
+				size_t max_value_node_index = 0;
+				for (size_t i = 0; i < root_actions.size(); i++)
+				{
+					auto child_ptr = root_node.child_node(i);
+					if (child_ptr != nullptr)
+					{
+						UcbValue child_value = _func_package.ValueForRootNode(*child_ptr);
+						if (child_value > max_value)
+						{
+							max_value = child_value;
+							max_value_node_index = i;
+						}
+					}
+				}
+				if (is_debug) { GADT_CHECK_WARNING(root_actions.size() == 0, "MW102: best value for root node equal to 0."); }
+				return root_action[max_value_node_index];
 			}
 
 		public:
 			//use private allocator.
 			MctsSearch(
-				typename FuncPackage::GetNewStateFunc _GetNewState,
-				typename FuncPackage::MakeActionFunc _MakeAction,
-				typename FuncPackage::DetemineWinnerFunc _DetemineWinner,
-				typename FuncPackage::StateToResultFunc _StateToResult,
-				typename FuncPackage::AllowUpdateValueFunc _AllowUpdateValue,
-				//typename FuncPackage::CheckResultFunc _CheckResult,
+				typename FuncPackage::GetNewStateFunc		_GetNewState,
+				typename FuncPackage::MakeActionFunc		_MakeAction,
+				typename FuncPackage::DetemineWinnerFunc	_DetemineWinner,
+				typename FuncPackage::StateToResultFunc		_StateToResult,
+				typename FuncPackage::AllowUpdateValueFunc	_AllowUpdateValue,
 				size_t max_node
 			):
 				_allocator(*(new Allocator(max_node))),
@@ -614,15 +642,16 @@ namespace gadt
 				),
 				DefaultFunc(DefaultFuncInit())
 			{
+				FuncInit();
 			}
 
 			//use public allocator.
 			MctsSearch(
-				typename FuncPackage::GetNewStateFunc _GetNewState,
-				typename FuncPackage::MakeActionFunc _MakeAction,
-				typename FuncPackage::DetemineWinnerFunc _DetemineWinner,
-				typename FuncPackage::StateToResultFunc _StateToResult,
-				typename FuncPackage::AllowUpdateValueFunc _AllowUpdateValue,
+				typename FuncPackage::GetNewStateFunc		_GetNewState,
+				typename FuncPackage::MakeActionFunc		_MakeAction,
+				typename FuncPackage::DetemineWinnerFunc	_DetemineWinner,
+				typename FuncPackage::StateToResultFunc		_StateToResult,
+				typename FuncPackage::AllowUpdateValueFunc	_AllowUpdateValue,
 				Allocator allocator
 			):
 				_allocator(allocator),
@@ -636,6 +665,7 @@ namespace gadt
 				),
 				DefaultFunc(DefaultFuncInit())
 			{
+				FuncInit();
 			}
 
 			//deconstructor function
@@ -648,15 +678,15 @@ namespace gadt
 			}
 
 			//do search with default parameters.
-			Action DoMcts(const State root_state, AgentIndex owner_index)
+			Action DoMcts(const State root_state)
 			{
-				return ExcuteMCTS(root_state, owner_index, _timeout, _max_iteration, _enable_gc);
+				return ExcuteMCTS(root_state, _timeout, _max_iteration, _enable_gc);
 			}
 
 			//do search with custom parameters.
-			Action DoMcts(const State root_state, AgentIndex owner_index, double timeout, size_t max_iteration, bool enable_gc)
+			Action DoMcts(const State root_state, double timeout, size_t max_iteration, bool enable_gc)
 			{
-				return ExcuteMCTS(root_state, owner_index, timeout, max_iteration, enable_gc);
+				return ExcuteMCTS(root_state, timeout, max_iteration, enable_gc);
 			}
 		};
 	}

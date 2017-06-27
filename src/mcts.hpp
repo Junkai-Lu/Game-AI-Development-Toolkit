@@ -61,7 +61,7 @@ namespace gadt
 					make_action_func(state, _action_vec);
 					if (debug_model)
 					{
-						GADT_WARNING_CHECK(_action_vec.size() == 0, "wrong make action func");
+						GADT_CHECK_WARNING(_action_vec.size() == 0, "wrong make action func");
 					}
 				}
 			}
@@ -428,7 +428,7 @@ namespace gadt
 					{
 						//default policy should not be execute in a end state.
 						t_StateInfo original_state_info(temp_state);
-						GADT_WARNING_CHECK(original_state_info.is_end_state(), "do default policy in a end state.");
+						GADT_CHECK_WARNING(original_state_info.is_end_state(), "do default policy in a end state.");
 					}
 
 					for (;;)
@@ -495,7 +495,7 @@ namespace gadt
 				t_StateInfo root_info = *root_node->state_info();//copy
 				if (debug_model)
 				{
-					GADT_WARNING_CHECK(root_info.is_end_state(), "start from leaf node.");
+					GADT_CHECK_WARNING(root_info.is_end_state(), "start from leaf node.");
 				}
 				//iteration.
 				for (size_t i = 0; i < iteration_time; i++)

@@ -49,9 +49,9 @@
 
 //a marco use for parameters check.
 #ifdef GADT_WARNING
-	#define GADT_WARNING_CHECK(warning_condition, reason) gadt::console::WarningCheck(warning_condition, reason, __FILE__, __LINE__, __FUNCTION__);
+	#define GADT_CHECK_WARNING(warning_condition, reason) gadt::console::WarningCheck(warning_condition, reason, __FILE__, __LINE__, __FUNCTION__);
 #else
-	#define GADT_WARNING_CHECK(warning_condition, reason)
+	#define GADT_CHECK_WARNING(warning_condition, reason)
 #endif
 
 #include <stdlib.h>
@@ -325,7 +325,5 @@ namespace gadt
 		//remove dir and return true if remove successfully. 
 		bool RemoveDir(std::string path);
 	}
-
-	
 
 }
