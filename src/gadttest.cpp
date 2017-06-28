@@ -33,6 +33,69 @@ namespace gadt
 {
 	namespace unittest
 	{
+		namespace tic_tac_toe
+		{
+			State GetNewState(const State& state, const Action& action)
+			{
+				State temp = state;
+				temp.dot[action.x][action.y] = action.player;
+				return temp;
+			}
+
+			void MakeAction(const State& state, ActionSet& as)
+			{
+				for (size_t x = 0; x < 3; x++)
+				{
+					for (size_t y = 0; y < 3; y++)
+					{
+						if (state.dot[x][y] == EMPTY)
+						{
+							as.push_back({ x,y,state.next_player });
+						}
+					}
+				}
+			}
+
+			Player DetemineWinner(const State& state)
+			{
+				for (size_t i = 0; i < 3; i++)
+				{
+					if (state.dot[i][0] == state.dot[i][1] && state.dot[i][1] == state.dot[i][2] && state.dot[i][0] != EMPTY)
+					{
+						return state.dot[i][0];
+					}
+					if (state.dot[0][i] == state.dot[1][i] && state.dot[1][i] == state.dot[2][i] && state.dot[0][i] != EMPTY)
+					{
+						return state.dot[i][0];
+					}
+				}
+				if (state.dot[0][0] == state.dot[1][1] && state.dot[1][1] == state.dot[2][2] && state.dot[1][1] != EMPTY)
+				{
+					return state.dot[0][0];
+				}
+				if (state.dot[2][0] == state.dot[1][1] && state.dot[1][1] == state.dot[0][2] && state.dot[1][1] != EMPTY)
+				{
+					return state.dot[0][0];
+				}
+				return EMPTY;
+			}
+
+			Result StateToResult(const State& state, mcts_new::AgentIndex winner)
+			{
+				return (Result)winner;
+			}
+
+			bool AllowUpdateValue(const State& state, Result winner)
+			{
+				if (state.next_player != winner)
+				{
+					return true;
+				}
+				return false;
+			}
+
+		}
+
 		void TestBitBoard()
 		{
 			//test BitBoard<>
@@ -186,20 +249,26 @@ namespace gadt
 				int a;
 				int b;
 				int c;
+				//std::vector<int> num;
 
-				t(int _a, int _b, int _c):a(_a),b(_b),c(_c)
+				t(int _a, int _b, int _c) :
+					a(_a), 
+					b(_b), 
+					c(_c)//, 
+					//num{a,b,c}
 				{
-					//print();
 				}
 			};
 			t temp(1,2,3);
-			const size_t ub = 100;
-			mcts_new::MctsAllocator<t,false> hey(ub);
+			const size_t ub = 1000000;
+			mcts_new::MyMctsAllocator<t,false> hey(ub);
 			t* p;
 			for (int i = 0; i <ub; i++)
 			{
-				p = hey.construct(i,i*i,i*i*i);
+				t temp(i, i*i, i*i*i);
+				p = hey.construct(temp);
 				GADT_ASSERT(p->a, i);
+				//GADT_ASSERT(p->num[0], i);
 			}
 			GADT_ASSERT(hey.construct(1,2,3), nullptr);
 			GADT_ASSERT(hey.remain_size(), 0);
@@ -211,7 +280,7 @@ namespace gadt
 			GADT_ASSERT(hey.construct(1, 2, 3) != nullptr, true);
 			GADT_ASSERT(hey.free(p - 2), true);
 			GADT_ASSERT(hey.free(p - 1), true);
-			mcts_new::MctsAllocator<t, false> new_hey = hey;
+			mcts_new::MyMctsAllocator<t, false> new_hey = hey;
 			GADT_ASSERT(hey.remain_size(), 2);
 			GADT_ASSERT(new_hey.remain_size(), 2);
 			GADT_ASSERT(new_hey.is_full(), false);
@@ -220,13 +289,49 @@ namespace gadt
 			GADT_ASSERT(new_hey.construct(3, 2, 1) != nullptr, false);
 			GADT_ASSERT(new_hey.remain_size(), 0);
 			GADT_ASSERT(new_hey.is_full(), true);
+
+			mcts_new::MctsAllocator<tic_tac_toe::State, false> alloc(100);
+			GADT_ASSERT(alloc.construct()->dot[0][0], tic_tac_toe::EMPTY);
+		}
+		void TestMctsNode()
+		{
+			tic_tac_toe::State state;
+			mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>::FuncPackage func(
+				tic_tac_toe::GetNewState,
+				tic_tac_toe::MakeAction,
+				tic_tac_toe::DetemineWinner,
+				tic_tac_toe::StateToResult,
+				tic_tac_toe::AllowUpdateValue
+			);
+			mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> node(state, func);
+			mcts_new::MctsAllocator<mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>, true> alloc(100);
+
+			auto p = alloc.construct(state, func);
+			GADT_ASSERT(node.action_num(), 9);
+			GADT_ASSERT(p->action_num(), 9);
+		}
+		void TestMctsSearch()
+		{
+			mcts_new::MctsSearch<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mcts(
+				tic_tac_toe::GetNewState,
+				tic_tac_toe::MakeAction,
+				tic_tac_toe::DetemineWinner,
+				tic_tac_toe::StateToResult,
+				tic_tac_toe::AllowUpdateValue,
+				10000
+			);
+			tic_tac_toe::State state;
+			tic_tac_toe::Action action = mcts.DoMcts(state, 10, 10000, false);
+			std::cout << action.x << action.y << std::endl;
 		}
 
 		const std::vector<FuncPair> func_list = {
-			{ "bitboard", TestBitBoard },
-			{ "file", TestFileLib },
-			{ "index", TestIndex},
-			{ "alloc", TestMctsAlloc}
+			{ "bitboard"	,TestBitBoard	},
+			{ "file"		,TestFileLib	},
+			{ "index"		,TestIndex		},
+			{ "mctsalloc"	,TestMctsAlloc	},
+			{ "mctsnode"	,TestMctsNode	},
+			{ "mctssearch"	,TestMctsSearch	}
 		};
 		void RunTest(FuncPair func_pair)
 		{

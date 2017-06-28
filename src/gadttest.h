@@ -31,6 +31,52 @@ namespace gadt
 {
 	namespace unittest
 	{
+		namespace tic_tac_toe
+		{
+			enum Player :mcts_new::AgentIndex
+			{
+				BLACK = -1,
+				WHITE = 1,
+				EMPTY = 0
+			};
+
+			struct State
+			{
+			public:
+				Player dot[3][3];
+				Player next_player;
+
+				State():
+					next_player(BLACK)
+				{
+					for (size_t x = 0; x < 3; x++)
+					{
+						for (size_t y = 0; y < 3; y++)
+						{
+							dot[x][y] = EMPTY;
+						}
+					}
+				}
+			};
+
+			struct Action
+			{
+			public:
+				size_t x;
+				size_t y;
+				Player player;
+			};
+
+			using Result = Player;
+			using ActionSet = std::vector<Action>;
+
+			State GetNewState(const State& state, const Action& action);
+			void MakeAction(const State& state, ActionSet& as);
+			Player DetemineWinner(const State& state);
+			Result StateToResult(const State& state, mcts_new::AgentIndex winner);
+			bool AllowUpdateValue(const State& state, Result winner);
+		}
+
 		typedef std::pair<std::string, std::function<void()>> FuncPair;
 		extern const std::vector<FuncPair> func_list;
 		void RunTest(FuncPair func_pair);
