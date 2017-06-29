@@ -37,8 +37,6 @@ namespace gadt
 {
 	namespace mcts_new
 	{
-		
-
 		//AgentIndex is the type index of each player, default is int8_t.
 		using AgentIndex		= int8_t;
 		using UcbValue			= double;
@@ -62,87 +60,110 @@ namespace gadt
 		class MctsAllocator
 		{
 		private:
-			using pointer = T*;
-			using reference = T&;
-			
-			const size_t			_max_size;
-			std::queue<T*>			_available_ptr;
-			pointer					_elements;
+			using pointer		= T*;
+			using reference		= T&;
+			using index_queue	= std::queue<size_t>;
 
+			static const size_t		_size = sizeof(T);
+			const size_t			_count;
+			index_queue				_available_index;
+			pointer					_fir_element;
+			bool*					_exist_element;
 
 		private:
 			//get index by pointer.
 			inline size_t ptr_to_index(pointer p) const
 			{
 				uintptr_t t = uintptr_t(p);
-				uintptr_t fir = uintptr_t(_elements);
-				return size_t((t - fir) / sizeof(T));
-			}
-
-			//free space by index.
-			inline bool free_by_index(size_t index)
-			{
-				if (index < _max_size)
-				{
-					_available_ptr.push(_elements + index);
-					return true;
-				}
-				return false;
+				uintptr_t fir = uintptr_t(_fir_element);
+				return size_t((t - fir) / _size);
 			}
 
 			//get objecy prt by index. return nullptr if the index is overflow.
-			pointer get_by_index(size_t index) const
+			inline pointer index_to_ptr(size_t index) const
 			{
-				if (index < _max_size)
-				{
-					return _elements + index;
-				}
-				return nullptr;
+				return _fir_element + index;
+			}
+
+			//destory element by index.
+			inline void destory_by_index(size_t index)
+			{
+				index_to_ptr(index)->~T();
+				_available_index.push(index);
+				_exist_element[index] = false;
+			}
+
+			//clear available pointer queue
+			inline void clear_queue()
+			{
+				_available_index = index_queue();
+			}
+
+			inline void alloc_memory(size_t count)
+			{
+				//_fir_element = reinterpret_cast<T*>(new char[count * _size]);
+				_fir_element = reinterpret_cast<T*>(calloc(count, _size));
+				_exist_element = new bool[count];
+			}
+
+			inline void delete_memory()
+			{
+				delete[] _exist_element;
+				//delete[] _fir_element;
+				free(_fir_element);
+				_exist_element = nullptr;
+				_fir_element = nullptr;
 			}
 
 			//allocate memery by size.
-			void allocate(size_t max_size)
+			void allocate(size_t count)
 			{
-				_elements = reinterpret_cast<T*>(calloc(max_size, sizeof(T)));
-				//_elements = reinterpret_cast<T*>(new char[_max_size * sizeof(T)]);
+				alloc_memory(count);
+				for (size_t i = 0; i < count; i++)
+				{
+					_available_index.push(i);
+					_exist_element[i] = false;
+				}
 			}
 
 			void deallocate()
 			{
-				::free(_elements);
+				for (size_t i = 0; i < _count; i++)
+				{
+					if (_exist_element[i])
+					{
+						destory_by_index(i);
+					}
+				}
+				clear_queue();
+				delete_memory();
 			}
 
 		public:
-			//default constructor function.
-			MctsAllocator(size_t max_size):
-				_max_size(max_size)
+			//constructor function with allocation.
+			MctsAllocator(size_t count):
+				_count(count),
+				_available_index(),
+				_fir_element(nullptr),
+				_exist_element(nullptr)
 			{
-				allocate(max_size);
-				flush();
+				allocate(count);
 			}
 
 			//copy constructor function.
 			MctsAllocator(const MctsAllocator& target):
-				_max_size(target._max_size)
+				_count(target._count),
+				_available_index(target._available_index),
+				_fir_element(nullptr),
+				_exist_element(nullptr)
 			{
-				allocate(target._max_size);
-				std::vector<bool> is_available(_max_size, false);
-				std::queue<pointer> temp_ptrs = target._available_ptr;
-				while (!temp_ptrs.empty())
+				alloc_memory(_count);
+				for (size_t i = 0; i < _count; i++)
 				{
-					is_available[target.ptr_to_index(temp_ptrs.front())] = true;
-					temp_ptrs.pop();
-				}
-
-				for (size_t i = 0; i < _max_size; i++)
-				{
-					if (is_available[i])
+					this->_exist_element[i] = target._exist_element[i];
+					if (_exist_element[i])
 					{
-						this->free_by_index(i);
-					}
-					else
-					{
-						(*get_by_index(i)) = (*target.get_by_index(i));
+						*(index_to_ptr(i)) = *(target.index_to_ptr(i));
 					}
 				}
 			}
@@ -150,20 +171,23 @@ namespace gadt
 			//destructor function.
 			~MctsAllocator()
 			{
-				//delete[] _elements;
 				deallocate();
 			}
 
 			//free space by ptr, return true if free successfully.
-			inline bool free(pointer target)
+			inline bool destory(pointer target)
 			{
 				uintptr_t t = uintptr_t(target);
-				uintptr_t fir = uintptr_t(_elements);
-				uintptr_t last = uintptr_t(_elements + _max_size);
-				if (target != nullptr && t >= fir && t < last && ((t - fir) % sizeof(T) == 0))
+				uintptr_t fir = uintptr_t(_fir_element);
+				uintptr_t last = uintptr_t(_fir_element + _count);
+				if (target != nullptr && t >= fir && t < last && ((t - fir) % _size == 0))
 				{
-					_available_ptr.push(target);
-					return true;
+					size_t index = (t - fir) / sizeof(T);
+					if (_exist_element[index])
+					{
+						destory_by_index(index);
+						return true;
+					}
 				}
 				return false;
 			}
@@ -172,12 +196,15 @@ namespace gadt
 			template<class... Types>
 			pointer construct(Types&&... args)//T* constructor(const T& source)
 			{
-				if (_available_ptr.empty() != true)
+				if (_available_index.empty() != true)
 				{
-					pointer temp = _available_ptr.front();
-					*temp = T(std::forward<Types>(args)...);
-					_available_ptr.pop();
-					return temp;
+					size_t index = _available_index.front();
+					_exist_element[index] = true;
+					_available_index.pop();
+					pointer ptr = index_to_ptr(index);
+					T temp(std::forward<Types>(args)...);
+					*ptr = temp;
+					return ptr;
 				}
 				return nullptr;
 			}
@@ -185,27 +212,32 @@ namespace gadt
 			//total size of alloc.
 			inline size_t total_size() const
 			{
-				return _max_size;
+				return _count;
 			}
 
 			//remain size in the alloc.
 			inline size_t remain_size() const
 			{
-				return _available_ptr.size();
+				return _available_index.size();
 			}
 
 			//return true if there is not available space in this allocator.
 			inline bool is_full() const
 			{
-				return _available_ptr.size() == 0;
+				return _available_index.size() == 0;
 			}
 
 			//flush all datas in the allocator.
 			inline void flush()
 			{
-				for (size_t i = 0; i <_max_size; i++)
+				clear_queue();
+				for (size_t i = 0; i <_count; i++)
 				{
-					_available_ptr.push(_elements + i);
+					if (_exist_element[i] == true)
+					{
+						destory_by_index(i);
+					}
+					_available_index.push(_elements + i);
 				}
 			}
 		};
@@ -489,7 +521,7 @@ namespace gadt
 			//get next action.
 			inline const Action& next_action()
 			{
-				return _action_set[_next_action_index++];
+				return _action_set[_next_action_index];
 			}
 
 			//set the ptr of next child.
@@ -538,7 +570,7 @@ namespace gadt
 				if (is_debug)
 				{
 					bool b = allocator.free(this);
-					GADT_CHECK_WARNING(b == false, "MCTS Warning 105: free child node failed.");
+					GADT_CHECK_WARNING(b == false, "MCTS105: free child node failed.");
 				}
 				else
 				{
@@ -549,12 +581,16 @@ namespace gadt
 		public:
 			MctsNode(const State& state, const FuncPackage& func) :
 				_state(state),
+				_winner_index(func.DetemineWinner(state)),
 				_visited_time(1),
 				_win_time(0),
 				_next_action_index(0)
 			{
-				func.MakeAction(_state, _action_set);
-				_child_nodes.resize(_action_set.size(), nullptr);
+				if (!is_end_state())
+				{
+					func.MakeAction(_state, _action_set);
+					_child_nodes.resize(_action_set.size(), nullptr);
+				}
 			}
 
 			MctsNode(const MctsNode&) = delete;
@@ -581,7 +617,7 @@ namespace gadt
 				ActionSet actions;
 				for (size_t i = 0;;i++)
 				{
-					if (is_debug){GADT_CHECK_WARNING(i > _default_policy_warning_length, "MCTS Warning 103: out of default policy process max length.");}
+					if (is_debug){GADT_CHECK_WARNING(i > _default_policy_warning_length, "MCTS103: out of default policy process max length.");}
 					AgentIndex winner = func.DetemineWinner(state);
 					if (winner != _no_winner_index)
 					{
@@ -625,7 +661,7 @@ namespace gadt
 				}
 				else
 				{
-					if (is_debug) { GADT_CHECK_WARNING(_child_nodes.size() == 0, "MCTS Warning 106: empty action set during tree policy."); }
+					if (is_debug) { GADT_CHECK_WARNING(_child_nodes.size() == 0, "MCTS106: empty action set during tree policy."); }
 					Node* max_ucb_child_node = _child_nodes[0];
 					UcbValue max_ucb_value = 0;
 					for (Node* child_node : _child_nodes)
@@ -696,7 +732,7 @@ namespace gadt
 				auto DefaultPolicy = [](const ActionSet& actions)->const Action&{
 					if (is_debug) 
 					{
-						GADT_CHECK_WARNING(actions.size() == 0, "MCTS Warning 104: empty action set during default policy.");
+						GADT_CHECK_WARNING(actions.size() == 0, "MCTS104: empty action set during default policy.");
 					}
 					return actions[rand() % actions.size()];
 				};
@@ -741,7 +777,7 @@ namespace gadt
 				for (iteration_time = 0; iteration_time < max_iteration; iteration_time++)
 				{
 					//stop search if timout.
-					if (start_tp.time_since_created() > timeout)
+					if (start_tp.time_since_created() > timeout && is_debug == false)
 					{
 						break;//timeout, stop search.
 					}
@@ -772,12 +808,13 @@ namespace gadt
 
 
 				//return the best result
-				if (is_debug) { GADT_CHECK_WARNING(root_actions.size() == 0, "MCTS Warning 101: root node do not exist any available action."); }
-				UcbValue max_value = _func_package.ValueForRootNode(*root_node->child_node(0));
+				if (is_debug) { GADT_CHECK_WARNING(root_actions.size() == 0, "MCTS101: root node do not exist any available action."); }
+				UcbValue max_value = 0;
 				size_t max_value_node_index = 0;
 				for (size_t i = 0; i < root_actions.size(); i++)
 				{
 					auto child_ptr = root_node->child_node(i);
+					if (is_debug) { GADT_CHECK_WARNING(root_node->child_node(0) == nullptr, "MCTS107: empty child node under root node."); }
 					if (child_ptr != nullptr)
 					{
 						UcbValue child_value = _func_package.ValueForRootNode(*child_ptr);
@@ -788,7 +825,7 @@ namespace gadt
 						}
 					}
 				}
-				if (is_debug) { GADT_CHECK_WARNING(root_actions.size() == 0, "MCTS Warning 102: best value for root node equal to 0."); }
+				if (is_debug) { GADT_CHECK_WARNING(root_actions.size() == 0, "MCTS102: best value for root node equal to 0."); }
 				return root_actions[max_value_node_index];
 			}
 

@@ -39,6 +39,7 @@ namespace gadt
 			{
 				State temp = state;
 				temp.dot[action.x][action.y] = action.player;
+				temp.next_player = action.player == WHITE ? BLACK : WHITE;
 				return temp;
 			}
 
@@ -244,54 +245,36 @@ namespace gadt
 		}
 		void TestMctsAlloc()
 		{
-			struct t
+			struct TestClass
 			{
-				int a;
-				int b;
-				int c;
-				//std::vector<int> num;
+				size_t a;
+				size_t b;
+				size_t c;
+				//std::vector<size_t> num;
 
-				t(int _a, int _b, int _c) :
-					a(_a), 
-					b(_b), 
-					c(_c)//, 
-					//num{a,b,c}
+				TestClass(size_t _a, size_t _b, size_t _c) :
+					a(_a),
+					b(_b),
+					c(_c)//,
+					//num{ _a,_b,_c }
 				{
 				}
 			};
-			t temp(1,2,3);
-			const size_t ub = 1000000;
-			mcts_new::MyMctsAllocator<t,false> hey(ub);
-			t* p;
-			for (int i = 0; i <ub; i++)
+			using TestAlloc = mcts_new::MctsAllocator<TestClass, true>;
+			const size_t ub = 10000000;
+			TestAlloc alloc(ub);
+			std::cout << sizeof(TestClass);
+			for (size_t i = 0; i < ub/2; i++)
 			{
-				t temp(i, i*i, i*i*i);
-				p = hey.construct(temp);
+				TestClass* p = alloc.construct(i, i + i, i*i);
 				GADT_ASSERT(p->a, i);
 				//GADT_ASSERT(p->num[0], i);
+				alloc.destory(p);
 			}
-			GADT_ASSERT(hey.construct(1,2,3), nullptr);
-			GADT_ASSERT(hey.remain_size(), 0);
-			GADT_ASSERT(hey.total_size(), ub);
-			GADT_ASSERT(hey.free(&temp), false);
-			GADT_ASSERT(hey.is_full(), true);
-			GADT_ASSERT(hey.free(p), true);
-			GADT_ASSERT(hey.remain_size(), 1);
-			GADT_ASSERT(hey.construct(1, 2, 3) != nullptr, true);
-			GADT_ASSERT(hey.free(p - 2), true);
-			GADT_ASSERT(hey.free(p - 1), true);
-			mcts_new::MyMctsAllocator<t, false> new_hey = hey;
-			GADT_ASSERT(hey.remain_size(), 2);
-			GADT_ASSERT(new_hey.remain_size(), 2);
-			GADT_ASSERT(new_hey.is_full(), false);
-			GADT_ASSERT(new_hey.construct(3, 2, 1) != nullptr, true);
-			GADT_ASSERT(new_hey.construct(3, 2, 1) != nullptr, true);
-			GADT_ASSERT(new_hey.construct(3, 2, 1) != nullptr, false);
-			GADT_ASSERT(new_hey.remain_size(), 0);
-			GADT_ASSERT(new_hey.is_full(), true);
 
-			mcts_new::MctsAllocator<tic_tac_toe::State, false> alloc(100);
-			GADT_ASSERT(alloc.construct()->dot[0][0], tic_tac_toe::EMPTY);
+			GADT_ASSERT(alloc.is_full(), false);
+			GADT_ASSERT(alloc.remain_size(), alloc.total_size());
+			
 		}
 		void TestMctsNode()
 		{
@@ -321,7 +304,7 @@ namespace gadt
 				10000
 			);
 			tic_tac_toe::State state;
-			tic_tac_toe::Action action = mcts.DoMcts(state, 10, 10000, false);
+			tic_tac_toe::Action action = mcts.DoMcts(state, 100, 10000, false);
 			std::cout << action.x << action.y << std::endl;
 		}
 
