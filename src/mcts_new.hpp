@@ -240,159 +240,13 @@ namespace gadt
 					_available_index.push(_elements + i);
 				}
 			}
-		};
 
-		template<typename T, bool is_debug>
-		class MyMctsAllocator
-		{
-		private:
-			using pointer = T*;
-			using reference = T&;
-
-			const size_t			_max_size;
-			std::queue<T*>			_available_ptr;
-			std::allocator<T>		_allocator;
-			T*						_fir_element;
-
-		private:
-			//get index by pointer.
-			inline size_t ptr_to_index(pointer p) const
+			//get info as string format
+			inline std::string info() const
 			{
-				uintptr_t t = uintptr_t(p);
-				uintptr_t fir = uintptr_t(_fir_element);
-				return size_t((t - fir) / sizeof(T));
-			}
-
-			//free space by index.
-			inline bool free_by_index(size_t index)
-			{
-				if (index < _max_size)
-				{
-					_available_ptr.push(_fir_element + index);
-					return true;
-				}
-				return false;
-			}
-
-			//get objecy prt by index. return nullptr if the index is overflow.
-			pointer get_by_index(size_t index) const
-			{
-				if (index < _max_size)
-				{
-					return _fir_element + index;
-				}
-				return nullptr;
-			}
-
-			//allocate memery by size.
-			void allocate(size_t max_size)
-			{
-				_fir_element = _allocator.allocate(max_size);
-				_max_size = max_size;
-				//_elements = reinterpret_cast<T*>(new char[_max_size * sizeof(T)]);
-			}
-
-			void deallocate()
-			{
-				_allocator.deallocate(_fir_element, _max_size);
-			}
-
-		public:
-			//default constructor function.
-			MyMctsAllocator(size_t max_size) :
-				_max_size(max_size)
-			{
-				_allocator.allocate(max_size);
-				flush();
-			}
-
-			//copy constructor function.
-			MyMctsAllocator(const MyMctsAllocator& target) :
-				_max_size(target._max_size)
-			{
-				_allocator.allocate(target._max_size);
-				//flush();
-				std::vector<bool> is_available(_max_size, false);
-				std::queue<pointer> temp_ptrs = target._available_ptr;
-				while (!temp_ptrs.empty())
-				{
-					is_available[target.ptr_to_index(temp_ptrs.front())] = true;
-					temp_ptrs.pop();
-				}
-
-				for (size_t i = 0; i < _max_size; i++)
-				{
-					if (is_available[i])
-					{
-						this->free_by_index(i);
-					}
-					else
-					{
-						(*get_by_index(i)) = (*target.get_by_index(i));
-					}
-				}
-			}
-
-			//destructor function.
-			~MyMctsAllocator()
-			{
-				//delete[] _elements;
-				deallocate();
-			}
-
-			//free space by ptr, return true if free successfully.
-			inline bool free(pointer target)
-			{
-				uintptr_t t = uintptr_t(target);
-				uintptr_t fir = uintptr_t(_fir_element);
-				uintptr_t last = uintptr_t(_fir_element + _max_size);
-				if (target != nullptr && t >= fir && t < last && ((t - fir) % sizeof(T) == 0))
-				{
-					_available_ptr.push(target);
-					return true;
-				}
-				return false;
-			}
-
-			//copy source object to a empty space and return the pointer, return nullptr if there are not available space.
-			template<class... Types>
-			pointer construct(Types&&... args)//T* constructor(const T& source)
-			{
-				if (_available_ptr.empty() != true)
-				{
-					pointer temp = _available_ptr.front();
-					*temp = T(std::forward<Types>(args)...);
-					_available_ptr.pop();
-					return temp;
-				}
-				return nullptr;
-			}
-
-			//total size of alloc.
-			inline size_t total_size() const
-			{
-				return _max_size;
-			}
-
-			//remain size in the alloc.
-			inline size_t remain_size() const
-			{
-				return _available_ptr.size();
-			}
-
-			//return true if there is not available space in this allocator.
-			inline bool is_full() const
-			{
-				return _available_ptr.size() == 0;
-			}
-
-			//flush all datas in the allocator.
-			inline void flush()
-			{
-				for (size_t i = 0; i <_max_size; i++)
-				{
-					_available_ptr.push(_fir_element + i);
-				}
+				std::stringstream ss;
+				ss << "{[count = " << _count << "], [remain = " << remain_size() << "]}";
+				return ss.str();
 			}
 		};
 
@@ -417,31 +271,31 @@ namespace gadt
 			struct FuncPackage
 			{
 			public:
-				using GetNewStateFunc		= std::function<State(const State&, const Action&)>;	//get a new state from previous state and action.
-				using MakeActionFunc		= std::function<void(const State&, ActionSet&)>;		//the function which create action set by the state.
-				using DetemineWinnerFunc	= std::function<AgentIndex(const State&)>;				//return no_winner_index if a state is not terminal state.
-				using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;		//get a result from state and winner.
-				using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;		//update values in the node by the result.
-				using TreePolicyValueFunc	= std::function<UcbValue(const Node&, const Node&)>;	//value of child node in selection process. the highest would be seleced.
-				using DefaultPolicyFunc		= std::function<const Action&(const ActionSet&)>;		//the default policy to select action.
-				using AllowExtendFunc		= std::function<bool(const Node&)>;						//allow node to extend child node.
-				using AllowExcuteGcFunc		= std::function<bool(const Node&)>;						//the condition to excute gc in a node.
-				using ValueForRootNodeFunc	= std::function<UcbValue(const Node&)>;					//select best action of root node after iterations finished.
+				using GetNewStateFunc		= std::function<State(const State&, const Action&)>;
+				using MakeActionFunc		= std::function<void(const State&, ActionSet&)>;	
+				using DetemineWinnerFunc	= std::function<AgentIndex(const State&)>;			
+				using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;	
+				using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;	
+				using TreePolicyValueFunc	= std::function<UcbValue(const Node&, const Node&)>;
+				using DefaultPolicyFunc		= std::function<const Action&(const ActionSet&)>;	
+				using AllowExtendFunc		= std::function<bool(const Node&)>;					
+				using AllowExcuteGcFunc		= std::function<bool(const Node&)>;					
+				using ValueForRootNodeFunc	= std::function<UcbValue(const Node&)>;				
 
 			public:
 				//necessary functions.
-				const GetNewStateFunc		GetNewState;
-				const MakeActionFunc		MakeAction;
-				const DetemineWinnerFunc	DetemineWinner;
-				const StateToResultFunc		StateToResult;
-				const AllowUpdateValueFunc	AllowUpdateValue;
+				const GetNewStateFunc		GetNewState;		//get a new state from previous state and action.
+				const MakeActionFunc		MakeAction;			//the function which create action set by the state.
+				const DetemineWinnerFunc	DetemineWinner;		//return no_winner_index if a state is not terminal state.
+				const StateToResultFunc		StateToResult;		//get a result from state and winner.
+				const AllowUpdateValueFunc	AllowUpdateValue;	//update values in the node by the result.
 
 				//default functions.
-				TreePolicyValueFunc			TreePolicyValue;
-				DefaultPolicyFunc			DefaultPolicy;
-				AllowExtendFunc				AllowExtend;
-				AllowExcuteGcFunc			AllowExcuteGc;
-				ValueForRootNodeFunc		ValueForRootNode;
+				TreePolicyValueFunc			TreePolicyValue;	//value of child node in selection process. the highest would be seleced.
+				DefaultPolicyFunc			DefaultPolicy;		//the default policy to select action.
+				AllowExtendFunc				AllowExtend;		//allow node to extend child node.
+				AllowExcuteGcFunc			AllowExcuteGc;		//the condition to excute gc in a node.
+				ValueForRootNodeFunc		ValueForRootNode;	//select best action of root node after iterations finished.
 
 			public:
 				FuncPackage(
@@ -454,7 +308,7 @@ namespace gadt
 					DefaultPolicyFunc		_DefaultPolicy,
 					AllowExtendFunc			_AllowExtend,
 					AllowExcuteGcFunc		_AllowExcuteGc,
-					ValueForRootNodeFunc		_ValueForRootNode
+					ValueForRootNodeFunc	_ValueForRootNode
 				):
 					GetNewState			(_GetNewState),
 					MakeAction			(_MakeAction),
@@ -655,25 +509,36 @@ namespace gadt
 			{
 				incr_visited_time();
 
-				if (exist_unactivated_action())
+				if (is_end_state())
 				{
-					Expandsion(result, allocator, func);
+					func.StateToResult(_state, result);
 				}
 				else
 				{
-					if (is_debug) { GADT_CHECK_WARNING(_child_nodes.size() == 0, "MCTS106: empty action set during tree policy."); }
-					Node* max_ucb_child_node = _child_nodes[0];
-					UcbValue max_ucb_value = 0;
-					for (Node* child_node : _child_nodes)
+					if (exist_unactivated_action())
 					{
-						UcbValue child_node_ucb_value = func.TreePolicyValue(*this, *child_node);
-						if (child_node_ucb_value > max_ucb_value)
-						{
-							max_ucb_child_node = child_node;
-							max_ucb_value = child_node_ucb_value;
-						}
+						Expandsion(result, allocator, func);
 					}
-					max_ucb_child_node->Selection(result, allocator, func);
+					else
+					{
+						if (is_debug) { GADT_CHECK_WARNING(_child_nodes.size() == 0, "MCTS106: empty action set during tree policy."); }
+						Node* max_ucb_child_node = _child_nodes[0];
+						UcbValue max_ucb_value = 0;
+						for (size_t i = 0; i < _child_nodes.size(); i++)
+						{
+							if (_child_nodes[i] != nullptr)
+							{
+								UcbValue child_node_ucb_value = func.TreePolicyValue(*this, *_child_nodes[i]);
+								if (child_node_ucb_value > max_ucb_value)
+								{
+									max_ucb_child_node = _child_nodes[i];
+									max_ucb_value = child_node_ucb_value;
+								}
+							}
+						}
+						if (is_debug) { GADT_CHECK_WARNING(max_ucb_child_node == nullptr, "MCTS108: best child node pointer is nullptr."); }
+						max_ucb_child_node->Selection(result, allocator, func);
+					}
 				}
 
 				//backpropagation process for this node.update value;
@@ -694,9 +559,9 @@ namespace gadt
 		{
 		public:
 			using Node			= typename MctsNode<State, Action, Result, is_debug>;							
-			using Allocator		= typename Node::Allocator;
-			using ActionSet		= typename Node::ActionSet;								//ActionSet is the set of Action
-			using NodePtrSet	= typename Node::NodePtrSet;								//ChildSet is the set of ptrs to child nodes.
+			using Allocator		= typename Node::Allocator;								//allocator of nodes
+			using ActionSet		= typename Node::ActionSet;								//set of Action
+			using NodePtrSet	= typename Node::NodePtrSet;							//set of ptrs to child nodes.
 			
 		private:
 			using FuncPackage	= typename Node::FuncPackage;
@@ -708,6 +573,16 @@ namespace gadt
 				typename FuncPackage::AllowExcuteGcFunc			AllowExcuteGc;
 				typename FuncPackage::ValueForRootNodeFunc		ValueForRootNode;
 			};
+			struct LogFuncPackage
+			{
+				using StateToStrFunc	= std::function<std::string(const State& state)>;
+				using ActionToStrFunc	= std::function<std::string(const Action& action)>;
+				using ResultToStrFunc	= std::function<std::string(const Result& result)>;
+
+				StateToStrFunc		StateToStr;
+				ActionToStrFunc		ActionToStr;
+				ResultToStrFunc		ResultToStr;
+			};
 
 		private:
 			FuncPackage		_func_package;			//function package of the search.
@@ -716,12 +591,31 @@ namespace gadt
 			double			_timeout;				//set timeout (seconds).
 			size_t			_max_iteration;			//set max iteration times.
 			bool			_enable_gc;				//allow garbage collection if the tree run out of memory.
-			
+			bool			_enable_log;			//enable log visualization.
+			std::ostream&	_log;					//log ostream.
+
 		public:
 			//package of default functions.
 			const DefaultFuncPackage DefaultFunc;
+			LogFuncPackage LogFunc;
 
 		private:
+
+			//get info of this search.
+			std::string info() const
+			{
+				std::stringstream ss;
+				ss << std::boolalpha << "{" << std::endl
+					<< "allocator: " << _allocator.info() << std::endl
+					<< "is_private_allocator: " << _private_allocator << std::endl
+					<< "timeout: " << _timeout << std::endl
+					<< "max_iteration: " << _max_iteration << std::endl
+					<< "enable_gc: " << _enable_gc << std::endl
+					<< "enable_log: " << _enable_log << std::endl
+					<< "}" << std::endl;
+				return ss.str();
+			}
+
 			//define functions as default.
 			DefaultFuncPackage DefaultFuncInit()
 			{
@@ -770,6 +664,11 @@ namespace gadt
 			//excute iteration function.
 			Action ExcuteMCTS(State root_state, double timeout, size_t max_iteration, bool enable_gc)
 			{
+				if (_enable_log)
+				{
+					_log << "[MCTS] start excute monte carlo tree search..." << std::endl
+						<< "[MCTS] info = " << info() << std::endl;
+				}
 				Node* root_node = _allocator.construct(root_state, _func_package);
 				ActionSet root_actions = root_node->action_set();
 				timer::TimePoint start_tp;
@@ -804,17 +703,23 @@ namespace gadt
 					root_node->Selection(new_result, _allocator, _func_package);
 				}
 
-				//log info if is debuging.
-
-
 				//return the best result
 				if (is_debug) { GADT_CHECK_WARNING(root_actions.size() == 0, "MCTS101: root node do not exist any available action."); }
 				UcbValue max_value = 0;
 				size_t max_value_node_index = 0;
+				if (_enable_log) 
+				{ 
+					_log << "[MCTS] iteration finished." << std::endl
+						<< "[MCTS] actions = {" << std::endl;
+				}
 				for (size_t i = 0; i < root_actions.size(); i++)
 				{
 					auto child_ptr = root_node->child_node(i);
 					if (is_debug) { GADT_CHECK_WARNING(root_node->child_node(0) == nullptr, "MCTS107: empty child node under root node."); }
+					if (_enable_log)
+					{
+						_log << "action " << i << ": "<< LogFunc.ActionToStr(root_actions[i])<<", value: ";
+					}
 					if (child_ptr != nullptr)
 					{
 						UcbValue child_value = _func_package.ValueForRootNode(*child_ptr);
@@ -823,7 +728,22 @@ namespace gadt
 							max_value = child_value;
 							max_value_node_index = i;
 						}
+						if (_enable_log)
+						{
+							_log << "[" << child_value << "]" << std::endl;
+						}
 					}
+					else
+					{
+						if (_enable_log)
+						{
+							_log << "[ deleted ]" << std::endl;
+						}
+					}
+				}
+				if (_enable_log)
+				{
+					_log << "[MCTS] best action index: "<< max_value_node_index << std::endl;
 				}
 				if (is_debug) { GADT_CHECK_WARNING(root_actions.size() == 0, "MCTS102: best value for root node equal to 0."); }
 				return root_actions[max_value_node_index];
@@ -839,8 +759,6 @@ namespace gadt
 				typename FuncPackage::AllowUpdateValueFunc	_AllowUpdateValue,
 				size_t max_node
 			):
-				_allocator(*(new Allocator(max_node))),
-				_private_allocator(true),
 				_func_package(
 					_GetNewState,
 					_MakeAction,
@@ -848,6 +766,10 @@ namespace gadt
 					_StateToResult,
 					_AllowUpdateValue
 				),
+				_allocator(*(new Allocator(max_node))),
+				_private_allocator(true),
+				_enable_log(false),
+				_log(std::cout),
 				DefaultFunc(DefaultFuncInit())
 			{
 				FuncInit();
@@ -862,8 +784,6 @@ namespace gadt
 				typename FuncPackage::AllowUpdateValueFunc	_AllowUpdateValue,
 				Allocator allocator
 			):
-				_allocator(allocator),
-				_private_allocator(false), 
 				_func_package(
 					_GetNewState,
 					_MakeAction,
@@ -871,6 +791,10 @@ namespace gadt
 					_StateToResult,
 					_AllowUpdateValue
 				),
+				_allocator(allocator),
+				_private_allocator(false), 
+				_enable_log(false),
+				_log(std::cout),
 				DefaultFunc(DefaultFuncInit())
 			{
 				FuncInit();
@@ -895,6 +819,24 @@ namespace gadt
 			Action DoMcts(const State root_state, double timeout, size_t max_iteration, bool enable_gc)
 			{
 				return ExcuteMCTS(root_state, timeout, max_iteration, enable_gc);
+			}
+
+			//enable log output to ostream.
+			inline void EnableLog(
+				typename LogFuncPackage::StateToStrFunc		StateToStr,
+				typename LogFuncPackage::ActionToStrFunc		ActionToStr,
+				typename LogFuncPackage::ResultToStrFunc		ResultToStr,
+				std::ostream& log = std::cout
+			)
+			{
+				LogFunc = { StateToStr,ActionToStr,ResultToStr };
+				_enable_log = true;
+				_log = log;
+			}
+
+			inline void DisableLog()
+			{
+				_enable_log = false;
 			}
 		};
 	}

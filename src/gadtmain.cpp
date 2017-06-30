@@ -52,6 +52,7 @@ void ShellDefine()
 	GameShell gadt("GADT");
 	auto* root = CreateShellPage<int>(gadt, "root");
 	auto* test = CreateShellPage<int>(gadt, "test");
+	auto* mcts = CreateShellPage<int>(gadt, "mcts");
 
 	//Define Root Page.
 	root->AddInfoFunc([]() {
@@ -76,15 +77,10 @@ void ShellDefine()
 			unittest::RunTest(p);
 		}
 	}, "run all test");
-
-	test->AddFunction("hey", [](int)->void {
-		auto GetNewState = [](const int& a, const int& b)->int {return 1; };
-		auto MakeAction = [](const int& a, std::vector<int>)->void {};
-		auto DetemineWinner = [](const int& a)->mcts_new::AgentIndex {return 1; };
-		auto StateToResult = [](const int& a, int b)->int {return 1; };
-		auto AllowUpdateValue = [](const int& a, const int& b)->bool {return true; };
-		mcts_new::MctsSearch<int, int, int> ms(GetNewState, MakeAction, DetemineWinner, StateToResult, AllowUpdateValue, 10000);
-	}, "hey");
+	test->AddChildPage("mcts", "monte carlo tree search test");
+	mcts->AddFunction("alloc", [](int)->void {unittest::TestMctsAlloc(); }, "alloc part");
+	mcts->AddFunction("node", [](int)->void {unittest::TestMctsNode(); }, "node part");
+	mcts->AddFunction("search", [](int)->void {unittest::TestMctsSearch(); }, "search part");
 
 	//Start Shell
 	gadt.RunPage("root");

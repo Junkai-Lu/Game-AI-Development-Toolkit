@@ -59,8 +59,16 @@ namespace gadt
 
 			Player DetemineWinner(const State& state)
 			{
+				bool all_empty = true;
 				for (size_t i = 0; i < 3; i++)
 				{
+					for (size_t y = 0; y < 3; y++)
+					{
+						if (state.dot[i][y] == EMPTY)
+						{
+							all_empty = false;
+						}
+					}
 					if (state.dot[i][0] == state.dot[i][1] && state.dot[i][1] == state.dot[i][2] && state.dot[i][0] != EMPTY)
 					{
 						return state.dot[i][0];
@@ -69,6 +77,10 @@ namespace gadt
 					{
 						return state.dot[i][0];
 					}
+				}
+				if (all_empty)
+				{
+					return DRAW;
 				}
 				if (state.dot[0][0] == state.dot[1][1] && state.dot[1][1] == state.dot[2][2] && state.dot[1][1] != EMPTY)
 				{
@@ -295,16 +307,20 @@ namespace gadt
 		}
 		void TestMctsSearch()
 		{
+			const size_t max_node = 100000;
+			const size_t max_iteration = 100000;
+			const double timeout = 100;
 			mcts_new::MctsSearch<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mcts(
 				tic_tac_toe::GetNewState,
 				tic_tac_toe::MakeAction,
 				tic_tac_toe::DetemineWinner,
 				tic_tac_toe::StateToResult,
 				tic_tac_toe::AllowUpdateValue,
-				10000
+				max_node
 			);
+			
 			tic_tac_toe::State state;
-			tic_tac_toe::Action action = mcts.DoMcts(state, 100, 10000, false);
+			tic_tac_toe::Action action = mcts.DoMcts(state, timeout, max_iteration, false);
 			std::cout << action.x << action.y << std::endl;
 		}
 

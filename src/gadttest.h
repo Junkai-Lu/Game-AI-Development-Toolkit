@@ -37,7 +37,8 @@ namespace gadt
 			{
 				BLACK = -1,
 				WHITE = 1,
-				EMPTY = 0
+				EMPTY = 0,
+				DRAW = 2
 			};
 
 			struct State
@@ -76,6 +77,10 @@ namespace gadt
 			Result StateToResult(const State& state, mcts_new::AgentIndex winner);
 			bool AllowUpdateValue(const State& state, Result winner);
 		}
+
+		void TestMctsAlloc();
+		void TestMctsNode();
+		void TestMctsSearch();
 
 		typedef std::pair<std::string, std::function<void()>> FuncPair;
 		extern const std::vector<FuncPair> func_list;
