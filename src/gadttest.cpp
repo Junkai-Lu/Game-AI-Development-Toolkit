@@ -107,6 +107,33 @@ namespace gadt
 				return false;
 			}
 
+			std::string StateToStr(const State& state)
+			{
+				std::stringstream ss;
+				for (size_t x = 0; x < 3; x++)
+				{
+					for (size_t y = 0; y < 3; y++)
+					{
+						ss << state.dot[x][y];
+					}
+					ss << " ";
+				} 
+				return ss.str();
+			}
+
+			std::string ActionToStr(const Action& action)
+			{
+				std::stringstream ss;
+				ss << "player "<<action.player << " [" << action.x << "," << action.y << "]";
+				return ss.str();
+			}
+
+			std::string ResultToStr(const Result& result)
+			{
+				std::stringstream ss;
+				ss << result;
+				return ss.str();
+			}
 		}
 
 		void TestBitBoard()
@@ -318,7 +345,7 @@ namespace gadt
 				tic_tac_toe::AllowUpdateValue,
 				max_node
 			);
-			
+			mcts.EnableLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr, std::cout);
 			tic_tac_toe::State state;
 			tic_tac_toe::Action action = mcts.DoMcts(state, timeout, max_iteration, false);
 			std::cout << action.x << action.y << std::endl;

@@ -99,6 +99,7 @@ namespace gadt
 				_available_index = index_queue();
 			}
 
+			//allocate memory
 			inline void alloc_memory(size_t count)
 			{
 				//_fir_element = reinterpret_cast<T*>(new char[count * _size]);
@@ -106,6 +107,7 @@ namespace gadt
 				_exist_element = new bool[count];
 			}
 
+			//delete memory
 			inline void delete_memory()
 			{
 				delete[] _exist_element;
@@ -245,7 +247,7 @@ namespace gadt
 			inline std::string info() const
 			{
 				std::stringstream ss;
-				ss << "{[count = " << _count << "], [remain = " << remain_size() << "]}";
+				ss << "{count : " << _count << ", remain: " << remain_size() << "}";
 				return ss.str();
 			}
 		};
@@ -544,6 +546,24 @@ namespace gadt
 				//backpropagation process for this node.update value;
 				BackPropagation(result, func);
 			}
+
+			//get info of this node.
+			std::string info() const
+			{
+				std::stringstream ss;
+				double avg = static_cast<double>(win_time()) / static_cast<double>(visited_time());
+				ss << "{ visited:" << visited_time() << " win:" << win_time() <<" avg:" << avg << " child";
+				if (exist_unactivated_action())
+				{
+					ss << next_action_index() << "/" << action_set().size();
+				}
+				else
+				{
+					ss << child_set().size() << "/" << child_set().size();
+				}
+				ss << " }";
+				return ss.str();
+			}
 		};
 
 		/*
@@ -592,7 +612,7 @@ namespace gadt
 			size_t			_max_iteration;			//set max iteration times.
 			bool			_enable_gc;				//allow garbage collection if the tree run out of memory.
 			bool			_enable_log;			//enable log visualization.
-			std::ostream&	_log;					//log ostream.
+			std::ostream*	_log_ptr;				//pointer to log ostream.
 
 		public:
 			//package of default functions.
@@ -601,17 +621,23 @@ namespace gadt
 
 		private:
 
+			//get reference of log ostream
+			inline std::ostream& log()
+			{
+				return *_log_ptr;
+			}
+
 			//get info of this search.
 			std::string info() const
 			{
 				std::stringstream ss;
 				ss << std::boolalpha << "{" << std::endl
-					<< "allocator: " << _allocator.info() << std::endl
-					<< "is_private_allocator: " << _private_allocator << std::endl
-					<< "timeout: " << _timeout << std::endl
-					<< "max_iteration: " << _max_iteration << std::endl
-					<< "enable_gc: " << _enable_gc << std::endl
-					<< "enable_log: " << _enable_log << std::endl
+					<< "    allocator: " << _allocator.info() << std::endl
+					<< "    is_private_allocator: " << _private_allocator << std::endl
+					<< "    timeout: " << _timeout << std::endl
+					<< "    max_iteration: " << _max_iteration << std::endl
+					<< "    enable_gc: " << _enable_gc << std::endl
+					<< "    enable_log: " << _enable_log << std::endl
 					<< "}" << std::endl;
 				return ss.str();
 			}
@@ -666,7 +692,7 @@ namespace gadt
 			{
 				if (_enable_log)
 				{
-					_log << "[MCTS] start excute monte carlo tree search..." << std::endl
+					log() << "[MCTS] start excute monte carlo tree search..." << std::endl
 						<< "[MCTS] info = " << info() << std::endl;
 				}
 				Node* root_node = _allocator.construct(root_state, _func_package);
@@ -709,7 +735,7 @@ namespace gadt
 				size_t max_value_node_index = 0;
 				if (_enable_log) 
 				{ 
-					_log << "[MCTS] iteration finished." << std::endl
+					log() << "[MCTS] iteration finished." << std::endl
 						<< "[MCTS] actions = {" << std::endl;
 				}
 				for (size_t i = 0; i < root_actions.size(); i++)
@@ -718,7 +744,7 @@ namespace gadt
 					if (is_debug) { GADT_CHECK_WARNING(root_node->child_node(0) == nullptr, "MCTS107: empty child node under root node."); }
 					if (_enable_log)
 					{
-						_log << "action " << i << ": "<< LogFunc.ActionToStr(root_actions[i])<<", value: ";
+						log() << "action " << i << ": "<< LogFunc.ActionToStr(root_actions[i])<<", value: ";
 					}
 					if (child_ptr != nullptr)
 					{
@@ -730,20 +756,20 @@ namespace gadt
 						}
 						if (_enable_log)
 						{
-							_log << "[" << child_value << "]" << std::endl;
+							log() << "[" << child_value << "]" << std::endl;
 						}
 					}
 					else
 					{
 						if (_enable_log)
 						{
-							_log << "[ deleted ]" << std::endl;
+							log() << "[ deleted ]" << std::endl;
 						}
 					}
 				}
 				if (_enable_log)
 				{
-					_log << "[MCTS] best action index: "<< max_value_node_index << std::endl;
+					log() << "[MCTS] best action index: "<< max_value_node_index << std::endl;
 				}
 				if (is_debug) { GADT_CHECK_WARNING(root_actions.size() == 0, "MCTS102: best value for root node equal to 0."); }
 				return root_actions[max_value_node_index];
@@ -769,7 +795,7 @@ namespace gadt
 				_allocator(*(new Allocator(max_node))),
 				_private_allocator(true),
 				_enable_log(false),
-				_log(std::cout),
+				_log_ptr(&std::cout),
 				DefaultFunc(DefaultFuncInit())
 			{
 				FuncInit();
@@ -794,7 +820,7 @@ namespace gadt
 				_allocator(allocator),
 				_private_allocator(false), 
 				_enable_log(false),
-				_log(std::cout),
+				_log_ptr(&std::cout),
 				DefaultFunc(DefaultFuncInit())
 			{
 				FuncInit();
@@ -831,7 +857,7 @@ namespace gadt
 			{
 				LogFunc = { StateToStr,ActionToStr,ResultToStr };
 				_enable_log = true;
-				_log = log;
+				_log_ptr = &log;
 			}
 
 			inline void DisableLog()
