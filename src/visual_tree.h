@@ -27,56 +27,336 @@ namespace gadt
 {
 	namespace visual_tree
 	{
-		using NodeDict = std::map<std::string, std::string>;
+		extern const char* g_VISUAL_TREE_CHILD_KEY;
 
-		class TreeNode
+		class VisualTree;
+		class TreeNode;
+
+		//dictionary value.
+		class DictValue
 		{
-		private:
-			using ChildPtrSet = std::vector<TreeNode*>;
+			friend class TreeNode;
 
 		private:
-			ChildPtrSet _childs;
-			size_t		_depth;
-			NodeDict	_dict;
+			enum ValueType:uint8_t
+			{
+				NULL_TYPE		= 0,
+				INTEGER_TYPE	= 1,
+				FLOAT_TYPE		= 2,
+				STRING_TYPE		= 3
+			};
 
-		private:
-
-
+			const ValueType	_type;
+			int				_integer_value;
+			double			_float_value;
+			std::string		_string_value;
 
 		public:
-			inline TreeNode()
+			inline explicit DictValue():
+				_type(NULL_TYPE)
 			{
 
 			}
+			inline explicit DictValue(int value) :
+				_type(INTEGER_TYPE),
+				_integer_value(value)
+			{
+			}
+			inline explicit DictValue(size_t value) :
+				_type(INTEGER_TYPE),
+				_integer_value((int)value)
+			{
+			}
+			inline explicit DictValue(double value) :
+				_type(FLOAT_TYPE),
+				_float_value(value)
+			{
+			}
+			inline explicit DictValue(std::string value):
+				_type(STRING_TYPE),
+				_string_value(value)
+			{
+			}
 
+			//return true if the value is integer.
+			inline bool is_integer() const
+			{
+				return _type == INTEGER_TYPE;
+			}
+
+			//return true if the value is float number.
+			inline bool is_float() const
+			{
+				return _type == FLOAT_TYPE;
+			}
+
+			//return true if the value is string.
+			inline bool is_string() const
+			{
+				return _type == STRING_TYPE;
+			}
+
+			//get integer value.
+			inline int integer_value() const
+			{
+				return _integer_value;
+			}
+
+			//get float value.
+			inline double float_value() const
+			{
+				return _float_value;
+			}
+
+			//get string value.
+			inline std::string string_value() const
+			{
+				return _string_value;
+			}
+		};
+
+		class TreeNode
+		{
+			friend class VisualTree;
+		public:
+			using pointer		= TreeNode*;
+			using reference		= TreeNode&;
+			using ChildPtrSet	= std::vector<pointer>;
+			using NodeDict		= std::map<std::string, DictValue>;
+			
+		private:
+			NodeDict		_dict;
+			ChildPtrSet		_childs;
+			const pointer	_parent;
+			const size_t	_depth;
+			size_t			_count;
+			VisualTree*		_owner;
+
+		private:
+			//constructor function.
+			inline TreeNode(pointer parent, size_t depth, VisualTree* owner):
+				_parent{parent},
+				_depth{depth},
+				_count{1},
+				_owner{owner}
+			{
+			}
+
+			//default copy constructor is deleted.
+			TreeNode(const TreeNode&) = delete;
+
+			//copy constructor.
+			TreeNode(const TreeNode& node, pointer parent, VisualTree* owner);
+
+			//destructor function.
+			inline ~TreeNode()
+			{
+				for (pointer p : _childs)
+				{
+					delete p;
+				}
+			}
+
+			//increase count.
+			void incr_count();
+
+			//refresh count of all nodes.
+			size_t refresh_count();
+
+		public:
 			//return true if the keye exist in the dict.
-			inline bool exist(std::string key)
+			inline bool exist_value(std::string key) const
 			{
 				return _dict.count(key) != 0;
 			}
 
-			//add key to node.
-			inline void add_value(std::string key, std::string value)
+			//get integer value by key.
+			inline int integer_value(std::string key)
 			{
-				_dict[key] = value;
+				if (exist_value(key))
+				{
+					if (_dict[key].is_integer())
+					{
+						return _dict[key].integer_value();
+					}
+				}
+				return 0;
 			}
 
-			inline void create_child()
+			//get float value by key.
+			inline double float_value(std::string key)
 			{
+				if (exist_value(key))
+				{
+					if (_dict[key].is_float())
+					{
+						return _dict[key].float_value();
+					}
+				}
+				return 0;
+			}
+
+			//get string value by key.
+			inline std::string string_value(std::string key)
+			{
+				if (exist_value(key))
+				{
+					if (_dict[key].is_string())
+					{
+						return _dict[key].string_value();
+					}
+				}
+				return std::string("");
+			}
+
+			//add value to node, return true if add successfully.
+			template<typename T>
+			inline bool add_value(std::string key, T value)
+			{
+				if (key != g_VISUAL_TREE_CHILD_KEY)
+				{
+					_dict.insert({ key,DictValue(value) });
+					return true;
+				}
+				return false;
 				
 			}
 
-			inline TreeNode* last_child()
+			//get first added child, return nullptr if not child exist.
+			inline pointer first_child() const
 			{
-
+				if (_childs.size() > 0)
+				{
+					return _childs[0];
+				}
+				return nullptr;
 			}
 
-			size_t depth() const
+			//get last added child, return nullptr if not child exist.
+			inline pointer last_child() const
+			{
+				if (_childs.size() > 0)
+				{
+					return _childs[_childs.size() - 1];
+				}
+				return nullptr;
+			}
+
+			//get number of child nodes.
+			inline size_t child_num() const
+			{
+				return _childs.size();
+			}
+			
+			//get depth of current node.
+			inline size_t depth() const
 			{
 				return _depth;
 			}
+
+			inline VisualTree* owner_tree()
+			{
+				return _owner;
+			}
+
+			//return the count of nodes in the subtree from current node.
+			inline size_t count() const
+			{
+				return _count;
+			}
+
+			//create a new child and return its index.
+			inline pointer create_child()
+			{
+				pointer p = new TreeNode(this, _depth + 1,_owner);
+				_childs.push_back(p);
+				incr_count();
+				return last_child();
+			}
+
+			//create child with obj
+			template <typename T>
+			inline pointer create_child(T obj)
+			{
+				pointer p = create_child();
+				*p << obj;
+				return p;
+			}
+
+			//create child with obj and callback function.
+			template <typename T>
+			inline pointer create_child(T obj, std::function<void(reference, T)> callback) 
+			{
+				pointer p = create_child();
+				callback(*p, obj);
+				return p;
+			}
+
+			//traverse all nodes.
+			void traverse_subtree(std::function<void(reference)> callback);
+
+			//to json string
+			std::string to_json() const;
+
+			//to xml string
+			std::string to_xml() const;
 		};
 
+		class VisualTree
+		{
+		private:
+			TreeNode _root_node;
+			
+		public:
+
+			//default constructor.
+			VisualTree();
+
+			//copy constructor.
+			VisualTree(const VisualTree& tree);
+
+			//get root node of the tree.
+			inline TreeNode& root_node()
+			{
+				return _root_node;
+			}
+
+			//get number of nodes in the tree.
+			inline size_t size() const
+			{
+				return _root_node.count();
+			}
+
+			//traverse nodes.
+			inline void traverse_nodes(std::function<void(TreeNode&)> callback)
+			{
+				_root_node.traverse_subtree(callback);
+			}
+
+			//to json string.
+			inline std::string to_json()
+			{
+				return _root_node.to_json();
+			}
+
+			//to xml string.
+			inline std::string to_xml()
+			{
+				return _root_node.to_xml();
+			}
+
+			//output json to ostream.
+			inline void output_json(std::ostream& os)
+			{
+				os << to_json();
+			}
+
+			//output xml to ostream.
+			inline void output_xml(std::ostream& os)
+			{
+				os << to_xml();
+			}
+		};
 
 	}
 }

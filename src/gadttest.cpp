@@ -289,20 +289,19 @@ namespace gadt
 				size_t a;
 				size_t b;
 				size_t c;
-				//std::vector<size_t> num;
+				std::vector<size_t> num;
 
 				TestClass(size_t _a, size_t _b, size_t _c) :
 					a(_a),
 					b(_b),
-					c(_c)//,
-					//num{ _a,_b,_c }
+					c(_c),
+					num{ _a,_b,_c }
 				{
 				}
 			};
 			using TestAlloc = mcts_new::MctsAllocator<TestClass, true>;
-			const size_t ub = 10000000;
+			const size_t ub = 1000;
 			TestAlloc alloc(ub);
-			std::cout << sizeof(TestClass);
 			for (size_t i = 0; i < ub/2; i++)
 			{
 				TestClass* p = alloc.construct(i, i + i, i*i);
@@ -334,8 +333,8 @@ namespace gadt
 		}
 		void TestMctsSearch()
 		{
-			const size_t max_node = 100000;
-			const size_t max_iteration = 100000;
+			const size_t max_node = 1000;
+			const size_t max_iteration = 100;
 			const double timeout = 100;
 			mcts_new::MctsSearch<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mcts(
 				tic_tac_toe::GetNewState,
@@ -345,10 +344,35 @@ namespace gadt
 				tic_tac_toe::AllowUpdateValue,
 				max_node
 			);
-			mcts.EnableLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr, std::cout);
+			//mcts.EnableLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr, std::cout);
 			tic_tac_toe::State state;
 			tic_tac_toe::Action action = mcts.DoMcts(state, timeout, max_iteration, false);
-			std::cout << action.x << action.y << std::endl;
+			//std::cout << action.x << action.y << std::endl;
+		}
+		void TestVisualTree()
+		{
+			visual_tree::VisualTree tree;
+			visual_tree::TreeNode::pointer ptr = &tree.root_node();
+			const size_t ub = 100;
+			for (size_t  i = 0; i < ub; i++)
+			{
+				ptr->add_value("depth", ptr->depth());
+				ptr->add_value("sqrt", (double)ptr->depth());
+				ptr->add_value("name", "hello world");
+				GADT_ASSERT(ptr->string_value("depth"), "");
+				GADT_ASSERT(ptr->integer_value("depth"), ptr->depth());
+				ptr->create_child();
+				ptr->last_child()->add_value("depth", ptr->last_child()->depth());
+				ptr = ptr->create_child();
+			}
+			ptr->add_value("hello", "world");
+			visual_tree::VisualTree new_tree = tree;
+			std::ofstream os("JsonTest.dat");
+			new_tree.output_json(os);
+			GADT_ASSERT(new_tree.size(), ub*2 +1);
+			GADT_ASSERT(new_tree.root_node().first_child()->count(), 1);
+			GADT_ASSERT(new_tree.root_node().last_child()->count(), ub * 2 - 1);
+			
 		}
 
 		const std::vector<FuncPair> func_list = {
@@ -357,7 +381,8 @@ namespace gadt
 			{ "index"		,TestIndex		},
 			{ "mctsalloc"	,TestMctsAlloc	},
 			{ "mctsnode"	,TestMctsNode	},
-			{ "mctssearch"	,TestMctsSearch	}
+			{ "mctssearch"	,TestMctsSearch	},
+			{ "tree"		,TestVisualTree }
 		};
 		void RunTest(FuncPair func_pair)
 		{
