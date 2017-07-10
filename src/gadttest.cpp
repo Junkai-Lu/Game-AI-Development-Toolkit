@@ -139,8 +139,8 @@ namespace gadt
 		void TestBitBoard()
 		{
 			//test BitBoard<>
-			BitBoard<56> temp;
-			BitBoard<56> subtemp;
+			bitboard::BitBoard<56> temp;
+			bitboard::BitBoard<56> subtemp;
 			subtemp.set(1);
 			GADT_ASSERT(0, temp.total());
 			GADT_ASSERT(false, temp.any());
@@ -165,7 +165,7 @@ namespace gadt
 
 
 			//test BitBoard64
-			BitBoard64 temp_64;
+			bitboard::BitBoard64 temp_64;
 			GADT_ASSERT(0, temp_64.total());
 			GADT_ASSERT(false, temp_64.any());
 			GADT_ASSERT(true, temp_64.none());
@@ -182,8 +182,8 @@ namespace gadt
 			GADT_ASSERT(64, temp_64.upper_bound());
 
 			//test BitPoker
-			BitPoker temp_poker;
-			BitPoker subtemp_poker;
+			bitboard::BitPoker temp_poker;
+			bitboard::BitPoker subtemp_poker;
 			GADT_ASSERT(0, temp_poker.total());
 			GADT_ASSERT(false, temp_poker.any());
 			GADT_ASSERT(true, temp_poker.none());
@@ -208,7 +208,7 @@ namespace gadt
 			GADT_ASSERT(1, temp_poker.get(4));
 
 			//test BitMahjong
-			BitMahjong temp_mahjong;
+			bitboard::BitMahjong temp_mahjong;
 			GADT_ASSERT(0, temp_mahjong.total());
 			GADT_ASSERT(false, temp_mahjong.any());
 			GADT_ASSERT(true, temp_mahjong.none());
@@ -235,7 +235,7 @@ namespace gadt
 			GADT_ASSERT(7, temp_mahjong.total());
 
 			//test ValueVector
-			ValueVector<14> temp_vec;
+			bitboard::ValueVector<14> temp_vec;
 			temp_vec.push(2);
 			GADT_ASSERT(1, temp_vec.length());
 			GADT_ASSERT(2, temp_vec.draw_value());
@@ -368,7 +368,7 @@ namespace gadt
 			ptr->add_value("hello", "world");
 			visual_tree::VisualTree new_tree = tree;
 			std::ofstream os("JsonTest.dat");
-			new_tree.output_json(os);
+			//new_tree.output_json(os);
 			GADT_ASSERT(new_tree.size(), ub*2 +1);
 			GADT_ASSERT(new_tree.root_node().first_child()->count(), 1);
 			GADT_ASSERT(new_tree.root_node().last_child()->count(), ub * 2 - 1);

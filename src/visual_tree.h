@@ -38,44 +38,72 @@ namespace gadt
 			friend class TreeNode;
 
 		private:
-			enum ValueType:uint8_t
+			enum ValueType :uint8_t
 			{
-				NULL_TYPE		= 0,
-				INTEGER_TYPE	= 1,
-				FLOAT_TYPE		= 2,
-				STRING_TYPE		= 3
+				NULL_TYPE = 0,
+				INTEGER_TYPE = 1,
+				FLOAT_TYPE = 2,
+				STRING_TYPE = 3,
+				BOOLEAN_TYPE = 4
 			};
 
 			const ValueType	_type;
 			int				_integer_value;
 			double			_float_value;
 			std::string		_string_value;
+			bool			_boolean_value;
 
 		public:
-			inline explicit DictValue():
+			inline explicit DictValue() :
 				_type(NULL_TYPE)
 			{
 
 			}
 			inline explicit DictValue(int value) :
 				_type(INTEGER_TYPE),
-				_integer_value(value)
+				_integer_value(value),
+				_float_value(0),
+				_string_value(""),
+				_boolean_value(false)
 			{
 			}
 			inline explicit DictValue(size_t value) :
 				_type(INTEGER_TYPE),
-				_integer_value((int)value)
+				_integer_value((int)value),
+				_float_value(0),
+				_string_value(""),
+				_boolean_value(false)
 			{
 			}
 			inline explicit DictValue(double value) :
 				_type(FLOAT_TYPE),
-				_float_value(value)
+				_integer_value(0),
+				_float_value(value),
+				_string_value(""),
+				_boolean_value(false)
 			{
 			}
-			inline explicit DictValue(std::string value):
+			inline explicit DictValue(std::string value) :
 				_type(STRING_TYPE),
-				_string_value(value)
+				_integer_value(0),
+				_float_value(0),
+				_string_value(value),
+				_boolean_value(false)
 			{
+			}
+			inline explicit DictValue(bool value) :
+				_type(BOOLEAN_TYPE),
+				_integer_value(0),
+				_float_value(0),
+				_string_value(""),
+				_boolean_value(value)
+			{
+			}
+
+			//return true if the value is null.
+			inline bool is_null() const
+			{
+				return _type == NULL_TYPE;
 			}
 
 			//return true if the value is integer.
@@ -96,6 +124,12 @@ namespace gadt
 				return _type == STRING_TYPE;
 			}
 
+			//return true if the value is boolean.
+			inline bool is_boolean() const
+			{
+				return _type == BOOLEAN_TYPE;
+			}
+
 			//get integer value.
 			inline int integer_value() const
 			{
@@ -113,17 +147,24 @@ namespace gadt
 			{
 				return _string_value;
 			}
+
+			//get boolean value.
+			inline bool boolean_value() const
+			{
+				return _boolean_value;
+			}
 		};
 
+		//the node class of visual tree.
 		class TreeNode
 		{
 			friend class VisualTree;
 		public:
-			using pointer		= TreeNode*;
-			using reference		= TreeNode&;
-			using ChildPtrSet	= std::vector<pointer>;
-			using NodeDict		= std::map<std::string, DictValue>;
-			
+			using pointer = TreeNode*;
+			using reference = TreeNode&;
+			using ChildPtrSet = std::vector<pointer>;
+			using NodeDict = std::map<std::string, DictValue>;
+
 		private:
 			NodeDict		_dict;
 			ChildPtrSet		_childs;
@@ -134,11 +175,11 @@ namespace gadt
 
 		private:
 			//constructor function.
-			inline TreeNode(pointer parent, size_t depth, VisualTree* owner):
-				_parent{parent},
-				_depth{depth},
-				_count{1},
-				_owner{owner}
+			inline TreeNode(pointer parent, size_t depth, VisualTree* owner) :
+				_parent{ parent },
+				_depth{ depth },
+				_count{ 1 },
+				_owner{ owner }
 			{
 			}
 
@@ -219,7 +260,7 @@ namespace gadt
 					return true;
 				}
 				return false;
-				
+
 			}
 
 			//get first added child, return nullptr if not child exist.
@@ -247,7 +288,7 @@ namespace gadt
 			{
 				return _childs.size();
 			}
-			
+
 			//get depth of current node.
 			inline size_t depth() const
 			{
@@ -268,7 +309,7 @@ namespace gadt
 			//create a new child and return its index.
 			inline pointer create_child()
 			{
-				pointer p = new TreeNode(this, _depth + 1,_owner);
+				pointer p = new TreeNode(this, _depth + 1, _owner);
 				_childs.push_back(p);
 				incr_count();
 				return last_child();
@@ -276,7 +317,7 @@ namespace gadt
 
 			//create child with obj
 			template <typename T>
-			inline pointer create_child(T obj)
+			inline pointer create_child(const T& obj)
 			{
 				pointer p = create_child();
 				*p << obj;
@@ -285,10 +326,10 @@ namespace gadt
 
 			//create child with obj and callback function.
 			template <typename T>
-			inline pointer create_child(T obj, std::function<void(reference, T)> callback) 
+			inline pointer create_child(const T& obj, std::function<void(const T&,reference)> callback)
 			{
 				pointer p = create_child();
-				callback(*p, obj);
+				callback(obj, *p);
 				return p;
 			}
 
@@ -297,16 +338,14 @@ namespace gadt
 
 			//to json string
 			std::string to_json() const;
-
-			//to xml string
-			std::string to_xml() const;
 		};
 
+		//the visual tree.
 		class VisualTree
 		{
 		private:
 			TreeNode _root_node;
-			
+
 		public:
 
 			//default constructor.
@@ -339,22 +378,10 @@ namespace gadt
 				return _root_node.to_json();
 			}
 
-			//to xml string.
-			inline std::string to_xml()
-			{
-				return _root_node.to_xml();
-			}
-
 			//output json to ostream.
 			inline void output_json(std::ostream& os)
 			{
 				os << to_json();
-			}
-
-			//output xml to ostream.
-			inline void output_xml(std::ostream& os)
-			{
-				os << to_xml();
 			}
 		};
 

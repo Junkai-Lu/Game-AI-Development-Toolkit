@@ -30,6 +30,7 @@
 #define ENABLE_TREE_VISUALIZATION	//allow convert search tree to xml file for tree visualization.
 
 #include "gadtlib.h"
+#include "visual_tree.h"
 
 #pragma once
 
@@ -56,7 +57,7 @@ namespace gadt
 		* [size] is the max size of the allocator.
 		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
 		*/
-		template<typename T, bool is_debug>
+		template<typename T, bool _is_debug>
 		class MctsAllocator
 		{
 		private:
@@ -250,6 +251,12 @@ namespace gadt
 				ss << "{count : " << _count << ", remain: " << remain_size() << "}";
 				return ss.str();
 			}
+
+			//return the value of _is_debug.
+			constexpr inline bool is_debug() const
+			{
+				return _is_debug;
+			}
 		};
 
 		/*
@@ -260,12 +267,12 @@ namespace gadt
 		* [Result] is the game-result class, which stand for a terminal state of the game.
 		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
 		*/
-		template<typename State, typename Action, typename Result, bool is_debug>
+		template<typename State, typename Action, typename Result, bool _is_debug>
 		class MctsNode
 		{
 		public:											
-			using Node			= typename MctsNode<State, Action, Result, is_debug>;		//MctsNode
-			using Allocator		= typename MctsAllocator<Node, is_debug>;					//MctsAllocate 
+			using Node			= typename MctsNode<State, Action, Result, _is_debug>;		//MctsNode
+			using Allocator		= typename MctsAllocator<Node, _is_debug>;					//MctsAllocate 
 			using ActionSet		= typename std::vector<Action>;								//ActionSet is the set of Action.
 			using NodePtrSet	= typename std::vector<MctsNode*>;							//ChildSet is the set of ptrs to child nodes.
 
@@ -423,7 +430,7 @@ namespace gadt
 				}
 
 				//free the node itself.
-				if (is_debug)
+				if (is_debug())
 				{
 					bool b = allocator.free(this);
 					GADT_CHECK_WARNING(b == false, "MCTS105: free child node failed.");
@@ -473,7 +480,7 @@ namespace gadt
 				ActionSet actions;
 				for (size_t i = 0;;i++)
 				{
-					if (is_debug){GADT_CHECK_WARNING(i > _default_policy_warning_length, "MCTS103: out of default policy process max length.");}
+					if (is_debug()){GADT_CHECK_WARNING(i > _default_policy_warning_length, "MCTS103: out of default policy process max length.");}
 					AgentIndex winner = func.DetemineWinner(state);
 					if (winner != _no_winner_index)
 					{
@@ -523,7 +530,7 @@ namespace gadt
 					}
 					else
 					{
-						if (is_debug) { GADT_CHECK_WARNING(_child_nodes.size() == 0, "MCTS106: empty action set during tree policy."); }
+						if (is_debug()) { GADT_CHECK_WARNING(_child_nodes.size() == 0, "MCTS106: empty action set during tree policy."); }
 						Node* max_ucb_child_node = _child_nodes[0];
 						UcbValue max_ucb_value = 0;
 						for (size_t i = 0; i < _child_nodes.size(); i++)
@@ -538,7 +545,7 @@ namespace gadt
 								}
 							}
 						}
-						if (is_debug) { GADT_CHECK_WARNING(max_ucb_child_node == nullptr, "MCTS108: best child node pointer is nullptr."); }
+						if (is_debug()) { GADT_CHECK_WARNING(max_ucb_child_node == nullptr, "MCTS108: best child node pointer is nullptr."); }
 						max_ucb_child_node->Selection(result, allocator, func);
 					}
 				}
@@ -564,6 +571,106 @@ namespace gadt
 				ss << " }";
 				return ss.str();
 			}
+
+			//return the value of _is_debug.
+			constexpr inline bool is_debug() const
+			{
+				return _is_debug;
+			}
+		};
+
+		//convert mcts search tree to json.
+		template<typename State, typename Action, typename Result, bool _is_debug>
+		class MctsToJson
+		{
+		private:
+			using SearchNode = MctsNode<State, Action, Result, _is_debug>;
+			using JsonTree = visual_tree::VisualTree;
+			using JsonNode = visual_tree::TreeNode;
+			using StateToStrFunc = std::function<std::string(const State& state)>;
+			using CustomInfoFunc = std::function<void(const SearchNode&, JsonNode&)>;
+
+			const char* DEPTH_NAME           = "depth";
+			const char* COUNT_NAME           = "tree_size";
+			const char* STATE_NAME           = "state";
+			const char* WINNER_INDEX_NAME    = "winner";
+			const char* VISITED_TIME_NAME    = "visited_time";
+			const char* WIN_TIME_NAME        = "win_time";
+			const char* CHILD_NUM_NAME       = "child_number";
+			const char* IS_TERMIANL_NAME     = "is_terminal";
+			const char* EXIST_UNACTIVED_NAME = "exist_unactived";
+
+		private:
+			const SearchNode&	_mcts_root_node;
+			JsonTree			_json_tree;
+			bool				_include_state;
+			StateToStrFunc		_StateToStr;
+			CustomInfoFunc		_CustomInfo;
+
+		private:
+			//search node convert to json node.
+			void convert_node(const SearchNode& search_node, JsonNode& json_node)
+			{
+				json_node.add_value(DEPTH_NAME, json_node.depth());
+				json_node.add_value(COUNT_NAME, json_node.count());
+				json_node.add_value(WINNER_INDEX_NAME, search_node.winner_index());
+				json_node.add_value(VISITED_TIME_NAME, search_node.visited_time());
+				json_node.add_value(WIN_TIME_NAME, search_node.win_time());
+				json_node.add_value(CHILD_NUM_NAME, search_node.child_num());
+				json_node.add_value(IS_TERMIANL_NAME, search_node.is_end_state());
+				json_node.add_value(EXIST_UNACTIVED_NAME, search_node.exist_unactivated_action());
+				if (_include_state)
+				{
+					json_node.add_value(STATE_NAME, _StateToStr(search_node.state()));
+				}
+				_CustomInfo(search_node, json_node);
+				for (const SearchNode& node : search_node.child_set())
+				{
+					json_node.create_child(node, convert_node);
+				}
+			}
+
+			//search tree convert to json tree.
+			JsonTree ConvertToJsonTree(const SearchNode& mcts_root_node)
+			{
+				JsonTree tree;
+				convert_node(mcts_root_node, tree.root_node());
+				return tree;
+			}
+
+		public:
+			//constructor function.
+			MctsToJson(const SearchNode& mcts_root_node, StateToStrFunc StateToStr, CustomInfoFunc CustomInfo = [](const SearchNode&, JsonNode&)->void {}) :
+				_mcts_root_node(mcts_root_node),
+				_json_tree(),
+				_include_state(true),
+				_StateToStr(StateToStr),
+				_CustomInfo(CustomInfo)
+			{
+				refresh();
+			}
+
+			MctsToJson(const SearchNode& mcts_root_node):
+				_mcts_root_node(mcts_root_node),
+				_json_tree(),
+				_include_state(false),
+				_StateToStr([](const State&)->std::string { return ""; }),
+				_CustomInfo([](const SearchNode&, JsonNode&)->void {})
+			{
+				refresh();
+			}
+
+			//refresh json tree by mcts search tree.
+			inline void refresh()
+			{
+				convert_node(_mcts_root_node, _json_tree.root_node());
+			}
+
+			//set custom info function.
+			inline void set_custom_info(CustomInfoFunc CustomInfo)
+			{
+				_CustomInfo = CustomInfo;
+			}
 		};
 
 		/*
@@ -572,13 +679,13 @@ namespace gadt
 		* [State] is the game-state class, which is defined by the user.
 		* [Action] is the game-action class, which is defined by the user.
 		* [Result] is the game-result class, which stand for a terminal state of the game.
-		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
+		* [_is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
 		*/
-		template<typename State, typename Action, typename Result, bool is_debug = false>
+		template<typename State, typename Action, typename Result, bool _is_debug = false>
 		class MctsSearch
 		{
 		public:
-			using Node			= typename MctsNode<State, Action, Result, is_debug>;							
+			using Node			= typename MctsNode<State, Action, Result, _is_debug>;							
 			using Allocator		= typename Node::Allocator;								//allocator of nodes
 			using ActionSet		= typename Node::ActionSet;								//set of Action
 			using NodePtrSet	= typename Node::NodePtrSet;							//set of ptrs to child nodes.
@@ -650,7 +757,7 @@ namespace gadt
 					return policy::UCB1(avg, static_cast<UcbValue>(parent.visited_time()), static_cast<UcbValue>(child.visited_time()));
 				};
 				auto DefaultPolicy = [](const ActionSet& actions)->const Action&{
-					if (is_debug) 
+					if (_is_debug) 
 					{
 						GADT_CHECK_WARNING(actions.size() == 0, "MCTS104: empty action set during default policy.");
 					}
@@ -702,7 +809,7 @@ namespace gadt
 				for (iteration_time = 0; iteration_time < max_iteration; iteration_time++)
 				{
 					//stop search if timout.
-					if (start_tp.time_since_created() > timeout && is_debug == false)
+					if (start_tp.time_since_created() > timeout && is_debug() == false)
 					{
 						break;//timeout, stop search.
 					}
@@ -730,7 +837,7 @@ namespace gadt
 				}
 
 				//return the best result
-				if (is_debug) { GADT_CHECK_WARNING(root_actions.size() == 0, "MCTS101: root node do not exist any available action."); }
+				if (is_debug()) { GADT_CHECK_WARNING(root_actions.size() == 0, "MCTS101: root node do not exist any available action."); }
 				UcbValue max_value = 0;
 				size_t max_value_node_index = 0;
 				if (_enable_log) 
@@ -741,7 +848,7 @@ namespace gadt
 				for (size_t i = 0; i < root_actions.size(); i++)
 				{
 					auto child_ptr = root_node->child_node(i);
-					if (is_debug) { GADT_CHECK_WARNING(root_node->child_node(0) == nullptr, "MCTS107: empty child node under root node."); }
+					if (is_debug()) { GADT_CHECK_WARNING(root_node->child_node(0) == nullptr, "MCTS107: empty child node under root node."); }
 					if (_enable_log)
 					{
 						log() << "action " << i << ": "<< LogFunc.ActionToStr(root_actions[i])<<", value: ";
@@ -771,7 +878,7 @@ namespace gadt
 				{
 					log() << "[MCTS] best action index: "<< max_value_node_index << std::endl;
 				}
-				if (is_debug) { GADT_CHECK_WARNING(root_actions.size() == 0, "MCTS102: best value for root node equal to 0."); }
+				if (is_debug()) { GADT_CHECK_WARNING(root_actions.size() == 0, "MCTS102: best value for root node equal to 0."); }
 				return root_actions[max_value_node_index];
 			}
 
@@ -849,9 +956,9 @@ namespace gadt
 
 			//enable log output to ostream.
 			inline void EnableLog(
-				typename LogFuncPackage::StateToStrFunc		StateToStr,
-				typename LogFuncPackage::ActionToStrFunc		ActionToStr,
-				typename LogFuncPackage::ResultToStrFunc		ResultToStr,
+				typename LogFuncPackage::StateToStrFunc     StateToStr,
+				typename LogFuncPackage::ActionToStrFunc    ActionToStr,
+				typename LogFuncPackage::ResultToStrFunc    ResultToStr,
 				std::ostream& log = std::cout
 			)
 			{
@@ -864,6 +971,13 @@ namespace gadt
 			{
 				_enable_log = false;
 			}
+
+			//return the value of _is_debug.
+			constexpr inline bool is_debug() const
+			{
+				return _is_debug;
+			}
 		};
+
 	}
 }

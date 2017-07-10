@@ -58,6 +58,7 @@ namespace gadt
 			}
 		}
 
+		//to json string
 		std::string TreeNode::to_json() const
 		{
 			std::stringstream ss;
@@ -86,6 +87,10 @@ namespace gadt
 				{
 					ss << "\"" << pair.second.string_value() << "\"";
 				}
+				else if (pair.second.is_boolean())
+				{
+					ss << std::boolalpha << pair.second.boolean_value();
+				}
 				else
 				{
 					ss << "null";
@@ -108,11 +113,13 @@ namespace gadt
 			return ss.str();
 		}
 
+		//default constructor.
 		VisualTree::VisualTree() :
 			_root_node{ nullptr,0,this }
 		{
 		}
 
+		//copy constructor.
 		VisualTree::VisualTree(const VisualTree & tree) :
 			_root_node{ tree._root_node,nullptr,this }
 		{
