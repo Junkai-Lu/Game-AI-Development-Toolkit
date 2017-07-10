@@ -399,12 +399,6 @@ namespace gadt
 				_next_action_index++;
 			}
 
-			//return true if the state is the terminal-state of the game.
-			inline bool is_end_state() const
-			{
-				return _winner_index != _no_winner_index;
-			}
-
 			//increase visited time.
 			inline void incr_visited_time()
 			{
@@ -554,6 +548,12 @@ namespace gadt
 				BackPropagation(result, func);
 			}
 
+			//return true if the state is the terminal-state of the game.
+			inline bool is_end_state() const
+			{
+				return _winner_index != _no_winner_index;
+			}
+
 			//get info of this node.
 			std::string info() const
 			{
@@ -584,9 +584,9 @@ namespace gadt
 		class MctsToJson
 		{
 		private:
-			using SearchNode = MctsNode<State, Action, Result, _is_debug>;
-			using JsonTree = visual_tree::VisualTree;
-			using JsonNode = visual_tree::TreeNode;
+			using SearchNode     = MctsNode<State, Action, Result, _is_debug>;
+			using JsonTree       = visual_tree::VisualTree;
+			using JsonNode	     = visual_tree::TreeNode;
 			using StateToStrFunc = std::function<std::string(const State& state)>;
 			using CustomInfoFunc = std::function<void(const SearchNode&, JsonNode&)>;
 
@@ -598,14 +598,13 @@ namespace gadt
 			const char* WIN_TIME_NAME        = "win_time";
 			const char* CHILD_NUM_NAME       = "child_number";
 			const char* IS_TERMIANL_NAME     = "is_terminal";
-			const char* EXIST_UNACTIVED_NAME = "exist_unactived";
-
+			
 		private:
-			const SearchNode&	_mcts_root_node;
-			JsonTree			_json_tree;
-			bool				_include_state;
-			StateToStrFunc		_StateToStr;
-			CustomInfoFunc		_CustomInfo;
+			const SearchNode& _mcts_root_node;
+			JsonTree          _json_tree;
+			bool              _include_state;
+			StateToStrFunc    _StateToStr;
+			CustomInfoFunc    _CustomInfo;
 
 		private:
 			//search node convert to json node.
@@ -618,15 +617,15 @@ namespace gadt
 				json_node.add_value(WIN_TIME_NAME, search_node.win_time());
 				json_node.add_value(CHILD_NUM_NAME, search_node.child_num());
 				json_node.add_value(IS_TERMIANL_NAME, search_node.is_end_state());
-				json_node.add_value(EXIST_UNACTIVED_NAME, search_node.exist_unactivated_action());
 				if (_include_state)
 				{
 					json_node.add_value(STATE_NAME, _StateToStr(search_node.state()));
 				}
 				_CustomInfo(search_node, json_node);
-				for (const SearchNode& node : search_node.child_set())
+				for (const SearchNode* node : search_node.child_set())
 				{
-					json_node.create_child(node, convert_node);
+					json_node.create_child();
+					convert_node(*node, *json_node.last_child());
 				}
 			}
 
@@ -671,6 +670,12 @@ namespace gadt
 			{
 				_CustomInfo = CustomInfo;
 			}
+
+			//output json.
+			inline void output_json(std::ostream& os) const
+			{
+				//_json_tree.output_json(os);
+			}
 		};
 
 		/*
@@ -685,10 +690,11 @@ namespace gadt
 		class MctsSearch
 		{
 		public:
-			using Node			= typename MctsNode<State, Action, Result, _is_debug>;							
-			using Allocator		= typename Node::Allocator;								//allocator of nodes
-			using ActionSet		= typename Node::ActionSet;								//set of Action
-			using NodePtrSet	= typename Node::NodePtrSet;							//set of ptrs to child nodes.
+			using Node       = typename MctsNode<State, Action, Result, _is_debug>;	  //searcg node.	
+			using JsonTree   = typename MctsToJson<State, Action, Result, _is_debug>; //json tree
+			using Allocator  = typename Node::Allocator;							  //allocator of nodes
+			using ActionSet  = typename Node::ActionSet;							  //set of Action
+			using NodePtrSet = typename Node::NodePtrSet;							  //set of ptrs to child nodes.
 			
 		private:
 			using FuncPackage	= typename Node::FuncPackage;
@@ -721,6 +727,8 @@ namespace gadt
 			bool			_enable_log;			//enable log visualization.
 			std::ostream*	_log_ptr;				//pointer to log ostream.
 
+			const char* MCTS_JSON_LOG_NAME = "MctsJsonLog.txt";
+
 		public:
 			//package of default functions.
 			const DefaultFuncPackage DefaultFunc;
@@ -747,6 +755,18 @@ namespace gadt
 					<< "    enable_log: " << _enable_log << std::endl
 					<< "}" << std::endl;
 				return ss.str();
+			}
+
+			//enable log
+			inline bool enable_log() const
+			{
+				return _enable_log;
+			}
+
+			//enable gc
+			inline bool enable_gc() const
+			{
+				return _enable_gc;
 			}
 
 			//define functions as default.
@@ -785,6 +805,7 @@ namespace gadt
 				};
 			}
 
+			//function package initilize.
 			void FuncInit()
 			{
 				_func_package.TreePolicyValue	= DefaultFunc.TreePolicyValue;
@@ -844,6 +865,8 @@ namespace gadt
 				{ 
 					log() << "[MCTS] iteration finished." << std::endl
 						<< "[MCTS] actions = {" << std::endl;
+					JsonTree json_tree(*root_node, LogFunc.StateToStr);
+					json_tree.output_json(std::ofstream(MCTS_JSON_LOG_NAME));
 				}
 				for (size_t i = 0; i < root_actions.size(); i++)
 				{

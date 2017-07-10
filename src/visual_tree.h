@@ -75,6 +75,14 @@ namespace gadt
 				_boolean_value(false)
 			{
 			}
+			inline explicit DictValue(uint32_t value) :
+				_type(INTEGER_TYPE),
+				_integer_value((int)value),
+				_float_value(0),
+				_string_value(""),
+				_boolean_value(false)
+			{
+			}
 			inline explicit DictValue(double value) :
 				_type(FLOAT_TYPE),
 				_integer_value(0),
@@ -248,6 +256,16 @@ namespace gadt
 					}
 				}
 				return std::string("");
+			}
+
+			inline bool add_value(std::string key, int value)
+			{
+				if (key != g_VISUAL_TREE_CHILD_KEY)
+				{
+					_dict.insert({ key,DictValue(value) });
+					return true;
+				}
+				return false;
 			}
 
 			//add value to node, return true if add successfully.
