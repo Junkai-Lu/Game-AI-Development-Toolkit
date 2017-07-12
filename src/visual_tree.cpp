@@ -5,24 +5,26 @@ namespace gadt
 	namespace visual_tree
 	{
 		const char* g_VISUAL_TREE_CHILD_KEY = "childs";
+		const char* g_VISUAL_TREE_COUNT_KEY = "count";
+		const char* g_VISUAL_TREE_DEPTH_KEY = "depth";
 
 		//copy constructor.
-		TreeNode::TreeNode(const TreeNode& node, pointer new_parent, VisualTree* new_owner) :
-			_dict(node._dict),
+		VisualNode::VisualNode(const VisualNode* node, pointer new_parent, VisualTree* new_owner) :
+			_dict(node->_dict),
 			_parent(new_parent),
-			_depth(node._depth),
-			_count(node._count),
+			_depth(node->_depth),
+			_count(node->_count),
 			_owner(new_owner)
 		{
-			for (pointer p : node._childs)
+			for (pointer p : node->_childs)
 			{
-				pointer ptr = new TreeNode(*p, this, new_owner);
+				pointer ptr = new VisualNode(p, this, new_owner);
 				_childs.push_back(ptr);
 			}
 		}
 
 		//increase count.
-		void TreeNode::incr_count()
+		void VisualNode::incr_count()
 		{
 			_count++;
 			if (_parent != nullptr)
@@ -32,7 +34,7 @@ namespace gadt
 		}
 
 		//refresh count of all nodes.
-		size_t TreeNode::refresh_count()
+		size_t VisualNode::refresh_count()
 		{
 			if (_childs.size() == 0)
 			{
@@ -49,7 +51,7 @@ namespace gadt
 		}
 
 		//traverse all nodes.
-		void TreeNode::traverse_subtree(std::function<void(reference)> callback)
+		void VisualNode::traverse_subtree(std::function<void(reference)> callback)
 		{
 			callback(*this);
 			for (pointer p : _childs)
@@ -59,16 +61,16 @@ namespace gadt
 		}
 
 		//to json string
-		std::string TreeNode::to_json() const
+		std::string VisualNode::to_json() const
 		{
 			std::stringstream ss;
-			ss << "{ ";
+			ss << "{ " << std::endl;
 			bool is_first = true;
 			for (auto pair : _dict)
 			{
 				if (!is_first)
 				{
-					ss << ",";
+					ss << ","<< std::endl;
 				}
 				else
 				{
@@ -98,7 +100,7 @@ namespace gadt
 			}
 			if (_childs.size() > 0)
 			{
-				ss << ",\"" << g_VISUAL_TREE_CHILD_KEY << "\":[";
+				ss << "," << std::endl << "\"" << g_VISUAL_TREE_CHILD_KEY << "\":" << std::endl << "[" << std::endl;
 				for (size_t i = 0; i < _childs.size(); i++)
 				{
 					ss << _childs[i]->to_json();
@@ -106,23 +108,30 @@ namespace gadt
 					{
 						ss << ",";
 					}
+					ss << std::endl;
 				}
-				ss << "]";
+				ss << "]" << std::endl;
 			}
-			ss << "}";
+			ss << "}" << std::endl;
 			return ss.str();
 		}
 
 		//default constructor.
 		VisualTree::VisualTree() :
-			_root_node{ nullptr,0,this }
+			_root_node{ new VisualNode(nullptr,(size_t)0,this) }
 		{
 		}
 
 		//copy constructor.
 		VisualTree::VisualTree(const VisualTree & tree) :
-			_root_node{ tree._root_node,nullptr,this }
+			_root_node{ new VisualNode(tree._root_node,nullptr,this) }
 		{
+		}
+
+		void VisualTree::operator=(const VisualTree & tree)
+		{
+			delete _root_node;
+			_root_node = new VisualNode(tree.root_node(), nullptr, this);
 		}
 	}
 }

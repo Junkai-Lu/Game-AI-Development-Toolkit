@@ -28,14 +28,16 @@ namespace gadt
 	namespace visual_tree
 	{
 		extern const char* g_VISUAL_TREE_CHILD_KEY;
+		extern const char* g_VISUAL_TREE_COUNT_KEY;
+		extern const char* g_VISUAL_TREE_DEPTH_KEY;
 
 		class VisualTree;
-		class TreeNode;
+		class VisualNode;
 
 		//dictionary value.
 		class DictValue
 		{
-			friend class TreeNode;
+			friend class VisualNode;
 
 		private:
 			enum ValueType :uint8_t
@@ -164,12 +166,12 @@ namespace gadt
 		};
 
 		//the node class of visual tree.
-		class TreeNode
+		class VisualNode
 		{
 			friend class VisualTree;
 		public:
-			using pointer = TreeNode*;
-			using reference = TreeNode&;
+			using pointer = VisualNode*;
+			using reference = VisualNode&;
 			using ChildPtrSet = std::vector<pointer>;
 			using NodeDict = std::map<std::string, DictValue>;
 
@@ -183,7 +185,7 @@ namespace gadt
 
 		private:
 			//constructor function.
-			inline TreeNode(pointer parent, size_t depth, VisualTree* owner) :
+			inline VisualNode(pointer parent, size_t depth, VisualTree* owner) :
 				_parent{ parent },
 				_depth{ depth },
 				_count{ 1 },
@@ -192,13 +194,13 @@ namespace gadt
 			}
 
 			//default copy constructor is deleted.
-			TreeNode(const TreeNode&) = delete;
+			VisualNode(const VisualNode&) = delete;
 
 			//copy constructor.
-			TreeNode(const TreeNode& node, pointer parent, VisualTree* owner);
+			VisualNode(const VisualNode* node, pointer parent, VisualTree* owner);
 
 			//destructor function.
-			inline ~TreeNode()
+			inline ~VisualNode()
 			{
 				for (pointer p : _childs)
 				{
@@ -327,7 +329,7 @@ namespace gadt
 			//create a new child and return its index.
 			inline pointer create_child()
 			{
-				pointer p = new TreeNode(this, _depth + 1, _owner);
+				pointer p = new VisualNode(this, _depth + 1, _owner);
 				_childs.push_back(p);
 				incr_count();
 				return last_child();
@@ -356,13 +358,16 @@ namespace gadt
 
 			//to json string
 			std::string to_json() const;
+
+			//get subtree under this node.
+
 		};
 
 		//the visual tree.
 		class VisualTree
 		{
 		private:
-			TreeNode _root_node;
+			VisualNode* _root_node;
 
 		public:
 
@@ -372,8 +377,18 @@ namespace gadt
 			//copy constructor.
 			VisualTree(const VisualTree& tree);
 
+			//copy operator.
+			void operator=(const VisualTree& tree);
+
+			//destructor function.
+			inline ~VisualTree()
+			{
+				GADT_CHECK_WARNING(_root_node == nullptr, "VT101:root node is nullptr");
+				delete _root_node;
+			}
+
 			//get root node of the tree.
-			inline TreeNode& root_node()
+			inline VisualNode* root_node() const
 			{
 				return _root_node;
 			}
@@ -381,19 +396,26 @@ namespace gadt
 			//get number of nodes in the tree.
 			inline size_t size() const
 			{
-				return _root_node.count();
+				return _root_node->count();
+			}
+
+			//clear existing visual tree.
+			inline void clear()
+			{
+				delete _root_node;
+				_root_node = new VisualNode(nullptr, (size_t)0, this);
 			}
 
 			//traverse nodes.
-			inline void traverse_nodes(std::function<void(TreeNode&)> callback)
+			inline void traverse_nodes(std::function<void(VisualNode&)> callback)
 			{
-				_root_node.traverse_subtree(callback);
+				_root_node->traverse_subtree(callback);
 			}
 
 			//to json string.
 			inline std::string to_json()
 			{
-				return _root_node.to_json();
+				return _root_node->to_json();
 			}
 
 			//output json to ostream.

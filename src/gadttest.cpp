@@ -334,7 +334,7 @@ namespace gadt
 		void TestMctsSearch()
 		{
 			const size_t max_node = 1000;
-			const size_t max_iteration = 100;
+			const size_t max_iteration = 1000;
 			const double timeout = 100;
 			mcts_new::MctsSearch<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mcts(
 				tic_tac_toe::GetNewState,
@@ -344,7 +344,7 @@ namespace gadt
 				tic_tac_toe::AllowUpdateValue,
 				max_node
 			);
-			//mcts.EnableLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr, std::cout);
+			mcts.EnableLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr, std::cout);
 			tic_tac_toe::State state;
 			tic_tac_toe::Action action = mcts.DoMcts(state, timeout, max_iteration, false);
 			//std::cout << action.x << action.y << std::endl;
@@ -352,7 +352,7 @@ namespace gadt
 		void TestVisualTree()
 		{
 			visual_tree::VisualTree tree;
-			visual_tree::TreeNode::pointer ptr = &tree.root_node();
+			visual_tree::VisualNode::pointer ptr = tree.root_node();
 			const size_t ub = 100;
 			for (size_t  i = 0; i < ub; i++)
 			{
@@ -370,9 +370,14 @@ namespace gadt
 			std::ofstream os("JsonTest.dat");
 			//new_tree.output_json(os);
 			GADT_ASSERT(new_tree.size(), ub*2 +1);
-			GADT_ASSERT(new_tree.root_node().first_child()->count(), 1);
-			GADT_ASSERT(new_tree.root_node().last_child()->count(), ub * 2 - 1);
+			GADT_ASSERT(new_tree.root_node()->first_child()->count(), 1);
+			GADT_ASSERT(new_tree.root_node()->last_child()->count(), ub * 2 - 1);
 			
+		}
+		void TestActionList()
+		{
+			using ActionList = mcts_new::MctsActionList<tic_tac_toe::Action, true>;
+			ActionList list(1000);
 		}
 
 		const std::vector<FuncPair> func_list = {

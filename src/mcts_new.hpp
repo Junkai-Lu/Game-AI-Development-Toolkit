@@ -259,6 +259,157 @@ namespace gadt
 			}
 		};
 
+		template<typename Action, bool _is_debug>
+		class MctsActionListNode
+		{
+		public:
+			using pointer = MctsActionListNode<Action, _is_debug>*;
+
+		private:
+			const Action _action;
+			pointer      _next_node;
+
+		public:
+			//constructor function.
+			inline MctsActionListNode(const Action& action):
+				_action(action),
+				_next_node(nullptr)
+			{
+			}
+
+			//copy constructor function is disallowed.
+			MctsActionListNode(const MctsActionListNode&) = delete;
+			
+			inline const Action& action() const { return _action; }
+			inline pointer next_node() const { return _next_node; }
+			inline void set_next_node(pointer p) { _next_node = p; }
+			
+		};
+
+		template<typename Action, bool _is_debug>
+		class MctsActionList
+		{
+		public:
+			using ListNode = MctsActionListNode<Action, _is_debug>;
+			using Allocator = MctsAllocator<ListNode, _is_debug>;
+			using node_pointer = MctsActionListNode<Action, _is_debug>*;
+
+		private:
+			const bool   _private_allocator;
+			Allocator&	 _allocator;
+			node_pointer _first_node;
+			node_pointer _last_node;
+			node_pointer _iterator;
+
+		public:
+			MctsActionList(size_t allocator_count):
+				_private_allocator(true),
+				_allocator(*(new Allocator(allocator_count))),
+				_first_node(nullptr),
+				_last_node(nullptr),
+				_iterator(nullptr)
+			{
+			}
+
+			MctsActionList(Allocator& allocator):
+				_private_allocator(false),
+				_allocator(allocator),
+				_first_node(nullptr),
+				_last_node(nullptr),
+				_iterator(nullptr)
+			{
+			}
+
+			inline ~MctsActionList()
+			{
+				if (_private_allocator)
+				{
+					delete &_allocator;
+				}
+			}
+
+			//insert a new value in the end of the list.
+			void insert(const Action& action)
+			{
+				auto ptr = _allocator.construct(action);
+				if (_first_node == nullptr)
+				{
+					_first_node = ptr;
+					_last_node = ptr;
+					_iterator = ptr;
+				}
+				else
+				{
+					_last_node->set_next_node(ptr);
+					_last_node = _last_node->next_node();
+				}
+				
+			}
+
+			//clear all nodes from allocator.
+			void clear()
+			{
+				node_pointer ptr = _first_node;
+				if (_first_node != nullptr)//to avoid the first node is not exist.
+				{
+					for (;;)
+					{
+						node_pointer temp_ptr = ptr->next_node();
+						_allocator.destory(ptr);
+						if (temp_ptr == nullptr)
+						{
+							break;
+						}
+						ptr = temp_ptr;
+					}
+				}
+				_first_node = nullptr;
+				_last_node = nullptr;
+				_iterator = nullptr;
+			}
+
+			//to next iterator.
+			bool to_next_iterator()
+			{
+				if (_iterator->next_node() != nullptr)
+				{
+					_iterator = _iterator->next_node();
+					return true;
+				}
+				return false;
+			}
+
+			//get action from iterator.
+			inline const Action& iterator() const
+			{
+				return _iterator->action();
+			}
+
+			//reset iterator from begin.
+			inline void reset_iterator()
+			{
+				_iterator = _first_node;
+			}
+
+			//return true if the iterator point to the first node.
+			inline bool is_begin() const
+			{
+				return _iterator == _first_node;
+			}
+
+			//return true if the iterator point to the last node.
+			inline bool is_end() const
+			{
+				return _iterator == _last_node;
+			}
+
+			//get first itertor.
+			inline node_pointer begin() const { return _first_node; }
+
+			//get last iterator.
+			inline node_pointer end() const { return _last_node; }
+		};
+
 		/*
 		* MctsNode is the node class in the monte carlo tree search.
 		*
@@ -583,13 +734,14 @@ namespace gadt
 		template<typename State, typename Action, typename Result, bool _is_debug>
 		class MctsToJson
 		{
-		private:
+		public:
 			using SearchNode     = MctsNode<State, Action, Result, _is_debug>;
-			using JsonTree       = visual_tree::VisualTree;
-			using JsonNode	     = visual_tree::TreeNode;
+			using VisualTree     = visual_tree::VisualTree;
+			using VisualNode	 = visual_tree::VisualNode;
 			using StateToStrFunc = std::function<std::string(const State& state)>;
-			using CustomInfoFunc = std::function<void(const SearchNode&, JsonNode&)>;
+			using CustomInfoFunc = std::function<void(const SearchNode&, VisualNode&)>;
 
+		private:
 			const char* DEPTH_NAME           = "depth";
 			const char* COUNT_NAME           = "tree_size";
 			const char* STATE_NAME           = "state";
@@ -600,69 +752,78 @@ namespace gadt
 			const char* IS_TERMIANL_NAME     = "is_terminal";
 			
 		private:
-			const SearchNode& _mcts_root_node;
-			JsonTree          _json_tree;
-			bool              _include_state;
-			StateToStrFunc    _StateToStr;
-			CustomInfoFunc    _CustomInfo;
+			SearchNode*    _mcts_root_node;
+			VisualTree     _json_tree;
+			bool           _include_state;
+			StateToStrFunc _StateToStr;
+			CustomInfoFunc _CustomInfo;
 
 		private:
 			//search node convert to json node.
-			void convert_node(const SearchNode& search_node, JsonNode& json_node)
+			void convert_node(const SearchNode& search_node, VisualNode& visual_node)
 			{
-				json_node.add_value(DEPTH_NAME, json_node.depth());
-				json_node.add_value(COUNT_NAME, json_node.count());
-				json_node.add_value(WINNER_INDEX_NAME, search_node.winner_index());
-				json_node.add_value(VISITED_TIME_NAME, search_node.visited_time());
-				json_node.add_value(WIN_TIME_NAME, search_node.win_time());
-				json_node.add_value(CHILD_NUM_NAME, search_node.child_num());
-				json_node.add_value(IS_TERMIANL_NAME, search_node.is_end_state());
+				visual_node.add_value(DEPTH_NAME, visual_node.depth());
+				visual_node.add_value(WINNER_INDEX_NAME, search_node.winner_index());
+				visual_node.add_value(VISITED_TIME_NAME, search_node.visited_time());
+				visual_node.add_value(WIN_TIME_NAME, search_node.win_time());
+				visual_node.add_value(CHILD_NUM_NAME, search_node.child_num());
+				visual_node.add_value(IS_TERMIANL_NAME, search_node.is_end_state());
 				if (_include_state)
 				{
-					json_node.add_value(STATE_NAME, _StateToStr(search_node.state()));
+					visual_node.add_value(STATE_NAME, _StateToStr(search_node.state()));
 				}
-				_CustomInfo(search_node, json_node);
-				for (const SearchNode* node : search_node.child_set())
+				_CustomInfo(search_node, visual_node);
+				for (size_t i = 0;i<search_node.child_num();i++)
 				{
-					json_node.create_child();
-					convert_node(*node, *json_node.last_child());
+					auto node_ptr = search_node.child_node(i);
+					if (node_ptr != nullptr)
+					{
+						visual_node.create_child();
+						convert_node(*search_node.child_node(i), *visual_node.last_child());
+					}
 				}
 			}
 
-			//search tree convert to json tree.
-			JsonTree ConvertToJsonTree(const SearchNode& mcts_root_node)
+			//add count
+			void AddCount(VisualNode& node)
 			{
-				JsonTree tree;
-				convert_node(mcts_root_node, tree.root_node());
-				return tree;
+				node.add_value(COUNT_NAME, node.count());
+			}
+
+			//search tree convert to json tree.
+			void ConvertToVisualTree(SearchNode* mcts_root_node,VisualTree& visual_tree)
+			{
+				visual_tree.clear();
+				convert_node(*mcts_root_node, *visual_tree.root_node());//generate new visual tree.
+				visual_tree.traverse_nodes([&](VisualNode& node)->void {AddCount(node); });	//refresh count value.
 			}
 
 		public:
 			//constructor function.
-			MctsToJson(const SearchNode& mcts_root_node, StateToStrFunc StateToStr, CustomInfoFunc CustomInfo = [](const SearchNode&, JsonNode&)->void {}) :
+			MctsToJson(SearchNode* mcts_root_node, StateToStrFunc StateToStr, CustomInfoFunc CustomInfo = [](const SearchNode&, VisualNode&)->void {}) :
 				_mcts_root_node(mcts_root_node),
 				_json_tree(),
 				_include_state(true),
 				_StateToStr(StateToStr),
 				_CustomInfo(CustomInfo)
 			{
-				refresh();
+				ConvertToVisualTree(mcts_root_node, _json_tree);
 			}
 
-			MctsToJson(const SearchNode& mcts_root_node):
+			MctsToJson(SearchNode* mcts_root_node):
 				_mcts_root_node(mcts_root_node),
 				_json_tree(),
 				_include_state(false),
 				_StateToStr([](const State&)->std::string { return ""; }),
-				_CustomInfo([](const SearchNode&, JsonNode&)->void {})
+				_CustomInfo([](const SearchNode&, VisualNode&)->void {})
 			{
-				refresh();
+				ConvertToVisualTree(mcts_root_node, _json_tree);
 			}
 
 			//refresh json tree by mcts search tree.
 			inline void refresh()
 			{
-				convert_node(_mcts_root_node, _json_tree.root_node());
+				_json_tree = ConvertToVisualTree(_mcts_root_node);
 			}
 
 			//set custom info function.
@@ -672,9 +833,9 @@ namespace gadt
 			}
 
 			//output json.
-			inline void output_json(std::ostream& os) const
+			inline void output_json(std::ostream& os)
 			{
-				//_json_tree.output_json(os);
+				_json_tree.output_json(os);
 			}
 		};
 
@@ -691,7 +852,7 @@ namespace gadt
 		{
 		public:
 			using Node       = typename MctsNode<State, Action, Result, _is_debug>;	  //searcg node.	
-			using JsonTree   = typename MctsToJson<State, Action, Result, _is_debug>; //json tree
+			using VisualTree = typename MctsToJson<State, Action, Result, _is_debug>; //json tree
 			using Allocator  = typename Node::Allocator;							  //allocator of nodes
 			using ActionSet  = typename Node::ActionSet;							  //set of Action
 			using NodePtrSet = typename Node::NodePtrSet;							  //set of ptrs to child nodes.
@@ -863,10 +1024,10 @@ namespace gadt
 				size_t max_value_node_index = 0;
 				if (_enable_log) 
 				{ 
+					VisualTree json_tree(root_node, LogFunc.StateToStr);
+					json_tree.output_json(std::ofstream(MCTS_JSON_LOG_NAME));
 					log() << "[MCTS] iteration finished." << std::endl
 						<< "[MCTS] actions = {" << std::endl;
-					JsonTree json_tree(*root_node, LogFunc.StateToStr);
-					json_tree.output_json(std::ofstream(MCTS_JSON_LOG_NAME));
 				}
 				for (size_t i = 0; i < root_actions.size(); i++)
 				{
