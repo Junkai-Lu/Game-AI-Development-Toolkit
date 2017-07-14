@@ -78,7 +78,6 @@ void ShellDefine()
 		}
 	}, "run all test");
 	test->AddChildPage("mcts", "monte carlo tree search test");
-	mcts->AddFunction("alloc", [](int)->void {unittest::TestMctsAlloc(); }, "alloc part");
 	mcts->AddFunction("node", [](int)->void {unittest::TestMctsNode(); }, "node part");
 	mcts->AddFunction("search", [](int)->void {unittest::TestMctsSearch(); }, "search part");
 

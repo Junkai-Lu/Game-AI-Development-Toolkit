@@ -129,6 +129,7 @@ namespace gadt
 				}
 			}
 
+			//deallocate memory.
 			void deallocate()
 			{
 				for (size_t i = 0; i < _count; i++)
@@ -205,8 +206,7 @@ namespace gadt
 					_exist_element[index] = true;
 					_available_index.pop();
 					pointer ptr = index_to_ptr(index);
-					T temp(std::forward<Types>(args)...);
-					*ptr = temp;
+					ptr = new (ptr) T(std::forward<Types>(args)...);//placement new;
 					return ptr;
 				}
 				return nullptr;
@@ -371,7 +371,7 @@ namespace gadt
 			//to next iterator.
 			bool to_next_iterator()
 			{
-				if (_iterator->next_node() != nullptr)
+				if (_iterator != nullptr)
 				{
 					_iterator = _iterator->next_node();
 					return true;
@@ -400,7 +400,7 @@ namespace gadt
 			//return true if the iterator point to the last node.
 			inline bool is_end() const
 			{
-				return _iterator == _last_node;
+				return _iterator == nullptr;
 			}
 
 			//get first itertor.

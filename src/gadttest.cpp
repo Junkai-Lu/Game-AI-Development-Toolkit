@@ -282,38 +282,6 @@ namespace gadt
 			GADT_ASSERT(2, players.get_jump(24));
 
 		}
-		void TestMctsAlloc()
-		{
-			struct TestClass
-			{
-				size_t a;
-				size_t b;
-				size_t c;
-				std::vector<size_t> num;
-
-				TestClass(size_t _a, size_t _b, size_t _c) :
-					a(_a),
-					b(_b),
-					c(_c),
-					num{ _a,_b,_c }
-				{
-				}
-			};
-			using TestAlloc = mcts_new::MctsAllocator<TestClass, true>;
-			const size_t ub = 1000;
-			TestAlloc alloc(ub);
-			for (size_t i = 0; i < ub/2; i++)
-			{
-				TestClass* p = alloc.construct(i, i + i, i*i);
-				GADT_ASSERT(p->a, i);
-				//GADT_ASSERT(p->num[0], i);
-				alloc.destory(p);
-			}
-
-			GADT_ASSERT(alloc.is_full(), false);
-			GADT_ASSERT(alloc.remain_size(), alloc.total_size());
-			
-		}
 		void TestMctsNode()
 		{
 			tic_tac_toe::State state;
@@ -344,7 +312,7 @@ namespace gadt
 				tic_tac_toe::AllowUpdateValue,
 				max_node
 			);
-			mcts.EnableLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr, std::cout);
+			//mcts.EnableLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr, std::cout);
 			tic_tac_toe::State state;
 			tic_tac_toe::Action action = mcts.DoMcts(state, timeout, max_iteration, false);
 			//std::cout << action.x << action.y << std::endl;
@@ -374,20 +342,69 @@ namespace gadt
 			GADT_ASSERT(new_tree.root_node()->last_child()->count(), ub * 2 - 1);
 			
 		}
-		void TestActionList()
+		void TestStlList()
 		{
-			using ActionList = mcts_new::MctsActionList<tic_tac_toe::Action, true>;
+			using Action = tic_tac_toe::Action;
+			using ActionList = gadt::stl::GadtList<tic_tac_toe::Action, true>;
 			ActionList list(1000);
+			for (size_t i = 0; i < 9; i++)
+			{
+				list.insert({ i / 3,i % 3,tic_tac_toe::BLACK });
+			}
+			size_t count = 0;
+			for (list.reset_iterator(); list.is_end() == false; list.to_next_iterator())
+			{
+				GADT_ASSERT(list.iterator().x, count / 3);
+				GADT_ASSERT(list.iterator().y, count % 3);
+				count++;
+			}
+			GADT_ASSERT(count, 9);
+			list.clear();
+			GADT_ASSERT(list.begin(), nullptr);
+			GADT_ASSERT(list.end(), nullptr);
+			GADT_ASSERT(list.to_next_iterator(), false);
+		}
+		void TestStlAllocator()
+		{
+			struct TestClass
+			{
+				size_t a;
+				size_t b;
+				size_t c;
+				std::vector<size_t> num;
+
+				TestClass(size_t _a, size_t _b, size_t _c) :
+					a(_a),
+					b(_b),
+					c(_c),
+					num{ _a,_b,_c }
+				{
+				}
+			};
+			using TestAlloc = stl::GadtAllocator<TestClass, true>;
+			const size_t ub = 300000;
+			TestAlloc alloc(ub);
+			for (size_t i = 0; i < ub / 2; i++)
+			{
+				TestClass* p = alloc.construct(i, i + i, i*i);
+				GADT_ASSERT(p->a, i);
+				//GADT_ASSERT(p->num[0], i);
+				alloc.destory(p);
+			}
+			GADT_ASSERT(alloc.is_full(), false);
+			GADT_ASSERT(alloc.remain_size(), alloc.total_size());
+
 		}
 
 		const std::vector<FuncPair> func_list = {
-			{ "bitboard"	,TestBitBoard	},
-			{ "file"		,TestFileLib	},
-			{ "index"		,TestIndex		},
-			{ "mctsalloc"	,TestMctsAlloc	},
-			{ "mctsnode"	,TestMctsNode	},
-			{ "mctssearch"	,TestMctsSearch	},
-			{ "tree"		,TestVisualTree }
+			{ "bitboard"	,TestBitBoard		},
+			{ "file"		,TestFileLib		},
+			{ "index"		,TestIndex			},
+			{ "mctsnode"	,TestMctsNode		},
+			{ "mctssearch"	,TestMctsSearch		},
+			{ "tree"		,TestVisualTree		},
+			{ "stlalloc"	,TestStlAllocator	},
+			{ "stllist"		,TestStlList		}
 		};
 		void RunTest(FuncPair func_pair)
 		{
@@ -396,7 +413,7 @@ namespace gadt
 			auto t = timer::GetClock();
 			cout << endl;
 			func_pair.second();
-			cout << ">> test comlete, time = ";
+			cout << ">> test complete, time = ";
 			console::Cprintf(timer::GetTimeDifference(t), console::RED);
 			cout << endl;
 		}
