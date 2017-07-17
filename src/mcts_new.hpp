@@ -27,8 +27,6 @@
 * THE SOFTWARE.
 */
 
-#define ENABLE_TREE_VISUALIZATION	//allow convert search tree to xml file for tree visualization.
-
 #include "gadtlib.h"
 #include "visual_tree.h"
 

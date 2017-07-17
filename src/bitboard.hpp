@@ -38,7 +38,7 @@ namespace gadt
 {
 	namespace bitboard
 	{
-		typedef uint64_t gadt_int64;
+		using gadt_int64 = uint64_t;
 
 		template<size_t ub>
 		class BitBoard

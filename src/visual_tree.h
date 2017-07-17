@@ -69,22 +69,6 @@ namespace gadt
 				_boolean_value(false)
 			{
 			}
-			inline explicit DictValue(size_t value) :
-				_type(INTEGER_TYPE),
-				_integer_value((int)value),
-				_float_value(0),
-				_string_value(""),
-				_boolean_value(false)
-			{
-			}
-			inline explicit DictValue(uint32_t value) :
-				_type(INTEGER_TYPE),
-				_integer_value((int)value),
-				_float_value(0),
-				_string_value(""),
-				_boolean_value(false)
-			{
-			}
 			inline explicit DictValue(double value) :
 				_type(FLOAT_TYPE),
 				_integer_value(0),
@@ -92,6 +76,15 @@ namespace gadt
 				_string_value(""),
 				_boolean_value(false)
 			{
+			}
+			inline explicit DictValue(const char* value) :
+				_type(STRING_TYPE),
+				_integer_value(0),
+				_float_value(0),
+				_string_value(std::string(value)),
+				_boolean_value(false)
+			{
+
 			}
 			inline explicit DictValue(std::string value) :
 				_type(STRING_TYPE),
@@ -107,6 +100,16 @@ namespace gadt
 				_float_value(0),
 				_string_value(""),
 				_boolean_value(value)
+			{
+			}
+			
+			template <typename T> 
+			inline DictValue(T value) :
+				_type(INTEGER_TYPE),
+				_integer_value((int)value),
+				_float_value(0),
+				_string_value(""),
+				_boolean_value(false)
 			{
 			}
 
