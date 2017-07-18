@@ -36,6 +36,9 @@ namespace gadt
 {
 	namespace mcts_new
 	{
+		//allow check warning if it is true.
+		constexpr const bool g_MCTS_NEW_ENABLE_WARNING = true;
+
 		//AgentIndex is the type index of each player, default is int8_t.
 		using AgentIndex		= int8_t;
 		using UcbValue			= double;
@@ -576,7 +579,7 @@ namespace gadt
 				if (is_debug())
 				{
 					bool b = allocator.free(this);
-					GADT_CHECK_WARNING(b == false, "MCTS105: free child node failed.");
+					GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, b == false, "MCTS105: free child node failed.");
 				}
 				else
 				{
@@ -623,7 +626,7 @@ namespace gadt
 				ActionSet actions;
 				for (size_t i = 0;;i++)
 				{
-					if (is_debug()){GADT_CHECK_WARNING(i > _default_policy_warning_length, "MCTS103: out of default policy process max length.");}
+					if (is_debug()){GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, i > _default_policy_warning_length, "MCTS103: out of default policy process max length.");}
 					AgentIndex winner = func.DetemineWinner(state);
 					if (winner != _no_winner_index)
 					{
@@ -673,7 +676,7 @@ namespace gadt
 					}
 					else
 					{
-						if (is_debug()) { GADT_CHECK_WARNING(_child_nodes.size() == 0, "MCTS106: empty action set during tree policy."); }
+						if (is_debug()) { GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, _child_nodes.size() == 0, "MCTS106: empty action set during tree policy."); }
 						Node* max_ucb_child_node = _child_nodes[0];
 						UcbValue max_ucb_value = 0;
 						for (size_t i = 0; i < _child_nodes.size(); i++)
@@ -688,7 +691,7 @@ namespace gadt
 								}
 							}
 						}
-						if (is_debug()) { GADT_CHECK_WARNING(max_ucb_child_node == nullptr, "MCTS108: best child node pointer is nullptr."); }
+						if (is_debug()) { GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, max_ucb_child_node == nullptr, "MCTS108: best child node pointer is nullptr."); }
 						max_ucb_child_node->Selection(result, allocator, func);
 					}
 				}
@@ -938,7 +941,7 @@ namespace gadt
 				auto DefaultPolicy = [](const ActionSet& actions)->const Action&{
 					if (_is_debug) 
 					{
-						GADT_CHECK_WARNING(actions.size() == 0, "MCTS104: empty action set during default policy.");
+						GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, actions.size() == 0, "MCTS104: empty action set during default policy.");
 					}
 					return actions[rand() % actions.size()];
 				};
@@ -1017,7 +1020,7 @@ namespace gadt
 				}
 
 				//return the best result
-				if (is_debug()) { GADT_CHECK_WARNING(root_actions.size() == 0, "MCTS101: root node do not exist any available action."); }
+				if (is_debug()) { GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, root_actions.size() == 0, "MCTS101: root node do not exist any available action."); }
 				UcbValue max_value = 0;
 				size_t max_value_node_index = 0;
 				if (_enable_log) 
@@ -1030,7 +1033,7 @@ namespace gadt
 				for (size_t i = 0; i < root_actions.size(); i++)
 				{
 					auto child_ptr = root_node->child_node(i);
-					if (is_debug()) { GADT_CHECK_WARNING(root_node->child_node(0) == nullptr, "MCTS107: empty child node under root node."); }
+					if (is_debug()) { GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, root_node->child_node(0) == nullptr, "MCTS107: empty child node under root node."); }
 					if (_enable_log)
 					{
 						log() << "action " << i << ": "<< LogFunc.ActionToStr(root_actions[i])<<", value: ";
@@ -1060,7 +1063,7 @@ namespace gadt
 				{
 					log() << "[MCTS] best action index: "<< max_value_node_index << std::endl;
 				}
-				if (is_debug()) { GADT_CHECK_WARNING(root_actions.size() == 0, "MCTS102: best value for root node equal to 0."); }
+				if (is_debug()) { GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, root_actions.size() == 0, "MCTS102: best value for root node equal to 0."); }
 				return root_actions[max_value_node_index];
 			}
 

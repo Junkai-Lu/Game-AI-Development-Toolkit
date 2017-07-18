@@ -49,9 +49,9 @@
 
 //a marco use for parameters check.
 #ifdef GADT_WARNING
-	#define GADT_CHECK_WARNING(warning_condition, reason) gadt::console::WarningCheck(warning_condition, reason, __FILE__, __LINE__, __FUNCTION__);
+	#define GADT_CHECK_WARNING(enable, condition, reason) gadt::console::WarningCheck(enable && condition, reason, __FILE__, __LINE__, __FUNCTION__);
 #else
-	#define GADT_CHECK_WARNING(warning_condition, reason)
+	#define GADT_CHECK_WARNING(enable, condition, reason)
 #endif
 
 #include <stdlib.h>

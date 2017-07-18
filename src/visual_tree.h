@@ -27,6 +27,9 @@ namespace gadt
 {
 	namespace visual_tree
 	{
+		//allow check warning if it is true.
+		constexpr const bool g_VISUAL_TREE_ENABLE_WARNING = true;
+
 		extern const char* g_VISUAL_TREE_CHILD_KEY;
 		extern const char* g_VISUAL_TREE_COUNT_KEY;
 		extern const char* g_VISUAL_TREE_DEPTH_KEY;
@@ -386,7 +389,7 @@ namespace gadt
 			//destructor function.
 			inline ~VisualTree()
 			{
-				GADT_CHECK_WARNING(_root_node == nullptr, "VT101:root node is nullptr");
+				GADT_CHECK_WARNING(g_VISUAL_TREE_ENABLE_WARNING, _root_node == nullptr, "VT101:root node is nullptr");
 				delete _root_node;
 			}
 
