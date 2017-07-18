@@ -524,10 +524,6 @@ namespace gadt
 			}
 		};
 
-		//type define.
-		typedef BitBoard<128> BitBoard128;
-		typedef BitBoard<256> BitBoard256;
-
 		//bit poker.
 		class BitPoker
 		{
@@ -1379,7 +1375,9 @@ namespace gadt
 		};
 
 		//type define.
-		typedef ValueVector<54> PokerVector;
-		typedef ValueVector<144> MahjongVector;
+		using PokerVector   = ValueVector<54>;
+		using MahjongVector = ValueVector<144>;
+		using BitBoard128   = BitBoard<128>;
+		using BitBoard256   = BitBoard<256>;
 	}
 }

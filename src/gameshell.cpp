@@ -28,57 +28,60 @@
 
 namespace gadt
 {
-	//ShellPageBase
-
-	const char* ShellPageBase::g_HELP_COMMAND	= "help";
-	const char* ShellPageBase::g_EXIT_COMMAND	= "return";
-	const char* ShellPageBase::g_CLEAN_COMMAND	= "clean";
-
-	ShellPageBase::ShellPageBase(GameShell* belonging_shell, std::string name) :
-		_belonging_shell(belonging_shell),
-		_name(name),
-		_index(AllocPageIndex()),
-		_info_func([]()->void {}),
-		_constructor_func([]()->void {}),
-		_destructor_func([]()->void {})
+	namespace shell
 	{
-	}
-	void ShellPageBase::ShowPath() const
-	{
-		if (_call_source == nullptr)
+		//global variables
+		const char* ShellPageBase::g_HELP_COMMAND = "help";
+		const char* ShellPageBase::g_EXIT_COMMAND = "return";
+		const char* ShellPageBase::g_CLEAN_COMMAND = "clean";
+
+		//ShellPageBase
+		ShellPageBase::ShellPageBase(GameShell* belonging_shell, std::string name) :
+			_belonging_shell(belonging_shell),
+			_name(name),
+			_index(AllocPageIndex()),
+			_info_func([]()->void {}),
+			_constructor_func([]()->void {}),
+			_destructor_func([]()->void {})
 		{
-			console::Cprintf(GameShell::focus_game()->name(), console::PURPLE);
-			std::cout << " @ ";
-			console::Cprintf(_name, console::YELLOW);
 		}
-		else
+		void ShellPageBase::ShowPath() const
 		{
-			_call_source->ShowPath();
-			std::cout << "/";
-			console::Cprintf(_name, console::GREEN);
+			if (_call_source == nullptr)
+			{
+				console::Cprintf(GameShell::focus_game()->name(), console::PURPLE);
+				std::cout << " @ ";
+				console::Cprintf(_name, console::YELLOW);
+			}
+			else
+			{
+				_call_source->ShowPath();
+				std::cout << "/";
+				console::Cprintf(_name, console::GREEN);
+			}
 		}
-	}
-	void ShellPageBase::CleanScreen() const
-	{
-		console::SystemClear();
-		_info_func();
-		std::cout << ">> ";
-		console::Cprintf("[ Shell ", console::DEEP_YELLOW);
-		console::Cprintf("<" + _name + ">", console::YELLOW);
-		console::Cprintf(" ]\n", console::DEEP_YELLOW);
-		std::cout << ">> ";
-		console::Cprintf(std::string("use '") + std::string(g_HELP_COMMAND) + std::string("' to get more command\n\n"), console::DEEP_GREEN);
-	}
-	void ShellPageBase::BeFocus()
-	{
-		belonging_shell()->_focus_page = this;
-	}
+		void ShellPageBase::CleanScreen() const
+		{
+			console::SystemClear();
+			_info_func();
+			std::cout << ">> ";
+			console::Cprintf("[ Shell ", console::DEEP_YELLOW);
+			console::Cprintf("<" + _name + ">", console::YELLOW);
+			console::Cprintf(" ]\n", console::DEEP_YELLOW);
+			std::cout << ">> ";
+			console::Cprintf(std::string("use '") + std::string(g_HELP_COMMAND) + std::string("' to get more command\n\n"), console::DEEP_GREEN);
+		}
+		void ShellPageBase::BeFocus()
+		{
+			belonging_shell()->_focus_page = this;
+		}
 
-	//GameShell
-	GameShell* GameShell::_g_focus_game = nullptr;
-	GameShell::GameShell(std::string name) :
-		_name(name)
-	{
-		BeFocus();
+		//GameShell
+		GameShell* GameShell::_g_focus_game = nullptr;
+		GameShell::GameShell(std::string name) :
+			_name(name)
+		{
+			BeFocus();
+		}
 	}
 }
