@@ -142,6 +142,13 @@ namespace gadt
 			bitboard::BitBoard<56> temp;
 			bitboard::BitBoard<56> subtemp;
 			subtemp.set(1);
+			size_t count = 0;
+			for (bool v : subtemp)
+			{
+				GADT_ASSERT(v, (count == 1 ? true : false));
+				count++;
+			}
+			GADT_ASSERT(count, temp.upper_bound());
 			GADT_ASSERT(0, temp.total());
 			GADT_ASSERT(false, temp.any());
 			GADT_ASSERT(true, temp.none());
@@ -170,6 +177,13 @@ namespace gadt
 			GADT_ASSERT(false, temp_64.any());
 			GADT_ASSERT(true, temp_64.none());
 			temp_64.set(1);
+			count = 0;
+			for (bool v : temp_64)
+			{
+				GADT_ASSERT(v, (count == 1 ? true : false));
+				count++;
+			}
+			GADT_ASSERT(count, temp_64.upper_bound());
 			GADT_ASSERT(true, temp_64.any());
 			GADT_ASSERT(false, temp_64.none());
 			temp_64.set(51);
@@ -192,6 +206,13 @@ namespace gadt
 			GADT_ASSERT(false, temp_poker.none());
 			temp_poker.set(2, 2);
 			temp_poker.set(3, 3);
+			count = 0;
+			for (size_t v : temp_poker)
+			{
+				GADT_ASSERT(v, (count > 0 && count < 4 ? count : 0));
+				count++;
+			}
+			GADT_ASSERT(count, temp_poker.upper_bound());
 			subtemp_poker.set(1, 1);
 			subtemp_poker.set(2, 1);
 			subtemp_poker.set(3, 1);
@@ -217,6 +238,13 @@ namespace gadt
 			GADT_ASSERT(false, temp_mahjong.none());
 			temp_mahjong.set(2, 2);
 			temp_mahjong.set(3, 3);
+			count = 0;
+			for (size_t v : temp_mahjong)
+			{
+				GADT_ASSERT(v, (count > 0 && count < 4 ? count : 0));
+				count++;
+			}
+			GADT_ASSERT(count, temp_mahjong.upper_bound());
 			GADT_ASSERT(6, temp_mahjong.total());
 			temp_mahjong.reset(1);
 			GADT_ASSERT(5, temp_mahjong.total());
@@ -237,6 +265,13 @@ namespace gadt
 			//test ValueVector
 			bitboard::ValueVector<14> temp_vec;
 			temp_vec.push(2);
+			count = 0;
+			for (auto v : temp_vec)
+			{
+				GADT_ASSERT(v, 2);
+				count++;
+			}
+			GADT_ASSERT(count, temp_vec.length());
 			GADT_ASSERT(1, temp_vec.length());
 			GADT_ASSERT(2, temp_vec.draw_value());
 			GADT_ASSERT(2, temp_vec.draw_and_remove_value());
