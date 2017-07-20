@@ -1283,6 +1283,16 @@ namespace gadt
 			{
 			}
 
+			//init with int vector.
+			template<typename T,typename std::enable_if<std::is_integral<T>::value,int> = 0>
+			ValueVector(const std::vector<T>& vec)
+			{
+				for (size_t i = 0; i < vec.size() && i < _upper_bound; i++)
+				{
+					push(static_cast<uint8_t>(vec[i]));
+				}
+			}
+
 			//copy constructor
 			ValueVector(const ValueVector& v) :
 				_len(v._len)
