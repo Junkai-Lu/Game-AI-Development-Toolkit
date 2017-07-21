@@ -44,10 +44,10 @@ namespace gadt
 			std::function<void()> _destructor_func;		//destructror func. would be called when quit the page.
 
 			//static paramaters.
-			static const char* g_HELP_COMMAND;			//help command, default is 'help'
-			static const char* g_EXIT_COMMAND;			//exit page command, default is 'return'
-			static const char* g_CLEAN_COMMAND;			//clean screen command, default is 'clear'
-
+			static const char*  g_SHELL_HELP_COMMAND_STR;			//help command, default is 'help'
+			static const char*  g_SHELL_EXIT_COMMAND_STR;			//exit page command, default is 'return'
+			static const char*  g_SHELL_CLEAN_COMMAND_STR;			//clean screen command, default is 'clear'
+			static const size_t g_SHELL_MAX_COMMAND_LENGTH;		//max length of the command. 
 
 		protected:
 
@@ -240,31 +240,30 @@ namespace gadt
 			std::map<std::string, std::string> _des;								//dict of describes.
 			std::set<std::string> _child;											//dict of child pages
 			std::function<bool(std::string, datatype&)> _custom_command_check_func;	//custom command check func
-			datatype _data;
-
-
+			datatype _data;															//data of the page.
 
 		private:
 			inline void ShellInit()
 			{
 				//add exit describe
-				AddDescript(g_EXIT_COMMAND, "return to previous menu.");
+				AddDescript(g_SHELL_EXIT_COMMAND_STR, "return to previous menu.");
 
 				//add help command.
-				AddFunction(g_HELP_COMMAND, [&](datatype& data)->void {
+				AddFunction(g_SHELL_HELP_COMMAND_STR, [&](datatype& data)->void {
 					std::cout << std::endl << ">> ";
 					console::Cprintf("[ COMMAND LIST ]\n\n", console::YELLOW);
 					for (auto command : _des)
 					{
 						std::cout << "   '";
 						console::Cprintf(command.first, console::RED);
-						std::cout << "'" << std::string("          ").substr(0, 10 - command.first.length()) << command.second << std::endl;
+						std::cout << "'" << std::string(g_SHELL_MAX_COMMAND_LENGTH,' ').substr(0, g_SHELL_MAX_COMMAND_LENGTH - command.first.length()) 
+							<< command.second << std::endl;
 					}
 					std::cout << std::endl << std::endl;
 				}, "get command list");
 
 				//add clean command.
-				AddFunction(g_CLEAN_COMMAND, [&](datatype& data)->void {
+				AddFunction(g_SHELL_CLEAN_COMMAND_STR, [&](datatype& data)->void {
 					this->CleanScreen();
 				}, "clean screen.");
 			}
@@ -349,7 +348,7 @@ namespace gadt
 					}
 
 					//return command
-					if (command == g_EXIT_COMMAND)
+					if (command == g_SHELL_EXIT_COMMAND_STR)
 					{
 						if (call_source != nullptr)
 						{
@@ -386,6 +385,16 @@ namespace gadt
 				_destructor_func();	//excute destructor func.
 			}
 
+			//curtail command if the length of command is out of max length.
+			inline std::string curtail_command(std::string command)
+			{
+				if (command.size() > g_SHELL_MAX_COMMAND_LENGTH)
+				{
+					return command.substr(0, g_SHELL_MAX_COMMAND_LENGTH);
+				}
+				return command;
+			}
+
 		public:
 			//default function.
 			ShellPage(GameShell* belonging_shell, std::string name) :
@@ -416,6 +425,7 @@ namespace gadt
 			//add child page of this page,the name page should exist in same shell and the name is also the command to enter this page.
 			inline void AddChildPage(std::string child_name, std::string des)
 			{
+				child_name = curtail_command(child_name);
 				if (child_name != name())
 				{
 					_des[child_name] = des;
@@ -434,6 +444,7 @@ namespace gadt
 			//add a function that can be execute by command and is allowed to visit the data binded in this page.
 			inline void AddFunction(std::string command, std::function<void(datatype&)> func, std::string des)
 			{
+				command = curtail_command(command);
 				_func[command] = func;
 				_des[command] = des;
 			}
@@ -441,6 +452,7 @@ namespace gadt
 			//add/cover descript, the command should be added in other place.
 			inline void AddDescript(std::string command, std::string des)
 			{
+				command = curtail_command(command);
 				_des[command] = des;
 			}
 

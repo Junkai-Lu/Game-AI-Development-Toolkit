@@ -288,7 +288,7 @@ namespace gadt
 				}
 				return true;
 			}
-
+						
 			//begin of the iter
 			Iter begin() const
 			{
@@ -513,6 +513,21 @@ namespace gadt
 			{
 				return _data == target._data;
 			}
+			inline BitBoard64 operator&(const BitBoard64 target) const 
+			{ 
+				return BitBoard64(_data & target._data); 
+			}
+			inline BitBoard64 operator|(const BitBoard64 target) const 
+			{
+				return BitBoard64(_data | target._data); 
+			}
+			inline void operator&=(const BitBoard64 target) { _data &= target._data; }
+			inline void operator|=(const BitBoard64 target) { _data |= target._data; }
+			inline size_t operator*(const BitBoard64 target) const
+			{
+				return this->operator&(target).total();
+			}
+
 
 			//begin of the iter
 			Iter begin() const
@@ -749,6 +764,18 @@ namespace gadt
 				return _upper_bound;
 			}
 
+			//begin of the iter
+			Iter begin() const
+			{
+				return Iter(0, *this);
+			}
+
+			//end of the iter
+			Iter end() const
+			{
+				return Iter(upper_bound(), *this);
+			}
+
 			inline void operator+=(const BitPoker target)
 			{
 #ifdef GADT_WARNING
@@ -837,17 +864,14 @@ namespace gadt
 			{
 				return _data >= target._data;
 			}
-
-			//begin of the iter
-			Iter begin() const
+			inline size_t operator*(const BitPoker target) const
 			{
-				return Iter(0, *this);
-			}
-
-			//end of the iter
-			Iter end() const
-			{
-				return Iter(upper_bound(), *this);
+				size_t t = 0;
+				for (size_t i = 0; i < upper_bound(); i++)
+				{
+					t += (get(i) * target.get(i));
+				}
+				return t;
 			}
 		};
 
@@ -1127,6 +1151,18 @@ namespace gadt
 				return _upper_bound;
 			}
 
+			//begin of the iter
+			Iter begin() const
+			{
+				return Iter(0, *this);
+			}
+
+			//end of the iter
+			Iter end() const
+			{
+				return Iter(_upper_bound, *this);
+			}
+
 			//operation.
 			inline void operator+=(const BitMahjong target)
 			{
@@ -1249,18 +1285,18 @@ namespace gadt
 				}
 				return false;
 			}
-
-			//begin of the iter
-			Iter begin() const
+			inline size_t operator*(const BitMahjong target) const
 			{
-				return Iter(0, *this);
+				size_t t = 0;
+				for (size_t i = 0; i < upper_bound(); i++)
+				{
+					t += (get(i) * target.get(i));
+				}
+				return t;
 			}
 
-			//end of the iter
-			Iter end() const
-			{
-				return Iter(_upper_bound, *this);
-			}
+
+			
 		};
 
 		//value vector.
@@ -1279,17 +1315,18 @@ namespace gadt
 			//default constructor function
 			inline ValueVector() :
 				_len(0)
-				
 			{
 			}
 
 			//init with int vector.
-			template<typename T,typename std::enable_if<std::is_integral<T>::value,int> = 0>
-			ValueVector(const std::vector<T>& vec)
+			template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+			ValueVector(std::initializer_list<T> init_list) :
+				_len(0)
 			{
-				for (size_t i = 0; i < vec.size() && i < _upper_bound; i++)
+				for (T p : init_list)
 				{
-					push(static_cast<uint8_t>(vec[i]));
+					if (is_full()) { break; }
+					push(p);
 				}
 			}
 
@@ -1332,7 +1369,10 @@ namespace gadt
 				return get(index);
 			}
 
-			
+			inline bool is_full() const
+			{
+				return _len >= upper_bound();
+			}
 
 			//get value operation.
 			inline uint8_t value(size_t index) const

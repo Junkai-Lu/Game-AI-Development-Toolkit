@@ -278,6 +278,14 @@ namespace gadt
 			GADT_ASSERT(0, temp_vec.length());
 			temp_vec.push(3);
 			GADT_ASSERT(1, temp_vec.length());
+
+			//test ValueVector
+			bitboard::ValueVector<5> temp_vec_5{1,2,3,4,5,6};
+			GADT_ASSERT(temp_vec_5.get(4), 5);
+			GADT_ASSERT(temp_vec_5.length(), 5);
+			GADT_ASSERT(temp_vec_5.is_full(), true);
+			GADT_ASSERT(temp_vec_5[0], 1);
+			GADT_ASSERT(temp_vec_5.upper_bound(), 5);
 		}
 		void TestFileLib()
 		{
@@ -432,14 +440,14 @@ namespace gadt
 		}
 
 		const std::vector<FuncPair> func_list = {
-			{ "bitboard"	,TestBitBoard		},
-			{ "file"		,TestFileLib		},
-			{ "index"		,TestIndex			},
-			{ "mctsnode"	,TestMctsNode		},
-			{ "mctssearch"	,TestMctsSearch		},
-			{ "tree"		,TestVisualTree		},
-			{ "stlalloc"	,TestStlAllocator	},
-			{ "stllist"		,TestStlList		}
+			{ "bitboard"		,TestBitBoard		},
+			{ "file"			,TestFileLib		},
+			{ "index"			,TestIndex			},
+			{ "mcts::node"		,TestMctsNode		},
+			{ "mcts::search"	,TestMctsSearch		},
+			{ "visual_tree"		,TestVisualTree		},
+			{ "stl::alloc"		,TestStlAllocator	},
+			{ "stl::list"		,TestStlList		}
 		};
 		void RunTest(FuncPair func_pair)
 		{

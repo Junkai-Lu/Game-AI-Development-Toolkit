@@ -31,9 +31,10 @@ namespace gadt
 	namespace shell
 	{
 		//global variables
-		const char* ShellPageBase::g_HELP_COMMAND = "help";
-		const char* ShellPageBase::g_EXIT_COMMAND = "return";
-		const char* ShellPageBase::g_CLEAN_COMMAND = "clean";
+		const char* ShellPageBase::g_SHELL_HELP_COMMAND_STR = "help";
+		const char* ShellPageBase::g_SHELL_EXIT_COMMAND_STR = "return";
+		const char* ShellPageBase::g_SHELL_CLEAN_COMMAND_STR = "clean";
+		const size_t ShellPageBase::g_SHELL_MAX_COMMAND_LENGTH = 15;
 
 		//ShellPageBase
 		ShellPageBase::ShellPageBase(GameShell* belonging_shell, std::string name) :
@@ -69,7 +70,7 @@ namespace gadt
 			console::Cprintf("<" + _name + ">", console::YELLOW);
 			console::Cprintf(" ]\n", console::DEEP_YELLOW);
 			std::cout << ">> ";
-			console::Cprintf(std::string("use '") + std::string(g_HELP_COMMAND) + std::string("' to get more command\n\n"), console::DEEP_GREEN);
+			console::Cprintf(std::string("use '") + std::string(g_SHELL_HELP_COMMAND_STR) + std::string("' to get more command\n\n"), console::DEEP_GREEN);
 		}
 		void ShellPageBase::BeFocus()
 		{
