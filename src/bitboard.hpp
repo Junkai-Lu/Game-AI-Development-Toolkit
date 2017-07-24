@@ -219,7 +219,7 @@ namespace gadt
 			}
 
 			//upper bound
-			inline static size_t upper_bound()
+			constexpr inline static size_t upper_bound()
 			{
 				return ub;
 			}
@@ -434,7 +434,7 @@ namespace gadt
 			}
 
 			//upper bound.
-			inline static size_t upper_bound()
+			constexpr inline static size_t upper_bound()
 			{
 				return _upper_bound;
 			}
@@ -759,7 +759,7 @@ namespace gadt
 			}
 
 			//upper bound.
-			inline static size_t upper_bound()
+			constexpr inline static size_t upper_bound()
 			{
 				return _upper_bound;
 			}
@@ -1146,7 +1146,7 @@ namespace gadt
 			}
 
 			//upper bound.
-			inline static size_t upper_bound()
+			constexpr inline static size_t upper_bound()
 			{
 				return _upper_bound;
 			}
@@ -1294,9 +1294,6 @@ namespace gadt
 				}
 				return t;
 			}
-
-
-			
 		};
 
 		//value vector.
