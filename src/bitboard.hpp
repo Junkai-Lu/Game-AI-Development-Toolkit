@@ -113,6 +113,15 @@ namespace gadt
 				}
 			}
 
+			//initilize BitBoard by list
+			inline BitBoard(std::initializer_list<size_t> init_list)
+			{
+				for (size_t index : init_list)
+				{
+					set(index);
+				}
+			}
+
 			//return whether any bit is true.
 			inline bool any() const
 			{
@@ -328,6 +337,8 @@ namespace gadt
 				}
 #endif
 			}
+			
+			//init by 64-bit integer
 			explicit inline BitBoard64(gadt_int64 board) :
 				_data(board)
 			{
@@ -337,6 +348,15 @@ namespace gadt
 					_debug_data[i] = get(i);
 				}
 #endif
+			}
+
+			//initilize BitBoard by list
+			inline BitBoard64(std::initializer_list<size_t> init_list)
+			{
+				for (size_t index : init_list)
+				{
+					set(index);
+				}
 			}
 
 			//equal to the appointed value.
@@ -567,6 +587,8 @@ namespace gadt
 				}
 #endif
 			}
+
+			//init by 64-bit integer
 			inline BitPoker(gadt_int64 board) :
 				_data(board)
 			{
@@ -576,6 +598,24 @@ namespace gadt
 					_debug_data[i] = (uint8_t)get(i);
 				}
 #endif
+			}
+
+			//initilize BitBoard by list
+			inline BitPoker(std::initializer_list<size_t> init_list)
+			{
+				for (size_t index : init_list)
+				{
+					set(index, 1);
+				}
+			}
+
+			//initilize BitBoard by pair list
+			inline BitPoker(std::initializer_list<std::pair<size_t,gadt_int64>> init_list)
+			{
+				for (auto p : init_list)
+				{
+					set(p.first, p.second);
+				}
 			}
 
 			//equal to the appointed value.
@@ -901,6 +941,8 @@ namespace gadt
 				}
 #endif
 			}
+
+			//init by two 64-bit integer
 			inline BitMahjong(gadt_int64 fir_data, gadt_int64 sec_data) :
 				_fir_data(fir_data),
 				_sec_data(sec_data)
@@ -911,6 +953,24 @@ namespace gadt
 					_debug_data[i] = (uint8_t)get(i);
 				}
 #endif
+			}
+
+			//initilize BitBoard by list
+			inline BitMahjong(std::initializer_list<size_t> init_list)
+			{
+				for (size_t index : init_list)
+				{
+					set(index, 1);
+				}
+			}
+
+			//initilize BitBoard by pair list
+			inline BitMahjong(std::initializer_list<std::pair<size_t, gadt_int64>> init_list)
+			{
+				for (auto p : init_list)
+				{
+					set(p.first, p.second);
+				}
 			}
 
 			//return whether any bit is true.
