@@ -116,6 +116,16 @@ namespace gadt
 			//initilize BitBoard by list
 			inline BitBoard(std::initializer_list<size_t> init_list)
 			{
+#ifdef GADT_DEBUG_INFO
+				for (size_t i = 0; i < ub; i++)
+				{
+					_debug_data[i] = false;
+				}
+#endif
+				for (size_t i = 0; i < data_ub; i++)
+				{
+					_data[i] = 0;
+				}
 				for (size_t index : init_list)
 				{
 					set(index);
@@ -234,7 +244,7 @@ namespace gadt
 			}
 
 			//return true if target is subset of this.
-			inline bool exist_subset(const BitBoard& target)
+			bool exist_subset(const BitBoard& target)
 			{
 				for (size_t i = 0; i < target.upper_bound(); i++)
 				{
@@ -247,7 +257,7 @@ namespace gadt
 			}
 
 			//return true if this is a subset of target.
-			inline bool is_subset_of(const BitBoard& target)
+			bool is_subset_of(const BitBoard& target)
 			{
 				for (size_t i = 0; i < upper_bound(); i++)
 				{
@@ -266,7 +276,7 @@ namespace gadt
 			}
 
 			//get ullong string.
-			inline std::string to_ushort_string() const
+			std::string to_ushort_string() const
 			{
 				std::stringstream ss;
 				ss << "( ";
@@ -299,13 +309,13 @@ namespace gadt
 			}
 						
 			//begin of the iter
-			Iter begin() const
+			inline Iter begin() const
 			{
 				return Iter(0, *this);
 			}
 
 			//end of the iter.
-			Iter end() const
+			inline Iter end() const
 			{
 				return Iter(ub, *this);
 			}
@@ -328,7 +338,6 @@ namespace gadt
 		public:
 			inline BitBoard64() :
 				_data(0)
-
 			{
 #ifdef GADT_DEBUG_INFO
 				for (size_t i = 0; i < 64; i++)
@@ -351,8 +360,15 @@ namespace gadt
 			}
 
 			//initilize BitBoard by list
-			inline BitBoard64(std::initializer_list<size_t> init_list)
+			inline BitBoard64(std::initializer_list<size_t> init_list):
+				_data(0)
 			{
+#ifdef GADT_DEBUG_INFO
+				for (size_t i = 0; i < 64; i++)
+				{
+					_debug_data[i] = false;
+				}
+#endif
 				for (size_t index : init_list)
 				{
 					set(index);
@@ -460,7 +476,7 @@ namespace gadt
 			}
 
 			//return true if target is subset of this.
-			inline bool exist_subset(const BitBoard64& target)
+			bool exist_subset(const BitBoard64& target)
 			{
 				for (size_t i = 0; i < target.upper_bound(); i++)
 				{
@@ -473,7 +489,7 @@ namespace gadt
 			}
 
 			//return true if this is a subset of target.
-			inline bool is_subset_of(const BitBoard64& target)
+			bool is_subset_of(const BitBoard64& target)
 			{
 				for (size_t i = 0; i < upper_bound(); i++)
 				{
@@ -492,7 +508,7 @@ namespace gadt
 			}
 
 			//get string
-			inline std::string to_string() const
+			std::string to_string() const
 			{
 				char c[64];
 				for (size_t i = 64 - 1; i <= 64; i--)
@@ -550,13 +566,13 @@ namespace gadt
 
 
 			//begin of the iter
-			Iter begin() const
+			inline Iter begin() const
 			{
 				return Iter(0, *this);
 			}
 
 			//end of the iter
-			Iter end() const
+			inline Iter end() const
 			{
 				return Iter(_upper_bound, *this);
 			}
@@ -601,17 +617,31 @@ namespace gadt
 			}
 
 			//initilize BitBoard by list
-			inline BitPoker(std::initializer_list<size_t> init_list)
+			inline BitPoker(std::initializer_list<size_t> init_list):
+				_data(0)
 			{
+#ifdef GADT_DEBUG_INFO
+				for (size_t i = 0; i < _upper_bound; i++)
+				{
+					_debug_data[i] = 0;
+				}
+#endif
 				for (size_t index : init_list)
 				{
-					set(index, 1);
+					push(index);
 				}
 			}
 
 			//initilize BitBoard by pair list
-			inline BitPoker(std::initializer_list<std::pair<size_t,gadt_int64>> init_list)
+			inline BitPoker(std::initializer_list<std::pair<size_t,gadt_int64>> init_list):
+				_data(0)
 			{
+#ifdef GADT_DEBUG_INFO
+				for (size_t i = 0; i < _upper_bound; i++)
+				{
+					_debug_data[i] = 0;
+				}
+#endif
 				for (auto p : init_list)
 				{
 					set(p.first, p.second);
@@ -736,7 +766,7 @@ namespace gadt
 			}
 
 			//return true if target is subset of this.
-			inline bool exist_subset(const BitPoker& target)
+			bool exist_subset(const BitPoker& target)
 			{
 				for (size_t i = 0; i < target._upper_bound; i++)
 				{
@@ -749,7 +779,7 @@ namespace gadt
 			}
 
 			//return true if this is a subset of target.
-			inline bool is_subset_of(const BitPoker& target)
+			bool is_subset_of(const BitPoker& target)
 			{
 				for (size_t i = 0; i < _upper_bound; i++)
 				{
@@ -768,20 +798,20 @@ namespace gadt
 			}
 
 			//get string
-			inline std::string to_string() const
+			std::string to_string() const
 			{
 				std::stringstream ss;
-				ss << "{ ";
+				ss << "[ ";
 				for (int i = 0; i < 64; i += 4)
 				{
-					ss << ((_data >> i) & 0xF) << " ";
+					ss << ((_data >> i) & 0xF) << ", ";
 				}
-				ss << "}" << std::endl;
+				ss << "]" << std::endl;
 				return ss.str();
 			}
 
 			//bit string
-			inline std::string to_bit_string() const
+			std::string to_bit_string() const
 			{
 				char c[64];
 				for (size_t i = 64 - 1; i <= 64; i--)
@@ -805,13 +835,13 @@ namespace gadt
 			}
 
 			//begin of the iter
-			Iter begin() const
+			inline Iter begin() const
 			{
 				return Iter(0, *this);
 			}
 
 			//end of the iter
-			Iter end() const
+			inline Iter end() const
 			{
 				return Iter(upper_bound(), *this);
 			}
@@ -956,17 +986,33 @@ namespace gadt
 			}
 
 			//initilize BitBoard by list
-			inline BitMahjong(std::initializer_list<size_t> init_list)
+			inline BitMahjong(std::initializer_list<size_t> init_list) :
+				_fir_data(0),
+				_sec_data(0)
 			{
+#ifdef GADT_DEBUG_INFO
+				for (size_t i = 0; i < _upper_bound; i++)
+				{
+					_debug_data[i] = 0;
+				}
+#endif
 				for (size_t index : init_list)
 				{
-					set(index, 1);
+					push(index);
 				}
 			}
 
 			//initilize BitBoard by pair list
-			inline BitMahjong(std::initializer_list<std::pair<size_t, gadt_int64>> init_list)
+			inline BitMahjong(std::initializer_list<std::pair<size_t, gadt_int64>> init_list) :
+				_fir_data(0),
+				_sec_data(0)
 			{
+#ifdef GADT_DEBUG_INFO
+				for (size_t i = 0; i < _upper_bound; i++)
+				{
+					_debug_data[i] = 0;
+				}
+#endif
 				for (auto p : init_list)
 				{
 					set(p.first, p.second);
@@ -1152,18 +1198,18 @@ namespace gadt
 			inline std::string to_string() const
 			{
 				std::stringstream ss;
-				ss << "{ " << std::endl;
+				ss << "[ " << std::endl;
 				for (int i = 0; i < 21; i++)
 				{
-					ss << get(i) << ",";
+					ss << get(i) << ", ";
 				}
 				ss << std::endl;
 				for (int i = 21; i < 41; i++)
 				{
-					ss << get(i) << ",";
+					ss << get(i) << ", ";
 				}
 				ss << get(41) << std::endl;
-				ss << "}" << std::endl;
+				ss << "]" << std::endl;
 				return ss.str();
 			}
 
@@ -1212,13 +1258,13 @@ namespace gadt
 			}
 
 			//begin of the iter
-			Iter begin() const
+			inline Iter begin() const
 			{
 				return Iter(0, *this);
 			}
 
 			//end of the iter
-			Iter end() const
+			inline Iter end() const
 			{
 				return Iter(_upper_bound, *this);
 			}
@@ -1453,7 +1499,7 @@ namespace gadt
 			}
 
 			//get random value and remove it.
-			inline uint8_t draw_and_remove_value()
+			uint8_t draw_and_remove_value()
 			{
 				GADT_CHECK_WARNING(g_BITBOARD_ENABLE_WARNING, _len <= 0, "overflow");
 				size_t rnd = rand() % _len;
@@ -1464,21 +1510,34 @@ namespace gadt
 			}
 
 			//get random value but do not remove.
-			inline uint8_t draw_value() const
+			uint8_t draw_value() const
 			{
 				GADT_CHECK_WARNING(g_BITBOARD_ENABLE_WARNING, _len <= 0, "overflow");
 				size_t rnd = rand() % _len;
 				return _values[rnd];
 			}
 
+			//to string format, e.g { 1, 2, 3}
+			std::string to_string() const
+			{
+				std::stringstream ss;
+				ss << "{ ";
+				for (size_t i = 0; i < _len; i++)
+				{
+					ss << static_cast<uint16_t>(get(i)) << ", ";
+				}
+				ss << "}";
+				return ss.str();
+			}
+
 			//begin of the iter
-			Iter begin() const
+			inline Iter begin() const
 			{
 				return Iter(0, *this);
 			}
 
 			//end of the iter
-			Iter end() const
+			inline Iter end() const
 			{
 				return Iter(_len, *this);
 			}
