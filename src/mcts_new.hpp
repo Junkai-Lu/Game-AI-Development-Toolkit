@@ -39,6 +39,14 @@ namespace gadt
 		//allow check warning if it is true.
 		constexpr const bool g_MCTS_NEW_ENABLE_WARNING = true;
 
+		//the method for parallel mcts
+		enum MctsParalleMethod: uint8_t
+		{
+			LEAF_PARALLELIZATION = 0,
+			ROOT_PARALLELIZATION = 1,
+			TREE_PARALLELIZATION = 2
+		};
+
 		//AgentIndex is the type index of each player, default is int8_t.
 		using AgentIndex		= int8_t;
 		using UcbValue			= double;
