@@ -169,6 +169,26 @@ namespace gadt
 			{
 				return _boolean_value;
 			}
+
+			//operator +=
+			inline void operator+=(const DictValue& value)
+			{
+				if (_type == value._type)
+				{
+					if (_type == INTEGER_TYPE)
+					{
+						_integer_value += value._integer_value;
+					}
+					else if (_type == FLOAT_TYPE)
+					{
+						_float_value += value._float_value;
+					}
+					else if (_type == STRING_TYPE)
+					{
+						_string_value += value._string_value;
+					}
+				}
+			}
 		};
 
 		//the node class of visual tree.
@@ -266,7 +286,19 @@ namespace gadt
 				return std::string("");
 			}
 
-			inline bool add_value(std::string key, int value)
+			/*inline bool add_value(std::string key, int value)
+			{
+				if (key != g_VISUAL_TREE_CHILD_KEY)
+				{
+					_dict.insert({ key,DictValue(value) });
+					return true;
+				}
+				return false;
+			}*/
+
+			//set value to node, return true if set successfully.
+			template<typename T>
+			inline bool set_value(std::string key, T value)
 			{
 				if (key != g_VISUAL_TREE_CHILD_KEY)
 				{
@@ -276,13 +308,20 @@ namespace gadt
 				return false;
 			}
 
-			//add value to node, return true if add successfully.
+			//add value to node, the value would be added if the key exist, or the key would be setted by value, return true if add successfully.
 			template<typename T>
 			inline bool add_value(std::string key, T value)
 			{
 				if (key != g_VISUAL_TREE_CHILD_KEY)
 				{
-					_dict.insert({ key,DictValue(value) });
+					if (exist_value(key))
+					{
+						_dict[key] += DictValue(value);
+					}
+					else
+					{
+						_dict.insert({ key,DictValue(value) });
+					}
 					return true;
 				}
 				return false;

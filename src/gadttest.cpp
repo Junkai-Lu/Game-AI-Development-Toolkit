@@ -336,7 +336,7 @@ namespace gadt
 				tic_tac_toe::AllowUpdateValue
 			);
 			mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> node(state, func);
-			mcts_new::MctsAllocator<mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>, true> alloc(100);
+			gadt::stl::Allocator<mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>, true> alloc(100);
 
 			auto p = alloc.construct(state, func);
 			GADT_ASSERT(node.action_num(), 9);
@@ -367,19 +367,20 @@ namespace gadt
 			const size_t ub = 100;
 			for (size_t  i = 0; i < ub; i++)
 			{
-				ptr->add_value("depth", ptr->depth());
-				ptr->add_value("sqrt", (double)ptr->depth());
-				ptr->add_value("name", "hello world");
+				ptr->set_value("depth", ptr->depth());
+				ptr->add_value("sqrt", sqrt((double)ptr->depth()));
+				ptr->set_value("name", "hello ");
+				ptr->add_value("name", "world!");
 				GADT_ASSERT(ptr->string_value("depth"), "");
 				GADT_ASSERT(ptr->integer_value("depth"), ptr->depth());
 				ptr->create_child();
-				ptr->last_child()->add_value("depth", ptr->last_child()->depth());
+				ptr->last_child()->set_value("depth", ptr->last_child()->depth());
 				ptr = ptr->create_child();
 			}
 			ptr->add_value("hello", "world");
 			visual_tree::VisualTree new_tree = tree;
 			std::ofstream os("JsonTest.dat");
-			//new_tree.output_json(os);
+			new_tree.output_json(os);
 			GADT_ASSERT(new_tree.size(), ub*2 +1);
 			GADT_ASSERT(new_tree.root_node()->first_child()->count(), 1);
 			GADT_ASSERT(new_tree.root_node()->last_child()->count(), ub * 2 - 1);
@@ -388,7 +389,7 @@ namespace gadt
 		void TestStlList()
 		{
 			using Action = tic_tac_toe::Action;
-			using ActionList = gadt::stl::GadtList<tic_tac_toe::Action, true>;
+			using ActionList = gadt::stl::List<tic_tac_toe::Action, true>;
 			ActionList list(1000);
 			for (size_t i = 0; i < 9; i++)
 			{
@@ -424,7 +425,7 @@ namespace gadt
 				{
 				}
 			};
-			using TestAlloc = stl::GadtAllocator<TestClass, true>;
+			using TestAlloc = stl::Allocator<TestClass, true>;
 			const size_t ub = 300000;
 			TestAlloc alloc(ub);
 			for (size_t i = 0; i < ub / 2; i++)
