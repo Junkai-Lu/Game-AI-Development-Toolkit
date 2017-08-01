@@ -13,9 +13,10 @@ SET(SRC_LIST
         gameshell.h 
         gameshell.cpp 
         mcts.hpp 
-		mcts_new.hpp
-		visual_tree.h
-		visual_tree.cpp
+        mcts_new.hpp
+        visual_tree.h
+        visual_tree.cpp
+        gadtmain.cpp
         )
  
-ADD_EXECUTABLE(GADT ${SRC_LIST})
+ADD_EXECUTABLE(Game-AI-Dev-Toolkit ${SRC_LIST})

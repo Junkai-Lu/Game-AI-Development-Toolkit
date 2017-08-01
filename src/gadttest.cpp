@@ -372,7 +372,7 @@ namespace gadt
 				ptr->set_value("name", "hello ");
 				ptr->add_value("name", "world!");
 				GADT_ASSERT(ptr->string_value("depth"), "");
-				GADT_ASSERT(ptr->integer_value("depth"), ptr->depth());
+				GADT_ASSERT((size_t)ptr->integer_value("depth"), ptr->depth());
 				ptr->create_child();
 				ptr->last_child()->set_value("depth", ptr->last_child()->depth());
 				ptr = ptr->create_child();
@@ -388,7 +388,6 @@ namespace gadt
 		}
 		void TestStlList()
 		{
-			using Action = tic_tac_toe::Action;
 			using ActionList = gadt::stl::List<tic_tac_toe::Action, true>;
 			ActionList list(1000);
 			for (size_t i = 0; i < 9; i++)

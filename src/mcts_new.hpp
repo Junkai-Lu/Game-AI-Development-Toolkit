@@ -73,10 +73,14 @@ namespace gadt
 		class MctsNode
 		{
 		public:											
-			using Node			= typename MctsNode<State, Action, Result, _is_debug>;		//MctsNode
-			using Allocator		= typename gadt::stl::Allocator<Node, _is_debug>;			//Allocate 
-			using ActionSet		= typename std::vector<Action>;								//ActionSet is the set of Action.
-			using NodePtrSet	= typename std::vector<MctsNode*>;							//ChildSet is the set of ptrs to child nodes.
+			using pointer       = MctsNode<State, Action, Result, _is_debug>*;
+			using reference     = MctsNode<State, Action, Result, _is_debug>&;
+			using Node			= MctsNode<State, Action, Result, _is_debug>;		//MctsNode
+			using Allocator		= gadt::stl::Allocator<Node, _is_debug>;			//Allocate 
+			using ActionSet		= std::vector<Action>;								//ActionSet is the set of Action.
+			using NodePtrSet	= std::vector<pointer>;							//ChildSet is the set of ptrs to child nodes.
+			
+
 
 			//function package
 			struct FuncPackage
@@ -254,10 +258,13 @@ namespace gadt
 
 			MctsNode(const MctsNode&) = delete;
 
+			//TODO
+			//TODO
 			//TODO free child node from allocator by index. return true if free successfully.
 			bool FreeChildNode(size_t index, Allocator& allocator)
 			{
 				//TODO
+				return true;
 			}
 
 			//4.the simulation result is back propagated through the selected nodes to update their statistics.
@@ -502,8 +509,8 @@ namespace gadt
 		class MctsSearch
 		{
 		public:
-			using Node       = typename MctsNode<State, Action, Result, _is_debug>;	  //searcg node.	
-			using VisualTree = typename MctsToJson<State, Action, Result, _is_debug>; //json tree
+			using Node       = MctsNode<State, Action, Result, _is_debug>;	  //searcg node.	
+			using VisualTree = MctsToJson<State, Action, Result, _is_debug>; //json tree
 			using Allocator  = typename Node::Allocator;							  //allocator of nodes
 			using ActionSet  = typename Node::ActionSet;							  //set of Action
 			using NodePtrSet = typename Node::NodePtrSet;							  //set of ptrs to child nodes.
@@ -676,7 +683,8 @@ namespace gadt
 				if (_enable_log) 
 				{ 
 					VisualTree json_tree(root_node, LogFunc.StateToStr);
-					json_tree.output_json(std::ofstream(MCTS_JSON_LOG_NAME));
+					std::ofstream os(MCTS_JSON_LOG_NAME);
+					json_tree.output_json(os);
 					log() << "[MCTS] iteration finished." << std::endl
 						<< "[MCTS] actions = {" << std::endl;
 				}

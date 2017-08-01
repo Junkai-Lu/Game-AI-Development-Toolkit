@@ -52,8 +52,8 @@ namespace gadt
 
 		public:
 			BitIter(size_t index, const SType& source) :
-				_index(index),
-				_source(source)
+				_source(source),
+				_index(index)
 			{
 			}
 
@@ -1429,7 +1429,7 @@ namespace gadt
 				for (T p : init_list)
 				{
 					if (is_full()) { break; }
-					push(p);
+					push((uint8_t)p);
 				}
 			}
 
@@ -1462,7 +1462,7 @@ namespace gadt
 			//get element.
 			inline uint8_t get(const size_t index) const
 			{
-				GADT_CHECK_WARNING(g_BITBOARD_ENABLE_WARNING, index < 0 || index >= _len, "overflow");
+				GADT_CHECK_WARNING(g_BITBOARD_ENABLE_WARNING, ((index < 0) || (index >= _len)), "overflow");
 				return _values[index];
 			}
 

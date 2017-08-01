@@ -196,7 +196,7 @@ namespace gadt
 					{
 						destory_by_index(i);
 					}
-					_available_index.push(_elements + i);
+					_available_index.push(_fir_element + i);
 				}
 			}
 
@@ -216,38 +216,37 @@ namespace gadt
 		};
 
 		template<typename T, bool _is_debug = false>
-		class List
+		class ListNode
 		{
+		public:
+			using pointer = ListNode<T, _is_debug>*;
+
 		private:
-			template<typename T, bool _is_debug = false>
-			class ListNode
-			{
-			public:
-				using pointer = ListNode<T, _is_debug>*;
-
-			private:
-				const T _value;
-				pointer _next_node;
-
-			public:
-				//constructor function.
-				inline ListNode(const T& value) :
-					_value(value),
-					_next_node(nullptr)
-				{
-				}
-
-				//copy constructor function is disallowed.
-				ListNode(const ListNode&) = delete;
-
-				inline const T& value() const { return _value; }
-				inline pointer next_node() const { return _next_node; }
-				inline void set_next_node(pointer p) { _next_node = p; }
-			};
+			const T _value;
+			pointer _next_node;
 
 		public:
-			using Allocator = Allocator<ListNode<T, _is_debug>, _is_debug>;
-			using node_pointer = ListNode<T, _is_debug>*;
+			//constructor function.
+			inline ListNode(const T& value) :
+				_value(value),
+				_next_node(nullptr)
+			{
+			}
+
+			//copy constructor function is disallowed.
+			ListNode(const ListNode&) = delete;
+
+			inline const T& value() const { return _value; }
+			inline pointer next_node() const { return _next_node; }
+			inline void set_next_node(pointer p) { _next_node = p; }
+		};
+
+		template<typename T, bool _is_debug = false>
+		class List
+		{
+		public:
+			using Allocator = gadt::stl::Allocator<gadt::stl::ListNode<T, _is_debug>, _is_debug>;
+			using node_pointer = gadt::stl::ListNode<T, _is_debug>*;
 
 		private:
 			const bool   _private_allocator;
@@ -284,9 +283,9 @@ namespace gadt
 			}
 
 			//insert a new value in the end of the list.
-			void insert(const T& T)
+			void insert(const T& value)
 			{
-				auto ptr = _allocator.construct(T);
+				auto ptr = _allocator.construct(value);
 				if (_first_node == nullptr)
 				{
 					_first_node = ptr;
