@@ -379,12 +379,22 @@ namespace gadt
 			}
 			ptr->add_value("hello", "world");
 			visual_tree::VisualTree new_tree = tree;
-			std::ofstream os("JsonTest.dat");
+			std::ofstream os("JsonTest1.dat");
 			new_tree.output_json(os);
 			GADT_ASSERT(new_tree.size(), ub*2 +1);
 			GADT_ASSERT(new_tree.root_node()->first_child()->count(), 1);
 			GADT_ASSERT(new_tree.root_node()->last_child()->count(), ub * 2 - 1);
-			
+			tree.clear();
+			ptr = tree.root_node()->create_child();
+			for (size_t i = 0; i < 10; i++)
+			{
+				ptr->set_value("number", i);
+				ptr->create_child()->set_value("is_leaf", true);
+				ptr = ptr->create_child();
+			}
+			GADT_ASSERT(tree.root_node()->first_child()->first_child()->boolean_value("is_leaf"), true);
+			std::ofstream os2("JsonTest2.dat");
+			tree.output_json(os2);
 		}
 		void TestStlList()
 		{

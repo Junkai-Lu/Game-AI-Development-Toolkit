@@ -247,7 +247,7 @@ namespace gadt
 				return _dict.count(key) != 0;
 			}
 
-			//get integer value by key.
+			//get integer value by key. return 0 if the key do not exist.
 			inline int integer_value(std::string key)
 			{
 				if (exist_value(key))
@@ -260,7 +260,7 @@ namespace gadt
 				return 0;
 			}
 
-			//get float value by key.
+			//get float value by key. return 0 if the key do not exist.
 			inline double float_value(std::string key)
 			{
 				if (exist_value(key))
@@ -273,7 +273,7 @@ namespace gadt
 				return 0;
 			}
 
-			//get string value by key.
+			//get string value by key. return "" if the key do not exist.
 			inline std::string string_value(std::string key)
 			{
 				if (exist_value(key))
@@ -286,15 +286,18 @@ namespace gadt
 				return std::string("");
 			}
 
-			/*inline bool add_value(std::string key, int value)
+			//get boolean value by key, return false if the key do not exist.
+			inline bool boolean_value(std::string key)
 			{
-				if (key != g_VISUAL_TREE_CHILD_KEY)
+				if (exist_value(key))
 				{
-					_dict.insert({ key,DictValue(value) });
-					return true;
+					if (_dict[key].is_boolean())
+					{
+						return _dict[key].boolean_value();
+					}
 				}
 				return false;
-			}*/
+			}
 
 			//set value to node, return true if set successfully.
 			template<typename T>

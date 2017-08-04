@@ -1339,6 +1339,26 @@ namespace gadt
 #endif
 				return temp;
 			}
+			inline BitMahjong operator+(uint8_t t) const
+			{
+				GADT_CHECK_WARNING(g_BITBOARD_ENABLE_WARNING, get(t) == 7, "overflow.");
+				BitMahjong temp = *this;
+				temp.increase(t);
+#ifdef GADT_DEBUG_INFO
+				temp._debug_data[t]++;
+#endif
+				return temp;
+			}
+			inline BitMahjong operator-(uint8_t t) const
+			{
+				GADT_CHECK_WARNING(g_BITBOARD_ENABLE_WARNING, get(t) == 0, "overflow.");
+				BitMahjong temp = *this;
+				temp.decrease(t);
+#ifdef GADT_DEBUG_INFO
+				temp._debug_data[t]--;
+#endif
+				return temp;
+			}
 			inline bool operator==(const BitMahjong target) const
 			{
 				return _fir_data == target._fir_data && _sec_data == target._sec_data;

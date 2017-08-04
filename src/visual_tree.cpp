@@ -100,7 +100,11 @@ namespace gadt
 			}
 			if (_childs.size() > 0)
 			{
-				ss << "," << std::endl << "\"" << g_VISUAL_TREE_CHILD_KEY << "\":" << std::endl << "[" << std::endl;
+				if (!is_first)
+				{
+					ss << ",";
+				}
+				ss << std::endl << "\"" << g_VISUAL_TREE_CHILD_KEY << "\":" << std::endl << "[" << std::endl;
 				for (size_t i = 0; i < _childs.size(); i++)
 				{
 					ss << _childs[i]->to_json();
