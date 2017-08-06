@@ -1492,9 +1492,16 @@ namespace gadt
 				return get(index);
 			}
 
+			//return return if the vector is full.
 			inline bool is_full() const
 			{
 				return _len >= upper_bound();
+			}
+
+			//return ture if the vector is empty.
+			inline bool is_empty() const
+			{
+				return _len == 0;
 			}
 
 			//get value operation.
