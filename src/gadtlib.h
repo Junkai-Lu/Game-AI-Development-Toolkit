@@ -327,4 +327,59 @@ namespace gadt
 		//remove dir and return true if remove successfully. 
 		bool RemoveDir(std::string path);
 	}
+
+	namespace log
+	{
+		//error log class. 
+		class ErrorLog
+		{
+		private:
+			std::vector<std::string> _error_list;
+
+		public:
+			//default constructor.
+			ErrorLog()
+			{
+
+			}
+
+			//constructor with init list.
+			ErrorLog(std::initializer_list<std::string> init_list)
+			{
+				for (auto err : init_list)
+				{
+					_error_list.push_back(err);
+				}
+			}
+
+			//add a new error.
+			inline void add(std::string err)
+			{
+				_error_list.push_back(err);
+			}
+
+			//return true if no error exist.
+			inline bool is_empty() const
+			{
+				return _error_list.size() == 0;
+			}
+
+			//output as json format.
+			inline std::string output() const
+			{
+				std::stringstream ss;
+				ss << "[";
+				for (size_t i = 0; i < _error_list.size(); i++)
+				{
+					ss << "\"" << _error_list[i] << "\"";
+					if (i != _error_list.size() - 1)
+					{
+						ss << "," << std::endl;
+					}
+				}
+				ss << "]";
+				return ss.str();
+			}
+		};
+	}
 }
