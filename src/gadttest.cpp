@@ -227,12 +227,6 @@ namespace gadt
 			GADT_ASSERT(3, temp_poker.get(3));
 			temp_poker.increase(4);
 			GADT_ASSERT(1, temp_poker.get(4));
-			GADT_ASSERT(2, (temp_poker + 4).get(4));
-			GADT_ASSERT(0, (temp_poker - 4).get(4));
-			temp_poker += 4;
-			GADT_ASSERT(2, temp_poker.get(4));
-			temp_poker -= 4;
-			GADT_ASSERT(1, temp_poker.get(4));
 
 			//test BitMahjong
 			bitboard::BitMahjong temp_mahjong;
@@ -267,12 +261,6 @@ namespace gadt
 			temp_mahjong.increase(25);
 			GADT_ASSERT(1, temp_mahjong.get(25));
 			GADT_ASSERT(7, temp_mahjong.total());
-			GADT_ASSERT(2, (temp_mahjong + 25).get(25));
-			GADT_ASSERT(0, (temp_mahjong - 25).get(25));
-			temp_mahjong += 25;
-			GADT_ASSERT(2, temp_mahjong.get(25));
-			temp_mahjong -= 25;
-			GADT_ASSERT(1, temp_mahjong.get(25));
 
 			//test ValueVector
 			bitboard::ValueVector<14> temp_vec;
