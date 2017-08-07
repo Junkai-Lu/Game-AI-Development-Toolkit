@@ -943,6 +943,31 @@ namespace gadt
 				}
 				return t;
 			}
+
+			template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+			inline BitPoker operator+(T index) const
+			{
+				BitPoker temp = *this;
+				temp.increase(static_cast<uint8_t>(index));
+				return temp;
+			}
+			template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+			inline BitPoker operator-(T index) const
+			{
+				BitPoker temp = *this;
+				temp.decrease(static_cast<uint8_t>(index));
+				return temp;
+			}
+			template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+			inline void operator+=(T index)
+			{
+				increase(static_cast<uint8_t>(index));
+			}
+			template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+			inline void operator-=(T index)
+			{
+				decrease(static_cast<uint8_t>(index));
+			}
 		};
 
 		//bit Mahjong
@@ -1339,26 +1364,6 @@ namespace gadt
 #endif
 				return temp;
 			}
-			inline BitMahjong operator+(uint8_t t) const
-			{
-				GADT_CHECK_WARNING(g_BITBOARD_ENABLE_WARNING, get(t) == 7, "overflow.");
-				BitMahjong temp = *this;
-				temp.increase(t);
-#ifdef GADT_DEBUG_INFO
-				temp._debug_data[t]++;
-#endif
-				return temp;
-			}
-			inline BitMahjong operator-(uint8_t t) const
-			{
-				GADT_CHECK_WARNING(g_BITBOARD_ENABLE_WARNING, get(t) == 0, "overflow.");
-				BitMahjong temp = *this;
-				temp.decrease(t);
-#ifdef GADT_DEBUG_INFO
-				temp._debug_data[t]--;
-#endif
-				return temp;
-			}
 			inline bool operator==(const BitMahjong target) const
 			{
 				return _fir_data == target._fir_data && _sec_data == target._sec_data;
@@ -1419,6 +1424,31 @@ namespace gadt
 					t += (get(i) * target.get(i));
 				}
 				return t;
+			}
+
+			template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+			inline BitMahjong operator+(T index) const
+			{
+				BitMahjong temp = *this;
+				temp.increase(static_cast<uint8_t>(index));
+				return temp;
+			}
+			template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+			inline BitMahjong operator-(T index) const
+			{
+				BitMahjong temp = *this;
+				temp.decrease(static_cast<uint8_t>(index));
+				return temp;
+			}
+			template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+			inline void operator+=(T index)
+			{
+				increase(static_cast<uint8_t>(index));
+			}
+			template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+			inline void operator-=(T index)
+			{
+				decrease(static_cast<uint8_t>(index));
 			}
 		};
 
