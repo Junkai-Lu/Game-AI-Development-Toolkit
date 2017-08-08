@@ -352,6 +352,9 @@ namespace gadt
 				}
 			}
 
+			//copy constructor is banned
+			ErrorLog(const ErrorLog&) = delete;
+
 			//add a new error.
 			inline void add(std::string err)
 			{
