@@ -557,13 +557,21 @@ namespace gadt
 			{
 				return BitBoard64(_data | target._data); 
 			}
+			inline BitBoard64 operator^(const BitBoard64 target) const
+			{
+				return BitBoard64(_data ^ target._data);
+			}
+			inline BitBoard64 operator~() const
+			{
+				return BitBoard64(~_data);
+			}
 			inline void operator&=(const BitBoard64 target) { _data &= target._data; }
 			inline void operator|=(const BitBoard64 target) { _data |= target._data; }
 			inline size_t operator*(const BitBoard64 target) const
 			{
 				return this->operator&(target).total();
 			}
-
+			
 
 			//begin of the iter
 			inline Iter begin() const

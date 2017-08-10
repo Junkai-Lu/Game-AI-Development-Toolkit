@@ -177,6 +177,10 @@ namespace gadt
 			GADT_ASSERT(false, temp_64.any());
 			GADT_ASSERT(true, temp_64.none());
 			temp_64.set(1);
+			GADT_ASSERT((temp_64 ^ temp_64).total(), 0);
+			GADT_ASSERT((~temp_64).get(1), false);
+			GADT_ASSERT((~temp_64).get(0), true);
+			GADT_ASSERT((~temp_64).get(2), true);
 			count = 0;
 			for (bool v : temp_64)
 			{
