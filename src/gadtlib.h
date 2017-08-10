@@ -107,6 +107,7 @@ namespace gadt
 
 			//change colors by setting using winapi in windows or output string in linux.
 			static std::string change_color(ConsoleColor color);
+
 		public:
 			costream(std::ostream& os) : _os(os),_color(DEFAULT) {}
 			costream& operator<<(ConsoleColor color)
@@ -124,7 +125,11 @@ namespace gadt
 			}
 
 			template <typename t_data>
-			void print(t_data data, ConsoleColor color);
+			inline void print(t_data data, ConsoleColor color)
+			{
+				ConsoleColor temp_color = ccout._color;
+				ccout << color << data << temp_color;
+			}
 		};
 		
 		//bool to string. that can be replaced by '<< boolalpha'
@@ -154,10 +159,11 @@ namespace gadt
 		}
 
 		//colorful print.
-		void Cprintf(std::string	data,	ConsoleColor color);
-		void Cprintf(double			data,	ConsoleColor color);
-		void Cprintf(int			data,	ConsoleColor color);
-		void Cprintf(char			data,	ConsoleColor color);
+		template<typename T>
+		inline void Cprintf(T data, ConsoleColor color)
+		{
+			ccout.print<T>(data, color);
+		}
 
 		//show error in terminal.
 		void ShowError(std::string reason);
@@ -173,8 +179,6 @@ namespace gadt
 
 		//system clear
 		void SystemClear();
-
-		
 	}
 
 	//a golbal color ostream 

@@ -68,15 +68,8 @@ namespace gadt
 			return color_str[color];
 #endif
 		}
-
-		//printf in costream.
-		template <typename t_data>
-		void costream::print(t_data data, ConsoleColor color)
-		{
-			ConsoleColor temp_color = _color;
-			ccout << color << data << temp_color;
-		}
 		
+		//show error
 		void ShowError(std::string reason)
 		{
 			std::cout << std::endl;
@@ -85,23 +78,7 @@ namespace gadt
 			std::cout << std::endl << std::endl;
 		}
 
-		void Cprintf(std::string tex, ConsoleColor color)
-		{
-			ccout.print(tex, color);
-		}
-		void Cprintf(int data, ConsoleColor color)
-		{
-			ccout.print(data, color);
-		}
-		void Cprintf(double data, ConsoleColor color)
-		{
-			ccout.print(data, color);
-		}
-		void Cprintf(char data, ConsoleColor color)
-		{
-			ccout.print(data, color);
-		}
-
+		//show message
 		void ShowMessage(std::string message, bool show_msg)
 		{
 			std::cout << ">> ";

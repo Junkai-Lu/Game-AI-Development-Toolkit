@@ -50,9 +50,9 @@ using std::endl;
 void ShellDefine()
 {
 	shell::GameShell gadt("GADT");
-	auto* root = shell::CreateShellPage<int>(gadt, "root");
-	auto* test = shell::CreateShellPage<int>(gadt, "test");
-	auto* mcts = shell::CreateShellPage<int>(gadt, "mcts");
+	auto* root = gadt.CreateShellPage("root");
+	auto* test = gadt.CreateShellPage("test");
+	auto* mcts = gadt.CreateShellPage("mcts");
 
 	//Define Root Page.
 	root->AddInfoFunc([]() {

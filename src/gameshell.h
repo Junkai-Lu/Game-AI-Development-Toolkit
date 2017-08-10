@@ -27,6 +27,13 @@ namespace gadt
 {
 	namespace shell
 	{
+		enum CommandType:uint8_t
+		{
+			DEFAULT_COMMAND = 0,
+			NORMAL_COMMAND = 1,
+			SPECIAL_COMMAND = 2
+		};
+
 		//Shell Page Interface
 		class GameShell;
 		class ShellPageBase
@@ -120,113 +127,6 @@ namespace gadt
 		public:
 			void CleanScreen() const;
 			virtual ~ShellPageBase() = default;
-
-		};
-
-		//Shell
-		class GameShell final
-		{
-			friend ShellPageBase;
-
-		private:
-			//global variable
-			static GameShell* _g_focus_game;	//focus page, that is used for show path.
-
-												//page table
-			std::map<std::string, std::shared_ptr<ShellPageBase>> _page_table;
-			std::string _name;
-			ShellPageBase* _focus_page;
-
-		public:
-			//global function
-			static inline GameShell* focus_game()
-			{
-				return _g_focus_game;
-			}
-
-			//print input tips.
-			static inline void InputTip(std::string tip = "")
-			{
-				if (focus_game() != nullptr)
-				{
-					if (focus_game()->focus_page() != nullptr)
-					{
-						focus_game()->focus_page()->ShowPath();
-						if (tip != "")
-						{
-							std::cout << "/";
-						}
-						console::Cprintf(tip, console::GREEN);
-						std::cout << ": >> ";
-					}
-					else
-					{
-						console::Cprintf("ERROR: focus page not exist", console::PURPLE);
-					}
-				}
-				else
-				{
-					console::Cprintf("ERROR: focus game not exist", console::PURPLE);
-				}
-			}
-
-			//get input line by string format.
-			static inline std::string GetInput()
-			{
-				char buffer[50];
-				std::cin.getline(buffer, 50);
-				return std::string(buffer);
-			}
-
-			//public function
-			GameShell(std::string name);
-
-			//copy constructor is disallowed.
-			GameShell(GameShell&) = delete;
-
-			//get name of shell.
-			inline std::string name() const
-			{
-				return _name;
-			}
-
-			//get focus_page of this shell.
-			inline ShellPageBase* focus_page() const
-			{
-				return _focus_page;
-			}
-
-			//return true if the page name exist.
-			inline bool page_exist(std::string name) const
-			{
-				return _page_table.count(name) > 0;
-			}
-
-			//add new page to this shell.
-			inline void AddPage(std::string name, std::shared_ptr<ShellPageBase> new_page)
-			{
-				_page_table[name] = new_page;
-			}
-
-			//to be the focus.
-			inline void BeFocus()
-			{
-				_g_focus_game = this;
-			}
-
-			//run page.
-			inline void RunPage(std::string name, ShellPageBase* call_source = nullptr)
-			{
-				if (page_exist(name))
-				{
-					_page_table[name]->Run(call_source);
-				}
-				else
-				{
-					std::cerr << "page '" << name << "' not exist" << std::endl;
-				}
-			}
-
 
 		};
 
@@ -482,21 +382,123 @@ namespace gadt
 			}
 		};
 
-		//Create Page
-		template<typename datatype>
-		ShellPage<datatype>* CreateShellPage(GameShell& belonging_shell, std::string name)
+		//Shell
+		class GameShell final
 		{
-			std::shared_ptr<ShellPage<datatype>> ptr(new ShellPage<datatype>(&belonging_shell, name));
-			belonging_shell.AddPage(name, ptr);
-			return ptr.get();
-		}
+			friend ShellPageBase;
 
-		template<typename datatype>
-		ShellPage<datatype>* CreateShellPage(GameShell& belonging_shell, std::string name, datatype data)
-		{
-			std::shared_ptr<ShellPage<datatype>> ptr(new ShellPage<datatype>(&belonging_shell, name, data));
-			belonging_shell.AddPage(name, ptr);
-			return ptr.get();
-		}
+		private:
+			//global variable
+			static GameShell* _g_focus_game;	//focus page, that is used for show path.									
+			std::map<std::string, std::shared_ptr<ShellPageBase>> _page_table;//page table
+			std::string _name;
+			ShellPageBase* _focus_page;
+
+		public:
+			//global function
+			static inline GameShell* focus_game()
+			{
+				return _g_focus_game;
+			}
+
+			//print input tips.
+			static inline void InputTip(std::string tip = "")
+			{
+				if (focus_game() != nullptr)
+				{
+					if (focus_game()->focus_page() != nullptr)
+					{
+						focus_game()->focus_page()->ShowPath();
+						if (tip != "")
+						{
+							std::cout << "/";
+						}
+						console::Cprintf(tip, console::GREEN);
+						std::cout << ": >> ";
+					}
+					else
+					{
+						console::Cprintf("ERROR: focus page not exist", console::PURPLE);
+					}
+				}
+				else
+				{
+					console::Cprintf("ERROR: focus game not exist", console::PURPLE);
+				}
+			}
+
+			//get input line by string format.
+			static inline std::string GetInput()
+			{
+				char buffer[50];
+				std::cin.getline(buffer, 50);
+				return std::string(buffer);
+			}
+
+			//public function
+			GameShell(std::string name);
+
+			//copy constructor is disallowed.
+			GameShell(GameShell&) = delete;
+
+			//get name of shell.
+			inline std::string name() const
+			{
+				return _name;
+			}
+
+			//get focus_page of this shell.
+			inline ShellPageBase* focus_page() const
+			{
+				return _focus_page;
+			}
+
+			//return true if the page name exist.
+			inline bool page_exist(std::string name) const
+			{
+				return _page_table.count(name) > 0;
+			}
+
+			//add new page to this shell.
+			inline void AddPage(std::string name, std::shared_ptr<ShellPageBase> new_page)
+			{
+				_page_table[name] = new_page;
+			}
+
+			//to be the focus.
+			inline void BeFocus()
+			{
+				_g_focus_game = this;
+			}
+
+			//run page.
+			inline void RunPage(std::string name, ShellPageBase* call_source = nullptr)
+			{
+				if (page_exist(name))
+				{
+					_page_table[name]->Run(call_source);
+				}
+				else
+				{
+					std::cerr << "page '" << name << "' not exist" << std::endl;
+				}
+			}
+
+			template<typename datatype = int>
+			ShellPage<datatype>* CreateShellPage(std::string name)
+			{
+				std::shared_ptr<ShellPage<datatype>> ptr(new ShellPage<datatype>(this, name));
+				AddPage(name, ptr);
+				return ptr.get();
+			}
+
+			template<typename datatype = int>
+			ShellPage<datatype>* CreateShellPage(std::string name, datatype data)
+			{
+				std::shared_ptr<ShellPage<datatype>> ptr(new ShellPage<datatype>(this, name, data));
+				AddPage(name, ptr);
+				return ptr.get();
+			}
+		};
 	}
 }
