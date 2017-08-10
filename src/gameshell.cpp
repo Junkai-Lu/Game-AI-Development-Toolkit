@@ -41,9 +41,7 @@ namespace gadt
 			_belonging_shell(belonging_shell),
 			_name(name),
 			_index(AllocPageIndex()),
-			_info_func([]()->void {}),
-			_constructor_func([]()->void {}),
-			_destructor_func([]()->void {})
+			_info_func([]()->void {})
 		{
 		}
 		void ShellPageBase::ShowPath() const

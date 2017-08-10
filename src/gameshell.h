@@ -27,51 +27,98 @@ namespace gadt
 {
 	namespace shell
 	{
-		enum CommandType:uint8_t
+		//Shell Page Interface
+		class GameShell;
+
+		//command type
+		enum CommandType :uint8_t
 		{
 			DEFAULT_COMMAND = 0,
 			NORMAL_COMMAND = 1,
-			SPECIAL_COMMAND = 2
+			CHILD_PAGE_COMMAND = 2,
 		};
 
-		//Shell Page Interface
-		class GameShell;
+		//data of command
+		template<typename DataType>
+		struct CommandData
+		{
+			using CommandFunc = std::function<void(DataType&)>;
+
+			const CommandType _type;
+			const std::string _desc;
+			const CommandFunc _command_func;
+			const std::string _child_page_name;
+
+			CommandData():
+				_type(NORMAL_COMMAND),
+				_desc(),
+				_command_func(),
+				_child_page_name()
+			{
+			}
+			CommandData(CommandFunc command_func, std::string desc, CommandType type) :
+				_type(type),
+				_desc(desc),
+				_command_func(command_func),
+				_child_page_name()
+			{
+			}
+			CommandData(std::string child_page_name, std::string desc) :
+				_type(CHILD_PAGE_COMMAND),
+				_desc(desc),
+				_command_func(),
+				_child_page_name(child_page_name)
+			{
+			}
+		};
+
+		//data of custom command
+		template<typename DataType>
+		struct CustomCommandData
+		{
+			using ConditionFunc = std::function<bool(std::string)>;
+			using ActionFunc = std::function<void(DataType&)>;
+
+			const std::string _name;
+			const std::string _desc;
+			const ConditionFunc _condition;
+			const ActionFunc _action;
+
+			CustomCommandData(std::string name, std::string desc, ConditionFunc condition, ActionFunc action) :
+				_name(name),
+				_desc(desc),
+				_condition(condition),
+				_action(action)
+			{
+			}
+		};
+
+		//ShellPageBase
 		class ShellPageBase
 		{
 			friend class GameShell;
+		public:
+			using InfoFunc = std::function<void()>;
+
 		private:
-			GameShell* _belonging_shell;	//the game shell this page belong to.
-			std::string _name;				//name, each name correspond to one page in a game shell.
-			size_t _index;					//page index, each page have a unique index.
-			ShellPageBase* _call_source;	//call source point to the page that call this page.
+			GameShell*		_belonging_shell;	//the game shell this page belong to.
+			std::string		_name;				//name, each name correspond to one page in a game shell.
+			size_t			_index;				//page index, each page have a unique index.
+			ShellPageBase*	_call_source;		//call source point to the page that call this page.
 
 		protected:
-			std::function<void()> _info_func;			//info function. would be called before show menu.
-			std::function<void()> _constructor_func;	//constructor func. would be called when enter the page.
-			std::function<void()> _destructor_func;		//destructror func. would be called when quit the page.
 
 			//static paramaters.
 			static const char*  g_SHELL_HELP_COMMAND_STR;			//help command, default is 'help'
 			static const char*  g_SHELL_EXIT_COMMAND_STR;			//exit page command, default is 'return'
 			static const char*  g_SHELL_CLEAN_COMMAND_STR;			//clean screen command, default is 'clear'
-			static const size_t g_SHELL_MAX_COMMAND_LENGTH;		//max length of the command. 
+			static const size_t g_SHELL_MAX_COMMAND_LENGTH;			//max length of the command. 
 
 		protected:
+			InfoFunc			_info_func;			//info function. would be called before show menu.
 
-			inline void set_info_func(std::function<void()> info_func)
-			{
-				_info_func = info_func;
-			}
-
-			inline void set_constructor_func(std::function<void()> constructor_func)
-			{
-				_constructor_func = constructor_func;
-			}
-
-			inline void set_destructor_func(std::function<void()> destructor_func)
-			{
-				_destructor_func = destructor_func;
-			}
+			virtual void constructor() = 0;
+			virtual void destructor() = 0;
 
 			inline void set_call_source(ShellPageBase* call_source)
 			{
@@ -128,90 +175,102 @@ namespace gadt
 			void CleanScreen() const;
 			virtual ~ShellPageBase() = default;
 
+			//add info function about this page, the func would be execute before the page works. 
+			inline void SetInfoFunc(InfoFunc info_func)
+			{
+				_info_func = info_func;
+			}
 		};
 
 		//Shell Page
-		template<typename datatype>
+		template<typename DataType>
 		class ShellPage final :public ShellPageBase
 		{
-			friend class ShellCreator;
-		private:
-			std::map<std::string, std::function<void(datatype&)> > _func;			//dict of commands.
-			std::map<std::string, std::string> _des;								//dict of describes.
-			std::set<std::string> _child;											//dict of child pages
-			std::function<bool(std::string, datatype&)> _custom_command_check_func;	//custom command check func
-			datatype _data;															//data of the page.
+		public:
+			using CommandDataType = CommandData<DataType>;
+			using CustomCommandDataType = CustomCommandData<DataType>;
+			using ConstructorFunc = std::function<void(DataType&)>;
+			using DestructorFunc = std::function<void(DataType&)>;
+			using CommandFunc = typename CommandDataType::CommandFunc;
+			using ConditionFunc = typename CustomCommandDataType::ConditionFunc;
+			using ActionFunc = typename CustomCommandDataType::ActionFunc;
 
 		private:
+			DataType _data;												//data of the page.
+			std::map<std::string, CommandDataType>	_command_list;		//command list
+			std::vector<CustomCommandDataType>		_custom_func_list;	//custom func list
+			ConstructorFunc							_constructor_func;	//constructor func. would be called when enter the page.
+			DestructorFunc							_destructor_func;	//destructror func. would be called when quit the page.
+
+		private:
+
+			//print command list
+			void PrintCommandList()
+			{
+				std::cout << std::endl << ">> ";
+				console::Cprintf("[ COMMAND LIST ]\n\n", console::YELLOW);
+				for (const auto& pair : _command_list)
+				{
+					const std::string& name = pair.first;
+					const std::string& desc = pair.second._desc;
+					std::cout << "   '";
+					console::Cprintf(name, console::RED);
+					std::cout << "'" << std::string(g_SHELL_MAX_COMMAND_LENGTH, ' ').substr(0, g_SHELL_MAX_COMMAND_LENGTH - name.length())
+						<< desc << std::endl;
+				}
+				std::cout << std::endl << std::endl;
+			}
+
+			//init shell and add default commands
 			inline void ShellInit()
 			{
 				//add exit describe
-				AddDescript(g_SHELL_EXIT_COMMAND_STR, "return to previous menu.");
+				AddFunction(g_SHELL_EXIT_COMMAND_STR, [](DataType&)->void {}, "return to previous menu.");
 
 				//add help command.
-				AddFunction(g_SHELL_HELP_COMMAND_STR, [&](datatype& data)->void {
-					std::cout << std::endl << ">> ";
-					console::Cprintf("[ COMMAND LIST ]\n\n", console::YELLOW);
-					for (auto command : _des)
-					{
-						std::cout << "   '";
-						console::Cprintf(command.first, console::RED);
-						std::cout << "'" << std::string(g_SHELL_MAX_COMMAND_LENGTH,' ').substr(0, g_SHELL_MAX_COMMAND_LENGTH - command.first.length()) 
-							<< command.second << std::endl;
-					}
-					std::cout << std::endl << std::endl;
+				AddFunction(g_SHELL_HELP_COMMAND_STR, [&](DataType& data)->void {
+					PrintCommandList();
 				}, "get command list");
 
 				//add clean command.
-				AddFunction(g_SHELL_CLEAN_COMMAND_STR, [&](datatype& data)->void {
+				AddFunction(g_SHELL_CLEAN_COMMAND_STR, [&](DataType& data)->void {
 					this->CleanScreen();
 				}, "clean screen.");
 			}
 
 			//data operator
-			inline datatype& data()
+			inline DataType& data()
 			{
 				return _data;
 			}
 
-			//return true if the func name exist
-			inline bool func_exist(std::string command) const
+			//excute constructor func
+			void constructor() override
 			{
-				return _func.count(command) > 0;
+				_constructor_func(_data);
 			}
 
-			//return true if the child page exist.
-			inline bool child_exist(std::string command) const
+			//excute destructor func
+			void destructor() override
 			{
-				return _child.count(command) > 0;
+				_destructor_func(_data);
 			}
 
-			//return true if the describe exist.
-			inline bool des_exist(std::string command) const
+			//return true if the command name exist
+			inline bool command_exist(std::string command) const
 			{
-				return _des.count(command) > 0;
+				return _command_list.count(command) > 0;
 			}
 
 			//get func by name.
-			inline std::function<void(datatype&)> get_func(std::string command)
+			inline const CommandDataType& get_command_data(std::string command)
 			{
-				if (!func_exist(command))
+				if (!command_exist(command))
 				{
 					std::cerr << "function '" << command << "' in page '" << name() << "'not exist" << std::endl;
 					console::SystemPause();
 				}
-				return _func[command];
-			}
-
-			//get describe by name.
-			inline std::string get_des(std::string command) const
-			{
-				if (!func_exist(command))
-				{
-					std::cerr << "descript '" << command << "' in page '" << name() << "'not exist" << std::endl;
-					console::SystemPause();
-				}
-				return _des.at(command);
+				return _command_list[command];
 			}
 
 			//run page.
@@ -222,7 +281,7 @@ namespace gadt
 				CleanScreen();
 
 				//excute constructor func.
-				_constructor_func();
+				constructor();
 
 				for (;;)
 				{
@@ -258,23 +317,31 @@ namespace gadt
 					}
 
 					//function command check
-					if (func_exist(command))
+					if (command_exist(command))
 					{
-						get_func(command)(_data);
-						continue;
+						CommandDataType& data = _command_list[command];
+						if (data._type == NORMAL_COMMAND || data._type == DEFAULT_COMMAND)
+						{
+							data._command_func(_data);
+							continue;
+						}
+						else if (data._type == CHILD_PAGE_COMMAND)
+						{
+							destructor();
+							belonging_shell()->RunPage(command, this);
+							constructor();
+							continue;
+						}
 					}
 
-					//child shell check
-					if (child_exist(command))
+					//custom command check
+					for (const CustomCommandDataType& custom : _custom_func_list)
 					{
-						belonging_shell()->RunPage(command, this);
-						continue;
-					}
-
-					//extra command check
-					if (_custom_command_check_func(command, _data))
-					{
-						continue;
+						if (custom._condition(command) == true)
+						{
+							custom._action(_data);
+							continue;
+						}
 					}
 
 					//error
@@ -282,7 +349,7 @@ namespace gadt
 					std::cout << "command not found." << std::endl;
 				}
 
-				_destructor_func();	//excute destructor func.
+				destructor();	//excute destructor func.
 			}
 
 			//curtail command if the length of command is out of max length.
@@ -299,16 +366,23 @@ namespace gadt
 			//default function.
 			ShellPage(GameShell* belonging_shell, std::string name) :
 				ShellPageBase(belonging_shell, name),
-				_custom_command_check_func([](std::string a, datatype& b)->bool {return false; })
+				_data(),
+				_command_list(),
+				_custom_func_list(),
+				_constructor_func([](DataType&)->void {}),
+				_destructor_func([](DataType&)->void {})
 			{
 				ShellInit();
 			}
 
 			//create a new shell page.
-			ShellPage(GameShell* belonging_shell, std::string name, datatype data) :
+			ShellPage(GameShell* belonging_shell, std::string name, DataType data) :
 				ShellPageBase(belonging_shell, name),
-				_custom_command_check_func([](std::string a, datatype& b)->bool {return false; }),
-				_data(data)
+				_data(data),
+				_command_list(),
+				_custom_func_list(),
+				_constructor_func([](DataType&)->void {}),
+				_destructor_func([](DataType&)->void {})
 			{
 				ShellInit();
 			}
@@ -319,17 +393,16 @@ namespace gadt
 			//deconstor function, DO NOT EXECUTE ALONE.
 			~ShellPage()
 			{
-
 			}
 
 			//add child page of this page,the name page should exist in same shell and the name is also the command to enter this page.
-			inline void AddChildPage(std::string child_name, std::string des)
+			inline void AddChildPage(std::string child_name, std::string desc)
 			{
 				child_name = curtail_command(child_name);
 				if (child_name != name())
 				{
-					_des[child_name] = des;
-					_child.insert(child_name);
+					//_command_list[child_name] = CommandDataType(child_name, desc);
+					_command_list.insert(std::pair<std::string, CommandDataType>(child_name, CommandDataType(child_name, desc)));
 				}
 				else
 				{
@@ -342,44 +415,31 @@ namespace gadt
 			}
 
 			//add a function that can be execute by command and is allowed to visit the data binded in this page.
-			inline void AddFunction(std::string command, std::function<void(datatype&)> func, std::string des)
+			inline void AddFunction(std::string command, CommandFunc func, std::string desc)
 			{
 				command = curtail_command(command);
-				_func[command] = func;
-				_des[command] = des;
-			}
-
-			//add/cover descript, the command should be added in other place.
-			inline void AddDescript(std::string command, std::string des)
-			{
-				command = curtail_command(command);
-				_des[command] = des;
+				_command_list.insert(std::pair<std::string, CommandDataType>(command, CommandDataType(func, desc, NORMAL_COMMAND)));
+				//_command_list[command] = CommandDataType(func, desc, NORMAL_COMMAND);
 			}
 
 			//use a extend function to check and execute command, if the command is legal that the function should return 'true'.
-			inline void AddCustomCommandCheck(std::function<bool(std::string, datatype&)> func, std::string command, std::string des)
+			inline void AddCustomCommand(std::string name, std::string desc, ConditionFunc condition, ActionFunc action)
 			{
-				AddDescript(command, des);
-				_custom_command_check_func = func;
-			}
-
-			//add info function about this page, the func would be execute before the page works. 
-			inline void AddInfoFunc(std::function<void()> info_func)
-			{
-				set_info_func(info_func);
+				_custom_func_list.push_back(CustomCommandDataType(name, desc, condition, action));
 			}
 
 			//add constructor func, it would be called when enter page. 
-			inline void AddConstructorFunc(std::function<void()> constructor_func)
+			inline void SetConstructorFunc(ConstructorFunc constructor_func)
 			{
-				set_constructor_func(constructor_func);
+				_constructor_func = constructor_func;
 			}
 
 			//add destructor func, it would be called when quit page.
-			inline void AddDestructorFunc(std::function<void()> destructor_func)
+			inline void SetDestructorFunc(DestructorFunc destructor_func)
 			{
-				set_destructor_func(destructor_func);
+				_destructor_func = destructor_func;
 			}
+
 		};
 
 		//Shell
@@ -484,18 +544,20 @@ namespace gadt
 				}
 			}
 
-			template<typename datatype = int>
-			ShellPage<datatype>* CreateShellPage(std::string name)
+			//create shell page, default data type is <int>
+			template<typename DataType = int>
+			ShellPage<DataType>* CreateShellPage(std::string name)
 			{
-				std::shared_ptr<ShellPage<datatype>> ptr(new ShellPage<datatype>(this, name));
+				std::shared_ptr<ShellPage<DataType>> ptr(new ShellPage<DataType>(this, name));
 				AddPage(name, ptr);
 				return ptr.get();
 			}
 
-			template<typename datatype = int>
-			ShellPage<datatype>* CreateShellPage(std::string name, datatype data)
+			//create shell page with initilized value, default data type is <int>
+			template<typename DataType = int>
+			ShellPage<DataType>* CreateShellPage(std::string name, DataType data)
 			{
-				std::shared_ptr<ShellPage<datatype>> ptr(new ShellPage<datatype>(this, name, data));
+				std::shared_ptr<ShellPage<DataType>> ptr(new ShellPage<DataType>(this, name, data));
 				AddPage(name, ptr);
 				return ptr.get();
 			}

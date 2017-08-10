@@ -55,7 +55,7 @@ void ShellDefine()
 	auto* mcts = gadt.CreateShellPage("mcts");
 
 	//Define Root Page.
-	root->AddInfoFunc([]() {
+	root->SetInfoFunc([]() {
 		console::Cprintf("=============================================\n", console::GRAY);
 		console::Cprintf("       Game AI Development Toolkit\n", console::YELLOW);
 		console::Cprintf("       Copyright @ Junkai-Lu 2017\n", console::YELLOW);
