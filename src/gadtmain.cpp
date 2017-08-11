@@ -50,18 +50,20 @@ using std::endl;
 void ShellDefine()
 {
 	shell::GameShell gadt("GADT");
-	auto* root = gadt.CreateShellPage("root");
-	auto* test = gadt.CreateShellPage("test");
-	auto* mcts = gadt.CreateShellPage("mcts");
 
 	//Define Root Page.
-	root->SetInfoFunc([]() {
+	gadt.SetDefaultInfoFunc([]()->void{
 		console::Cprintf("=============================================\n", console::GRAY);
 		console::Cprintf("       Game AI Development Toolkit\n", console::YELLOW);
 		console::Cprintf("       Copyright @ Junkai-Lu 2017\n", console::YELLOW);
 		console::Cprintf("=============================================", console::GRAY);
 		std::cout << endl << endl;
 	});
+
+	auto* root = gadt.CreateShellPage("root");
+	auto* test = gadt.CreateShellPage("test");
+	auto* mcts = gadt.CreateShellPage("mcts");
+
 	root->AddChildPage("test", "start unit test");
 
 	//Unit Test Page

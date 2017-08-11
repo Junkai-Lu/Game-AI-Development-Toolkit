@@ -107,7 +107,6 @@ namespace gadt
 			ShellPageBase*	_call_source;		//call source point to the page that call this page.
 
 		protected:
-
 			//static paramaters.
 			static const char*  g_SHELL_HELP_COMMAND_STR;			//help command, default is 'help'
 			static const char*  g_SHELL_EXIT_COMMAND_STR;			//exit page command, default is 'return'
@@ -293,13 +292,13 @@ namespace gadt
 					* 4.extra command
 					*/
 					BeFocus();	//ensure this page is always the focus.
-					GameShell::InputTip();
+					belonging_shell()->InputTip();
 					std::string command;
 
 					//get command that is not empty.
 					for (;;)
 					{
-						command = GameShell::GetInput();
+						command = belonging_shell()->GetInput();
 						if (command != "")
 						{
 							break;
@@ -446,15 +445,20 @@ namespace gadt
 		class GameShell final
 		{
 			friend ShellPageBase;
+		public:
+			using InfoFunc = typename ShellPageBase::InfoFunc;
+			using PagePtr = std::shared_ptr<ShellPageBase>;
 
 		private:
 			//global variable
 			static GameShell* _g_focus_game;	//focus page, that is used for show path.									
-			std::map<std::string, std::shared_ptr<ShellPageBase>> _page_table;//page table
-			std::string _name;
-			ShellPageBase* _focus_page;
+			std::map<std::string, PagePtr>	_page_table;	//page table
+			std::string						_name;			//name of the shell
+			ShellPageBase*					_focus_page;	//focus page.
+			InfoFunc						_info_func;		//default info func.
 
 		public:
+			
 			//global function
 			static inline GameShell* focus_game()
 			{
@@ -462,7 +466,7 @@ namespace gadt
 			}
 
 			//print input tips.
-			static inline void InputTip(std::string tip = "")
+			void InputTip(std::string tip = "")
 			{
 				if (focus_game() != nullptr)
 				{
@@ -488,7 +492,7 @@ namespace gadt
 			}
 
 			//get input line by string format.
-			static inline std::string GetInput()
+			std::string GetInput()
 			{
 				char buffer[50];
 				std::cin.getline(buffer, 50);
@@ -544,12 +548,19 @@ namespace gadt
 				}
 			}
 
+			//set info func for all pages
+			inline void SetDefaultInfoFunc(InfoFunc info_func)
+			{
+				_info_func = info_func;
+			}
+
 			//create shell page, default data type is <int>
 			template<typename DataType = int>
 			ShellPage<DataType>* CreateShellPage(std::string name)
 			{
 				std::shared_ptr<ShellPage<DataType>> ptr(new ShellPage<DataType>(this, name));
 				AddPage(name, ptr);
+				ptr.get()->SetInfoFunc(_info_func);
 				return ptr.get();
 			}
 
@@ -559,6 +570,7 @@ namespace gadt
 			{
 				std::shared_ptr<ShellPage<DataType>> ptr(new ShellPage<DataType>(this, name, data));
 				AddPage(name, ptr);
+				ptr.get()->SetInfoFunc(_info_func);
 				return ptr.get();
 			}
 		};

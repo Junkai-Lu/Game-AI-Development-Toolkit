@@ -467,7 +467,7 @@ namespace gadt
 		void RunTest(FuncPair func_pair)
 		{
 			cout << endl << ">> test start, target = ";
-			ccout << console::GREEN << "<" << func_pair.first << ">" << console::DEFAULT;
+			console::ccout << console::GREEN << "<" << func_pair.first << ">" << console::DEFAULT;
 			auto t = timer::GetClock();
 			cout << endl;
 			func_pair.second();

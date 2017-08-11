@@ -125,7 +125,7 @@ namespace gadt
 			//return true if the node is terminal.
 			inline bool is_terminal_state() const
 			{
-				return _winnner != _params.no_winner_index;
+				return _winner != _params.no_winner_index;
 			}
 
 			//get value of this node for parent node.

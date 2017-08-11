@@ -102,21 +102,28 @@ namespace gadt
 		class costream
 		{
 		private:
-			std::ostream& _os;
-			ConsoleColor _color;
+			std::ostream& _os;		
+			static ConsoleColor _global_color;
 
 			//change colors by setting using winapi in windows or output string in linux.
-			static std::string change_color(ConsoleColor color);
+			static void change_color(ConsoleColor color);
 
 		public:
-			costream(std::ostream& os) : _os(os),_color(DEFAULT) {}
+			//constructor with appointed std::ostream
+			costream(std::ostream& os) : 
+				_os(os)
+			{
+			}
+			
+			//output stream
 			costream& operator<<(ConsoleColor color)
 			{
-				_color = color;
-				_os << change_color(color);
+				_global_color = color;
+				change_color(color);
 				return *this;
 			}
 
+			//output stream
 			template<typename datatype>
 			inline costream& operator<<(datatype d)
 			{
@@ -124,13 +131,24 @@ namespace gadt
 				return *this;
 			}
 
+			//print data with color
 			template <typename t_data>
 			inline void print(t_data data, ConsoleColor color)
 			{
-				ConsoleColor temp_color = ccout._color;
-				ccout << color << data << temp_color;
+				ConsoleColor temp_color = _global_color;
+				change_color(color);
+				_os << data;
+				change_color(temp_color);
+			}
+
+			static ConsoleColor global_color()
+			{
+				return _global_color;
 			}
 		};
+
+		//a golbal color ostream 
+		extern costream ccout;
 		
 		//bool to string. that can be replaced by '<< boolalpha'
 		inline std::string BoolToString(bool b)
@@ -181,8 +199,7 @@ namespace gadt
 		void SystemClear();
 	}
 
-	//a golbal color ostream 
-	extern console::costream ccout;
+	
 
 	namespace timer
 	{

@@ -78,9 +78,13 @@ namespace gadt
 		//GameShell
 		GameShell* GameShell::_g_focus_game = nullptr;
 		GameShell::GameShell(std::string name) :
-			_name(name)
+			_page_table(),
+			_name(name),
+			_focus_page(nullptr),
+			_info_func([]()->void {})
 		{
 			BeFocus();
 		}
+		
 	}
 }

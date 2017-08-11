@@ -216,35 +216,34 @@ namespace gadt
 		};
 
 		template<typename T, bool _is_debug = false>
+		class ListNode
+		{
+		public:
+			using pointer = ListNode<T, _is_debug>*;
+
+		private:
+			const T _value;
+			pointer _next_node;
+
+		public:
+			//constructor function.
+			inline ListNode(const T& value) :
+				_value(value),
+				_next_node(nullptr)
+			{
+			}
+
+			//copy constructor function is disallowed.
+			ListNode(const ListNode&) = delete;
+
+			inline const T& value() const { return _value; }
+			inline pointer next_node() const { return _next_node; }
+			inline void set_next_node(pointer p) { _next_node = p; }
+		};
+
+		template<typename T, bool _is_debug = false>
 		class List
 		{
-		private:
-			template<typename T, bool _is_debug = false>
-			class ListNode
-			{
-			public:
-				using pointer = ListNode<T, _is_debug>*;
-
-			private:
-				const T _value;
-				pointer _next_node;
-
-			public:
-				//constructor function.
-				inline ListNode(const T& value) :
-					_value(value),
-					_next_node(nullptr)
-				{
-				}
-
-				//copy constructor function is disallowed.
-				ListNode(const ListNode&) = delete;
-
-				inline const T& value() const { return _value; }
-				inline pointer next_node() const { return _next_node; }
-				inline void set_next_node(pointer p) { _next_node = p; }
-			};
-
 		public:
 			using Node = ListNode<T, _is_debug>;
 			using Allocator = gadt::stl::Allocator<Node, _is_debug>;
