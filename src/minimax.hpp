@@ -158,10 +158,37 @@ namespace gadt
 			using Node = MinimaxNode<State, Action, _is_debug>;
 			using ActionSet = typename Node::ActionSet;
 			using ParamPackage = typename Node::ParamPackage;
+			using VisualTree = visual_tree::VisualTree;
+			using VisualNode = visual_tree::VisualNode;
 
 		private:
-			
+			struct LogFuncPackage
+			{
+				using StateToStrFunc = std::function<std::string(const State& state)>;
+				using ActionToStrFunc = std::function<std::string(const Action& action)>;
+
+				StateToStrFunc		StateToStr;
+				ActionToStrFunc		ActionToStr;
+				bool enable;
+
+				LogFuncPackage(StateToStrFunc _StateToStr, ActionToStrFunc _ActionToStr):
+					StateToStr(_StateToStr),
+					ActionToStr(_ActionToStr),
+					enable(true)
+				{
+				}
+			};
+
+		private:
+			ParamPackage _params;
+			VisualTree _visual_tree;
+			LogFuncPackage LogFunc;
+
+		private:
+
+
 		public:
+			void EnableLog()
 		};
 	}
 }
