@@ -40,6 +40,8 @@ namespace gadt
 		using AgentIndex = int8_t;
 		using EvalValue = double;
 
+		
+
 		template<typename State, typename Action, bool _is_debug>
 		class MinimaxNode
 		{
@@ -90,7 +92,7 @@ namespace gadt
 			const ParamPackage& _params;	//parameters package
 
 		private:
-			inline NodeInit()
+			inline void NodeInit()
 			{
 				_winner = _params.DetemineWinner(_state);
 				_params.MakeAction(_state, _actions);
@@ -120,24 +122,26 @@ namespace gadt
 				NodeInit(params);
 			}
 
+			//return true if the node is terminal.
 			inline bool is_terminal_state() const
 			{
 				return _winnner != _params.no_winner_index;
 			}
 
-			EvalValue GetValue() const
+			//get value of this node for parent node.
+			EvalValue GetValueForParent() const
 			{
 				if (_depth == 0 || is_terminal_state())
 				{
 					return _params.EvalForParent(_state, _winner);
 				}
-				GADT_CHECK_WARNING(g_ENABLE_MINIMAX_WARNING, _actions.size() == 0, "MM101:empty action set");
+				GADT_CHECK_WARNING(g_ENABLE_MINIMAX_WARNING, _actions.size() == 0, "MM101: empty action set");
 				Node first_child(_state, _actions[0], _depth - 1, _params);
 				EvalValue best_value = first_child.GetValue();
 				for (size_t i = 1; i < _actions.size(); i++)
 				{
 					Node child(_state, _actions[i], _depth - 1, _params);
-					EvalValue child_value = child.GetValue();
+					EvalValue child_value = child.GetValueForParent();
 					if (child_value >= best_value)
 					{
 						best_value = child_value;
@@ -147,11 +151,16 @@ namespace gadt
 			}
 		};
 
-		template<typename State, typename Action, typename Result, bool _is_debug>
+		template<typename State, typename Action, bool _is_debug>
 		class MinimaxSearch
 		{
-		private:
+		public:
+			using Node = MinimaxNode<State, Action, _is_debug>;
+			using ActionSet = typename Node::ActionSet;
+			using ParamPackage = typename Node::ParamPackage;
 
+		private:
+			
 		public:
 		};
 	}

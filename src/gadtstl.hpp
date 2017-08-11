@@ -216,37 +216,39 @@ namespace gadt
 		};
 
 		template<typename T, bool _is_debug = false>
-		class ListNode
-		{
-		public:
-			using pointer = ListNode<T, _is_debug>*;
-
-		private:
-			const T _value;
-			pointer _next_node;
-
-		public:
-			//constructor function.
-			inline ListNode(const T& value) :
-				_value(value),
-				_next_node(nullptr)
-			{
-			}
-
-			//copy constructor function is disallowed.
-			ListNode(const ListNode&) = delete;
-
-			inline const T& value() const { return _value; }
-			inline pointer next_node() const { return _next_node; }
-			inline void set_next_node(pointer p) { _next_node = p; }
-		};
-
-		template<typename T, bool _is_debug = false>
 		class List
 		{
+		private:
+			template<typename T, bool _is_debug = false>
+			class ListNode
+			{
+			public:
+				using pointer = ListNode<T, _is_debug>*;
+
+			private:
+				const T _value;
+				pointer _next_node;
+
+			public:
+				//constructor function.
+				inline ListNode(const T& value) :
+					_value(value),
+					_next_node(nullptr)
+				{
+				}
+
+				//copy constructor function is disallowed.
+				ListNode(const ListNode&) = delete;
+
+				inline const T& value() const { return _value; }
+				inline pointer next_node() const { return _next_node; }
+				inline void set_next_node(pointer p) { _next_node = p; }
+			};
+
 		public:
-			using Allocator = gadt::stl::Allocator<gadt::stl::ListNode<T, _is_debug>, _is_debug>;
-			using node_pointer = gadt::stl::ListNode<T, _is_debug>*;
+			using Node = ListNode<T, _is_debug>;
+			using Allocator = gadt::stl::Allocator<Node, _is_debug>;
+			using node_pointer = Node*;
 
 		private:
 			const bool   _private_allocator;
@@ -254,6 +256,7 @@ namespace gadt
 			node_pointer _first_node;
 			node_pointer _last_node;
 			node_pointer _iterator;
+			size_t       _size;
 
 		public:
 			List(size_t allocator_count) :
@@ -261,7 +264,8 @@ namespace gadt
 				_allocator(*(new Allocator(allocator_count))),
 				_first_node(nullptr),
 				_last_node(nullptr),
-				_iterator(nullptr)
+				_iterator(nullptr),
+				_size(0)
 			{
 			}
 
@@ -270,7 +274,8 @@ namespace gadt
 				_allocator(allocator),
 				_first_node(nullptr),
 				_last_node(nullptr),
-				_iterator(nullptr)
+				_iterator(nullptr),
+				_size(0)
 			{
 			}
 
@@ -285,6 +290,7 @@ namespace gadt
 			//insert a new value in the end of the list.
 			void insert(const T& value)
 			{
+				_size++;//incr size of the list.
 				auto ptr = _allocator.construct(value);
 				if (_first_node == nullptr)
 				{
@@ -297,6 +303,12 @@ namespace gadt
 					_last_node->set_next_node(ptr);
 					_last_node = _last_node->next_node();
 				}
+			}
+
+			//get the size of the list.
+			inline size_t size() const
+			{
+				return _size;
 			}
 
 			//clear all nodes from allocator.

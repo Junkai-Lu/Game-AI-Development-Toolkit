@@ -406,6 +406,7 @@ namespace gadt
 			ActionList list(1000);
 			for (size_t i = 0; i < 9; i++)
 			{
+				GADT_ASSERT(list.size(), i);
 				list.insert({ i / 3,i % 3,tic_tac_toe::BLACK });
 			}
 			size_t count = 0;
