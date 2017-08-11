@@ -32,8 +32,9 @@ namespace gadt
 	{
 		//global variables
 		const char* ShellPageBase::g_SHELL_HELP_COMMAND_STR = "help";
-		const char* ShellPageBase::g_SHELL_EXIT_COMMAND_STR = "return";
+		const char* ShellPageBase::g_SHELL_RETURN_COMMAND_STR = "return";
 		const char* ShellPageBase::g_SHELL_CLEAN_COMMAND_STR = "clean";
+		const char* ShellPageBase::g_SHELL_EXIT_COMMAND_STR = "exit";
 		const size_t ShellPageBase::g_SHELL_MAX_COMMAND_LENGTH = 15;
 
 		//ShellPageBase

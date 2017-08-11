@@ -109,8 +109,9 @@ namespace gadt
 		protected:
 			//static paramaters.
 			static const char*  g_SHELL_HELP_COMMAND_STR;			//help command, default is 'help'
-			static const char*  g_SHELL_EXIT_COMMAND_STR;			//exit page command, default is 'return'
+			static const char*  g_SHELL_RETURN_COMMAND_STR;			//command that return to previous page, default is 'return'
 			static const char*  g_SHELL_CLEAN_COMMAND_STR;			//clean screen command, default is 'clear'
+			static const char*  g_SHELL_EXIT_COMMAND_STR;			//command that exit the program, default is 'exit'
 			static const size_t g_SHELL_MAX_COMMAND_LENGTH;			//max length of the command. 
 
 		protected:
@@ -223,8 +224,13 @@ namespace gadt
 			//init shell and add default commands
 			inline void ShellInit()
 			{
-				//add exit describe
-				AddFunction(g_SHELL_EXIT_COMMAND_STR, [](DataType&)->void {}, "return to previous menu.");
+				//add return describe
+				AddFunction(g_SHELL_RETURN_COMMAND_STR, [](DataType&)->void {}, "return to previous menu.");
+
+				//add exit command
+				AddFunction(g_SHELL_EXIT_COMMAND_STR, [](DataType&)->void {
+					exit(0);
+				}, "exit program.");
 
 				//add help command.
 				AddFunction(g_SHELL_HELP_COMMAND_STR, [&](DataType& data)->void {
@@ -306,7 +312,7 @@ namespace gadt
 					}
 
 					//return command
-					if (command == g_SHELL_EXIT_COMMAND_STR)
+					if (command == g_SHELL_RETURN_COMMAND_STR)
 					{
 						if (call_source != nullptr)
 						{
