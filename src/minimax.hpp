@@ -40,7 +40,11 @@ namespace gadt
 		using AgentIndex = int8_t;
 		using EvalValue = double;
 
-		
+		enum MinimaxNodeReturnMethod: uint8_t
+		{
+			HIGHEST_VALUE = 0,
+			AVERAGE_VALUE = 1
+		};
 
 		template<typename State, typename Action, bool _is_debug>
 		class MinimaxNode
@@ -188,7 +192,9 @@ namespace gadt
 
 
 		public:
-			void EnableLog()
+			void EnableLog();
+
+			void DisableLog();
 		};
 	}
 }

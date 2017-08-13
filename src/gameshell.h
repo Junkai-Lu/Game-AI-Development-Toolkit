@@ -27,15 +27,19 @@ namespace gadt
 {
 	namespace shell
 	{
+		//allow check warning if it is true.
+		constexpr const bool g_ENABLE_SHELL_WARNING = true;
+		constexpr const size_t g_SHELL_COMMAND_TYPE_NUMBER = 3;
+
 		//Shell Page Interface
 		class GameShell;
 
 		//command type
 		enum CommandType :uint8_t
 		{
-			DEFAULT_COMMAND = 0,
-			NORMAL_COMMAND = 1,
-			CHILD_PAGE_COMMAND = 2,
+			NORMAL_COMMAND = 0,
+			CHILD_PAGE_COMMAND = 1,
+			DEFAULT_COMMAND = 2
 		};
 
 		//data of command
@@ -196,9 +200,11 @@ namespace gadt
 			using ActionFunc = typename CustomCommandDataType::ActionFunc;
 
 		private:
-			DataType _data;												//data of the page.
-			std::map<std::string, CommandDataType>	_command_list;		//command list
-			std::vector<CustomCommandDataType>		_custom_func_list;	//custom func list
+			DataType _data;																			//data of the page.
+			std::map<std::string, CommandDataType>	_command_list;									//command list
+			std::vector<CustomCommandDataType>		_custom_func_list;								//custom func list
+			std::vector<std::string>				_cmd_name_list[g_SHELL_COMMAND_TYPE_NUMBER];	//list of commands by names.
+
 			ConstructorFunc							_constructor_func;	//constructor func. would be called when enter the page.
 			DestructorFunc							_destructor_func;	//destructror func. would be called when quit the page.
 
@@ -207,40 +213,82 @@ namespace gadt
 			//print command list
 			void PrintCommandList()
 			{
-				std::cout << std::endl << ">> ";
-				console::Cprintf("[ COMMAND LIST ]\n\n", console::YELLOW);
-				for (const auto& pair : _command_list)
+				std::cout << std::endl;
+				//console::Cprintf("[ COMMAND LIST ]\n\n", console::YELLOW);
+				for (size_t i = 0 ;i < g_SHELL_COMMAND_TYPE_NUMBER;i++)
 				{
-					const std::string& name = pair.first;
-					const std::string& desc = pair.second._desc;
-					std::cout << "   '";
-					console::Cprintf(name, console::RED);
-					std::cout << "'" << std::string(g_SHELL_MAX_COMMAND_LENGTH, ' ').substr(0, g_SHELL_MAX_COMMAND_LENGTH - name.length())
-						<< desc << std::endl;
+					std::string type_name[g_SHELL_COMMAND_TYPE_NUMBER] = 
+					{
+						"COMMANDS",
+						"CHILD PAGES",
+						"SHELL COMMANDS"
+					};
+					if (_cmd_name_list[i].size() > 0)
+					{
+						std::cout << ">> ";
+						console::Cprintf("[" + type_name[i] + "]\n", console::YELLOW);
+						for (auto name : _cmd_name_list[i])
+						{
+							//const std::string& name = pair.first;
+							const std::string& desc = get_command_data(name)._desc;
+							std::cout << "   '";
+							console::Cprintf(name, console::RED);
+							std::cout << "'" << std::string(g_SHELL_MAX_COMMAND_LENGTH, ' ').substr(0, g_SHELL_MAX_COMMAND_LENGTH - name.length())
+								<< desc << std::endl;
+						}
+						std::cout << std::endl;
+					}
 				}
-				std::cout << std::endl << std::endl;
 			}
 
 			//init shell and add default commands
 			inline void ShellInit()
 			{
 				//add return describe
-				AddFunction(g_SHELL_RETURN_COMMAND_STR, [](DataType&)->void {}, "return to previous menu.");
+				InsertCommand(
+					g_SHELL_RETURN_COMMAND_STR, 
+					CommandDataType(
+						[](DataType&)->void {}, 
+						"return to previous menu.", 
+						DEFAULT_COMMAND
+					)
+				);
 
 				//add exit command
-				AddFunction(g_SHELL_EXIT_COMMAND_STR, [](DataType&)->void {
-					exit(0);
-				}, "exit program.");
+				InsertCommand(
+					g_SHELL_EXIT_COMMAND_STR,
+					CommandDataType(
+						[](DataType&)->void {
+							exit(0);
+						},
+						"exit program.",
+						DEFAULT_COMMAND
+					)
+				);
 
 				//add help command.
-				AddFunction(g_SHELL_HELP_COMMAND_STR, [&](DataType& data)->void {
-					PrintCommandList();
-				}, "get command list");
+				InsertCommand(
+					g_SHELL_HELP_COMMAND_STR,
+					CommandDataType(
+						[&](DataType& data)->void {
+							PrintCommandList();
+						},
+						"get command list",
+						DEFAULT_COMMAND
+					)
+				);
 
 				//add clean command.
-				AddFunction(g_SHELL_CLEAN_COMMAND_STR, [&](DataType& data)->void {
-					this->CleanScreen();
-				}, "clean screen.");
+				InsertCommand(
+					g_SHELL_CLEAN_COMMAND_STR,
+					CommandDataType(
+						[&](DataType& data)->void {
+							this->CleanScreen();
+						},
+						"clean screen.",
+						DEFAULT_COMMAND
+					)
+				);
 			}
 
 			//data operator
@@ -367,7 +415,21 @@ namespace gadt
 				return command;
 			}
 
+			//insert command data
+			inline void InsertCommand(std::string command, CommandDataType&& data)
+			{
+				_cmd_name_list[data._type].push_back(command);
+				_command_list.insert(std::pair<std::string, CommandDataType>(command, data));
+			}
+
+			//insert custom command
+			inline void InsertCustomComand(CustomCommandDataType&& data)
+			{
+				_custom_func_list.push_back(data);
+			}
+
 		public:
+
 			//default function.
 			ShellPage(GameShell* belonging_shell, std::string name) :
 				ShellPageBase(belonging_shell, name),
@@ -381,9 +443,10 @@ namespace gadt
 			}
 
 			//create a new shell page.
-			ShellPage(GameShell* belonging_shell, std::string name, DataType data) :
+			template<class... Types>
+			ShellPage(GameShell* belonging_shell, std::string name, Types&&... args) :
 				ShellPageBase(belonging_shell, name),
-				_data(data),
+				_data(std::forward<Types>(args)...),
 				_command_list(),
 				_custom_func_list(),
 				_constructor_func([](DataType&)->void {}),
@@ -406,8 +469,7 @@ namespace gadt
 				child_name = curtail_command(child_name);
 				if (child_name != name())
 				{
-					//_command_list[child_name] = CommandDataType(child_name, desc);
-					_command_list.insert(std::pair<std::string, CommandDataType>(child_name, CommandDataType(child_name, desc)));
+					InsertCommand(child_name, CommandDataType(child_name, desc));
 				}
 				else
 				{
@@ -423,14 +485,13 @@ namespace gadt
 			inline void AddFunction(std::string command, CommandFunc func, std::string desc)
 			{
 				command = curtail_command(command);
-				_command_list.insert(std::pair<std::string, CommandDataType>(command, CommandDataType(func, desc, NORMAL_COMMAND)));
-				//_command_list[command] = CommandDataType(func, desc, NORMAL_COMMAND);
+				InsertCommand(command, CommandDataType(func, desc, NORMAL_COMMAND));
 			}
 
 			//use a extend function to check and execute command, if the command is legal that the function should return 'true'.
 			inline void AddCustomCommand(std::string name, std::string desc, ConditionFunc condition, ActionFunc action)
 			{
-				_custom_func_list.push_back(CustomCommandDataType(name, desc, condition, action));
+				InsertCustomComand(CustomCommandDataType(name, desc, condition, action));
 			}
 
 			//add constructor func, it would be called when enter page. 
@@ -562,20 +623,22 @@ namespace gadt
 
 			//create shell page, default data type is <int>
 			template<typename DataType = int>
-			ShellPage<DataType>* CreateShellPage(std::string name)
+			ShellPage<DataType>* CreateShellPage(std::string page_name)
 			{
-				std::shared_ptr<ShellPage<DataType>> ptr(new ShellPage<DataType>(this, name));
-				AddPage(name, ptr);
+				GADT_CHECK_WARNING(g_ENABLE_SHELL_WARNING, page_exist(page_name), "SHELL01: repeation of page name.");
+				std::shared_ptr<ShellPage<DataType>> ptr(new ShellPage<DataType>(this, page_name));
+				AddPage(page_name, ptr);
 				ptr.get()->SetInfoFunc(_info_func);
 				return ptr.get();
 			}
 
 			//create shell page with initilized value, default data type is <int>
-			template<typename DataType = int>
-			ShellPage<DataType>* CreateShellPage(std::string name, DataType data)
+			template<typename DataType, class... Types>
+			ShellPage<DataType>* CreateShellPage(std::string page_name, Types&&... args)
 			{
-				std::shared_ptr<ShellPage<DataType>> ptr(new ShellPage<DataType>(this, name, data));
-				AddPage(name, ptr);
+				GADT_CHECK_WARNING(g_ENABLE_SHELL_WARNING, page_exist(page_name), "SHELL01: repeation of page name.");
+				std::shared_ptr<ShellPage<DataType>> ptr(new ShellPage<DataType>(this, page_name, std::forward<Types>(args)...));
+				AddPage(page_name, ptr);
 				ptr.get()->SetInfoFunc(_info_func);
 				return ptr.get();
 			}
