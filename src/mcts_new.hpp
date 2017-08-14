@@ -62,91 +62,6 @@ namespace gadt
 		}
 
 		/*
-		* MctsLogController is used for control logs in mcts search.
-		*
-		* [State] is the game-state class, which is defined by the user.
-		* [Action] is the game-action class, which is defined by the user.
-		* [Result] is the game-result class, which stand for a terminal state of the game.
-		*/
-		template<typename State, typename Action, typename Result>
-		class MctsLogController
-		{
-		private:
-			using VisualTree		= visual_tree::VisualTree;
-
-		public:
-			using StateToStrFunc	= std::function<std::string(const State& state)>;
-			using ActionToStrFunc	= std::function<std::string(const Action& action)>;
-			using ResultToStrFunc	= std::function<std::string(const Result& result)>;
-
-
-		private:
-			bool			_enable;
-			std::ostream*	_log_ostream;
-			StateToStrFunc	_state_to_str_func;
-			ActionToStrFunc	_action_to_str_func;
-			ResultToStrFunc	_result_to_str_func;
-
-		public:
-			//default constructor.
-			MctsLogController() :
-				_enable(false),
-				_log_ostream(std::cout),
-				_state_to_str_func([](const State&)->std::string {return ""; }),
-				_action_to_str_func([](const Action&)->std::string {return ""; }),
-				_result_to_str_func([](const Result&)->std::string {return ""; })
-			{
-
-			}
-
-			//return true if enable.
-			bool enable() const
-			{
-				return _enable;
-			}
-
-			//return ostream for logs.
-			std::ostream& output_stream() const
-			{
-				return _log_ostream;
-			}
-
-			//convert state to string
-			inline std::string StateToStr(const State& state) const
-			{
-				return _state_to_str_func;
-			}
-
-			//convert action to string
-			inline std::string ActionToStr(const State& action) const
-			{
-				return _action_to_str_func;
-			}
-
-			//convert action to string
-			inline std::string ResultToStr(const State& action) const
-			{
-				return _result_to_str_func;
-			}
-
-			//enable log.
-			void EnableLog(StateToStrFunc state_to_str_func, ActionToStrFunc action_to_str_func, ResultToStrFunc result_to_str_func, std::ostream& os)
-			{
-				_enable = true;
-				_state_to_str_func = state_to_str_func;
-				_action_to_str_func = action_to_str_func;
-				_result_to_str_func = result_to_str_func;
-				_log_ostream = os;
-			}
-
-			//disable log.
-			void DisableLog()
-			{
-				_enable = false;
-			}
-		};
-
-		/*
 		* MctsNode is the node class in the monte carlo tree search.
 		*
 		* [State] is the game-state class, which is defined by the user.
@@ -600,12 +515,12 @@ namespace gadt
 		class MctsSearch
 		{
 		public:
-			using Node			= MctsNode<State, Action, Result, _is_debug>;	//searcg node.	
-			using JsonConvert	= MctsToJson<State, Action, Result, _is_debug>; //json tree
-			using LogController = MctsLogController<State, Action, Result>;     //log controller
-			using Allocator		= typename Node::Allocator;						//allocator of nodes
-			using ActionSet		= typename Node::ActionSet;						//set of Action
-			using NodePtrSet	= typename Node::NodePtrSet;					//set of ptrs to child nodes.
+			using Node			= MctsNode<State, Action, Result, _is_debug>;		//searcg node.	
+			using JsonConvert	= MctsToJson<State, Action, Result, _is_debug>;		//json tree
+			using LogController = log::SearchLogController<State, Action, Result>;  //log controller
+			using Allocator		= typename Node::Allocator;							//allocator of nodes
+			using ActionSet		= typename Node::ActionSet;							//set of Action
+			using NodePtrSet	= typename Node::NodePtrSet;						//set of ptrs to child nodes.
 			
 		private:
 			using FuncPackage	= typename Node::FuncPackage;
@@ -626,8 +541,6 @@ namespace gadt
 			double			_timeout;				//set timeout (seconds).
 			size_t			_max_iteration;			//set max iteration times.
 			bool			_enable_gc;				//allow garbage collection if the tree run out of memory.
-
-			const char* MCTS_JSON_LOG_NAME = "MctsJsonLog.txt";
 
 		public:
 			//package of default functions.

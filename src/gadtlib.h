@@ -199,8 +199,6 @@ namespace gadt
 		void SystemClear();
 	}
 
-	
-
 	namespace timer
 	{
 		std::string TimeString(std::string format = "%Y.%m.%d-%H:%M:%S");
@@ -405,5 +403,6 @@ namespace gadt
 				return ss.str();
 			}
 		};
+
 	}
 }
