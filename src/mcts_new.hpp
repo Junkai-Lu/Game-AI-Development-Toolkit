@@ -630,7 +630,7 @@ namespace gadt
 			//excute iteration function.
 			Action ExcuteMCTS(State root_state, double timeout, size_t max_iteration, bool enable_gc)
 			{
-				if (_log_controller.enable())
+				if (_log_controller.log_enabled())
 				{
 					log() << "[MCTS] start excute monte carlo tree search..." << std::endl
 						<< "[MCTS] info = " << info() << std::endl;
@@ -673,19 +673,27 @@ namespace gadt
 				if (is_debug()) { GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, root_actions.size() == 0, "MCTS101: root node do not exist any available action."); }
 				UcbValue max_value = 0;
 				size_t max_value_node_index = 0;
-				if (_log_controller.enable())
+
+				//output log if enabled.
+				if (_log_controller.log_enabled())
 				{ 
 					JsonConvert json_convert(root_node, _log_controller.StateToStr);
-					std::ofstream os(MCTS_JSON_LOG_NAME);
+					std::ofstream os(_log_controller.json_output_path());
 					json_convert.output_json(os);
 					log() << "[MCTS] iteration finished." << std::endl
 						<< "[MCTS] actions = {" << std::endl;
+				}
+
+				//output Json if enabled.
+				if (_log_controller.json_output_enabled())
+				{
+
 				}
 				for (size_t i = 0; i < root_actions.size(); i++)
 				{
 					auto child_ptr = root_node->child_node(i);
 					if (is_debug()) { GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, root_node->child_node(0) == nullptr, "MCTS107: empty child node under root node."); }
-					if (_log_controller.enable())
+					if (_log_controller.log_enabled())
 					{
 						log() << "action " << i << ": "<< _log_controller.ActionToStr(root_actions[i])<<", value: ";
 					}
@@ -697,20 +705,20 @@ namespace gadt
 							max_value = child_value;
 							max_value_node_index = i;
 						}
-						if (_log_controller.enable())
+						if (_log_controller.log_enabled())
 						{
 							log() << "[" << child_value << "]" << std::endl;
 						}
 					}
 					else
 					{
-						if (_log_controller.enable())
+						if (_log_controller.log_enabled())
 						{
 							log() << "[ deleted ]" << std::endl;
 						}
 					}
 				}
-				if (_log_controller.enable())
+				if (_log_controller.log_enabled())
 				{
 					log() << "[MCTS] best action index: "<< max_value_node_index << std::endl;
 				}

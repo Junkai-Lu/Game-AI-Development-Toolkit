@@ -48,7 +48,7 @@ namespace gadt
 				_state_to_str_func([](const State&)->std::string {return ""; }),
 				_action_to_str_func([](const Action&)->std::string {return ""; }),
 				_enable_log(false),
-				_log_ostream(std::cout),
+				_log_ostream(&std::cout),
 				_enable_json_output(false),
 				_json_output_path(),
 				_visual_tree()
@@ -82,19 +82,19 @@ namespace gadt
 			//convert state to string
 			inline std::string StateToStr(const State& state) const
 			{
-				return _state_to_str_func;
+				return _state_to_str_func(state);
 			}
 
 			//convert action to string
-			inline std::string ActionToStr(const State& action) const
+			inline std::string ActionToStr(const Action& action) const
 			{
-				return _action_to_str_func;
+				return _action_to_str_func(action);
 			}
 
 			//convert action to string
-			inline std::string ResultToStr(const State& action) const
+			inline std::string ResultToStr(const Result& result) const
 			{
-				return _result_to_str_func;
+				return _result_to_str_func(result);
 			}
 
 			void Init(
@@ -133,6 +133,12 @@ namespace gadt
 			inline void DisableJsonOutput()
 			{
 				_enable_json_output = false;
+			}
+
+			//get json output path
+			inline std::string json_output_path() const
+			{
+				return _json_output_path;
 			}
 
 			//get ref of visual tree.

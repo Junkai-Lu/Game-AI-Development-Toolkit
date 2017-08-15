@@ -117,6 +117,16 @@ namespace gadt
 			{
 				return _params;
 			}
+
+			//get the first command.
+			std::string fir_command() const
+			{
+				if (_is_legal && _commands.size() > 0)
+				{
+					return _commands.front();
+				}
+				return "";
+			}
 		};
 
 		//command type
@@ -160,7 +170,7 @@ namespace gadt
 			CommandData(CommandNoParamsFunc command_func, std::string desc, CommandType type) :
 				_type(type),
 				_desc(desc),
-				_command_func([](DataType& data, const ParamsList&)->void {command_func(data); }),
+				_command_func([&](DataType& data, const ParamsList&)->void {command_func(data); }),
 				_child_page_name(),
 				_params_check([](const ParamsList& params)->bool {return params.size() == 0 ? true : false; })
 			{
@@ -458,6 +468,7 @@ namespace gadt
 						}
 					}
 
+					
 					//return command
 					if (command == g_SHELL_RETURN_COMMAND_STR)
 					{
@@ -469,12 +480,21 @@ namespace gadt
 					}
 
 					//function command check
-					if (command_exist(command))
+					CommandParser parser(command);
+					if (command_exist(parser.fir_command()))
 					{
-						CommandDataType& data = _command_list[command];
+						CommandDataType& data = _command_list[parser.fir_command()];
 						if (data._type == NORMAL_COMMAND || data._type == DEFAULT_COMMAND)
 						{
-							data._command_func(_data);
+							if (data._params_check(parser.params()))
+							{
+								data._command_func(_data, parser.params());
+							}
+							else
+							{
+								console::Cprintf("ERROR:", console::PURPLE);
+								console::Cprintf("illegal parameters\n", console::BROWN);
+							}
 							continue;
 						}
 						else if (data._type == CHILD_PAGE_COMMAND)
@@ -667,8 +687,8 @@ namespace gadt
 			//get input line by string format.
 			std::string GetInput()
 			{
-				char buffer[50];
-				std::cin.getline(buffer, 50);
+				char buffer[256];
+				std::cin.getline(buffer, 256);
 				return std::string(buffer);
 			}
 

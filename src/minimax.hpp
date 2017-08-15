@@ -40,55 +40,6 @@ namespace gadt
 		using AgentIndex = int8_t;
 		using EvalValue = double;
 
-		template<typename State, typename Action>
-		class MinimaxLogController
-		{
-		public:
-			using StateToStrFunc = std::function<std::string(const State& state)>;
-			using ActionToStrFunc = std::function<std::string(const Action& action)>;
-
-		private:
-			bool _enable;
-			StateToStrFunc		_state_to_str_func;
-			ActionToStrFunc		_action_to_str_func;
-			
-
-		public:
-			//default constructor, disable the log.
-			MinimaxLogController() :
-				_enable(false),
-				_state_to_str_func([](const State&)->std::string {return ""; }),
-				_action_to_str_func([](const Action&)->std::string {return ""; })
-			{
-			}
-
-			//convert state to string
-			inline std::string StateToStr(const State& state)
-			{
-				return _state_to_str_func;
-			}
-
-			//convert action to string
-			inline std::string ActionToStr(const State& action)
-			{
-				return _action_to_str_func;
-			}
-
-			//enable log.
-			void Enable(StateToStrFunc state_to_str_func, ActionToStrFunc action_to_str_func)
-			{
-				_state_to_str_func = state_to_str_func;
-				_action_to_str_func = action_to_str_func;
-				_enable = true;
-			}
-
-			//disable log.
-			void Disable()
-			{
-				_enable = false;
-			}
-		};
-
 		//minimax search node.
 		template<typename State, typename Action, bool _is_debug>
 		class MinimaxNode
@@ -207,7 +158,7 @@ namespace gadt
 			using Node			= MinimaxNode<State, Action, _is_debug>;
 			using ActionSet		= typename Node::ActionSet;
 			using ParamPackage	= typename Node::ParamPackage;
-			using LogController	= MinimaxLogController<State, Action>;
+			using LogController	= log::SearchLogController<State, Action>;
 			using VisualTree	= visual_tree::VisualTree;
 			using VisualNode	= visual_tree::VisualNode;
 			
