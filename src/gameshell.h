@@ -133,7 +133,7 @@ namespace gadt
 		{
 			using ParamsList = std::vector<std::string>;
 			using CommandFunc = std::function<void(DataType&, const ParamsList&)>;
-			using CommandFuncWithoutParams = std::function<void(DataType&)>;
+			using CommandNoParamsFunc = std::function<void(DataType&)>;
 			using CommandParamsCheck = std::function<bool(const ParamsList&)>;
 
 			const CommandType			_type;
@@ -149,23 +149,20 @@ namespace gadt
 				_child_page_name()
 			{
 			}
-			CommandData(CommandFunc command_func, std::string desc, CommandType type) :
+			CommandData(CommandFunc command_func, std::string desc, CommandType type, CommandParamsCheck check = [](const ParamsList&)->bool {return true; }) :
 				_type(type),
 				_desc(desc),
 				_command_func(command_func),
 				_child_page_name(),
-				_params_check([](const ParamsList& params)->bool {
-					if (params.size() == 0)
-						return true;
-					return false; 
-				})
+				_params_check()
 			{
 			}
-			CommandData(CommandFuncWithoutParams command_func, std::string desc, CommandType type, CommandParamsCheck check) :
+			CommandData(CommandNoParamsFunc command_func, std::string desc, CommandType type) :
 				_type(type),
 				_desc(desc),
 				_command_func([](DataType& data, const ParamsList&)->void {command_func(data); }),
-				_child_page_name()
+				_child_page_name(),
+				_params_check([](const ParamsList& params)->bool {return params.size() == 0 ? true : false; })
 			{
 			}
 			CommandData(std::string child_page_name, std::string desc) :
@@ -297,7 +294,7 @@ namespace gadt
 			using ConstructorFunc			= std::function<void(DataType&)>;
 			using DestructorFunc			= std::function<void(DataType&)>;
 			using CommandFunc				= typename CommandDataType::CommandFunc;
-			using CommandFuncWithoutParams	= typename CommandDataType::CommandFuncWithoutParams;
+			using CommandNoParamsFunc	= typename CommandDataType::CommandNoParamsFunc;
 			using ConditionFunc				= typename CustomCommandDataType::ConditionFunc;
 			using ActionFunc				= typename CustomCommandDataType::ActionFunc;
 
@@ -591,7 +588,7 @@ namespace gadt
 			}
 
 			//add a function that can be execute by command and is allowed to visit the data binded in this page.
-			inline void AddFunction(std::string command, CommandFuncWithoutParams func, std::string desc)
+			inline void AddFunction(std::string command, CommandNoParamsFunc func, std::string desc)
 			{
 				command = curtail_command(command);
 				InsertCommand(command, CommandDataType(func, desc, NORMAL_COMMAND));
