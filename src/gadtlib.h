@@ -64,6 +64,7 @@
 #include <sstream>
 #include <set>
 #include <vector>
+#include <list>
 #include <map>
 #include <stack>
 #include <queue>

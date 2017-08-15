@@ -34,6 +34,91 @@ namespace gadt
 		//Shell Page Interface
 		class GameShell;
 
+		//Command Parser.
+		class CommandParser
+		{
+		private:
+			bool						_is_legal;
+			std::list<std::string>		_commands;
+			std::vector<std::string>	_params;
+
+		private:
+			//return true if the string is legal
+			static bool CheckStringLegal(std::string str);
+
+			//parse the command.
+			bool ParseParameters(std::string params);
+
+			//parse command
+			bool ParseCommands(std::string commands);
+
+			//init by command
+			bool ParseOriginalCommand(std::string original_command);
+
+			//constructor by initialized.
+			CommandParser(bool is_legal, const std::list<std::string>& commands, const std::vector<std::string>& params) :
+				_is_legal(is_legal),
+				_commands(commands),
+				_params(params)
+			{
+			}
+
+		public:
+			//constructor function by command string.
+			CommandParser(std::string original_command) :
+				_is_legal(false),
+				_commands(),
+				_params()
+			{
+				_is_legal = ParseOriginalCommand(original_command);
+			}
+
+			//constructor function by parent command parser
+			CommandParser next() const
+			{
+				std::list<std::string> temp = _commands;
+				if (temp.size() > 0)
+				{
+					temp.pop_front();
+					return CommandParser(_is_legal, temp, _params);
+				}
+				return CommandParser(false, _commands, _params);
+			}
+
+			//return true if the command is the only command
+			bool is_last_command() const
+			{
+				return _commands.size() == 1;
+			}
+
+			//return true if there are no parameters.
+			bool no_params() const
+			{
+				return _params.size() == 0;
+			}
+
+			//print details
+			void print_details() const
+			{
+				std::cout << "commands:" << std::endl;
+				for (auto cmd : _commands)
+				{
+					std::cout << "  <" << cmd << ">" << std::endl;
+				}
+				std::cout << "parameters:" << std::endl;
+				for (auto param : _params)
+				{
+					std::cout << "  <" << param << ">" << std::endl;
+				}
+			}
+
+			//get the params in this command.
+			const std::vector<std::string>& params() const
+			{
+				return _params;
+			}
+		};
+
 		//command type
 		enum CommandType :uint8_t
 		{
@@ -46,12 +131,16 @@ namespace gadt
 		template<typename DataType>
 		struct CommandData
 		{
-			using CommandFunc = std::function<void(DataType&)>;
+			using ParamsList = std::vector<std::string>;
+			using CommandFunc = std::function<void(DataType&, const ParamsList&)>;
+			using CommandFuncWithoutParams = std::function<void(DataType&)>;
+			using CommandParamsCheck = std::function<bool(const ParamsList&)>;
 
-			const CommandType _type;
-			const std::string _desc;
-			const CommandFunc _command_func;
-			const std::string _child_page_name;
+			const CommandType			_type;
+			const std::string			_desc;
+			const CommandFunc			_command_func;
+			const std::string			_child_page_name;
+			const CommandParamsCheck	_params_check;
 
 			CommandData():
 				_type(NORMAL_COMMAND),
@@ -64,6 +153,18 @@ namespace gadt
 				_type(type),
 				_desc(desc),
 				_command_func(command_func),
+				_child_page_name(),
+				_params_check([](const ParamsList& params)->bool {
+					if (params.size() == 0)
+						return true;
+					return false; 
+				})
+			{
+			}
+			CommandData(CommandFuncWithoutParams command_func, std::string desc, CommandType type, CommandParamsCheck check) :
+				_type(type),
+				_desc(desc),
+				_command_func([](DataType& data, const ParamsList&)->void {command_func(data); }),
 				_child_page_name()
 			{
 			}
@@ -191,13 +292,14 @@ namespace gadt
 		class ShellPage final :public ShellPageBase
 		{
 		public:
-			using CommandDataType = CommandData<DataType>;
-			using CustomCommandDataType = CustomCommandData<DataType>;
-			using ConstructorFunc = std::function<void(DataType&)>;
-			using DestructorFunc = std::function<void(DataType&)>;
-			using CommandFunc = typename CommandDataType::CommandFunc;
-			using ConditionFunc = typename CustomCommandDataType::ConditionFunc;
-			using ActionFunc = typename CustomCommandDataType::ActionFunc;
+			using CommandDataType			= CommandData<DataType>;
+			using CustomCommandDataType		= CustomCommandData<DataType>;
+			using ConstructorFunc			= std::function<void(DataType&)>;
+			using DestructorFunc			= std::function<void(DataType&)>;
+			using CommandFunc				= typename CommandDataType::CommandFunc;
+			using CommandFuncWithoutParams	= typename CommandDataType::CommandFuncWithoutParams;
+			using ConditionFunc				= typename CustomCommandDataType::ConditionFunc;
+			using ActionFunc				= typename CustomCommandDataType::ActionFunc;
 
 		private:
 			DataType _data;																			//data of the page.
@@ -483,6 +585,13 @@ namespace gadt
 
 			//add a function that can be execute by command and is allowed to visit the data binded in this page.
 			inline void AddFunction(std::string command, CommandFunc func, std::string desc)
+			{
+				command = curtail_command(command);
+				InsertCommand(command, CommandDataType(func, desc, NORMAL_COMMAND));
+			}
+
+			//add a function that can be execute by command and is allowed to visit the data binded in this page.
+			inline void AddFunction(std::string command, CommandFuncWithoutParams func, std::string desc)
 			{
 				command = curtail_command(command);
 				InsertCommand(command, CommandDataType(func, desc, NORMAL_COMMAND));
