@@ -149,6 +149,7 @@ namespace gadt
 			const CommandType			_type;
 			const std::string			_desc;
 			const CommandFunc			_command_func;
+			const CommandNoParamsFunc   _command_no_params_func;
 			const std::string			_child_page_name;
 			const CommandParamsCheck	_params_check;
 
@@ -170,7 +171,8 @@ namespace gadt
 			CommandData(CommandNoParamsFunc command_func, std::string desc, CommandType type) :
 				_type(type),
 				_desc(desc),
-				_command_func([&](DataType& data, const ParamsList&)->void {command_func(data); }),
+				_command_no_params_func(command_func),
+				_command_func([&](DataType& data, const ParamsList&)->void {_command_no_params_func(data); }),
 				_child_page_name(),
 				_params_check([](const ParamsList& params)->bool {return params.size() == 0 ? true : false; })
 			{
