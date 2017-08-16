@@ -74,10 +74,11 @@ namespace gadt
 		//show error
 		void ShowError(std::string reason)
 		{
-			std::cout << std::endl;
-			Cprintf(">> ERROR: ", RED);
-			Cprintf(reason, WHITE);
-			std::cout << std::endl << std::endl;
+			//std::cout << std::endl;
+			Cprintf(">> ERROR ", PURPLE);
+			std::cout << ": ";
+			Cprintf(reason, RED);
+			std::cout  << std::endl;
 		}
 
 		//show message
