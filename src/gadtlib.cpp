@@ -32,20 +32,18 @@ using std::string;
 
 namespace gadt
 {
+	//a golbal color ostream 
+	console::costream ccout(std::cout);
+
 	namespace console
 	{
-		//a golbal color ostream 
-		costream ccout(std::cout);
-
-		//global color.
-		ConsoleColor costream::_global_color = DEFAULT;
-
 		//change_color
-		void costream::change_color(ConsoleColor color)
+		std::string costream::change_color(ConsoleColor color)
 		{
 #ifdef __GADT_MSVC
 			HANDLE handle = ::GetStdHandle(STD_OUTPUT_HANDLE);
 			SetConsoleTextAttribute(handle, color);
+			return std::string("");
 #elif defined(__GADT_GNUC)
 			static std::string color_str[16] =
 			{
@@ -67,7 +65,7 @@ namespace gadt
 				string("\e[0;40;37m")		//white = 15
 											//string("\e[0;40;37m")		//white = 15
 			};
-			std::cout << color_str[color];
+			return color_str[color];
 #endif
 		}
 		
@@ -75,25 +73,20 @@ namespace gadt
 		void ShowError(std::string reason)
 		{
 			//std::cout << std::endl;
-			Cprintf(">> ERROR ", PURPLE);
+			Cprintf(">> ERROR", PURPLE);
 			std::cout << ": ";
 			Cprintf(reason, RED);
-			std::cout  << std::endl;
-		}
-
-		//show message
-		void ShowMessage(std::string message, bool show_msg)
-		{
-			std::cout << ">> ";
-			if (show_msg)
-			{
-				Cprintf("MSG: ", DEEP_GREEN);
-			}
-			Cprintf(message, GREEN);
 			std::cout << std::endl << std::endl;
 		}
 
-		//warning check.
+		//show message
+		void ShowMessage(std::string message)
+		{
+			std::cout << ">> ";
+			Cprintf(message, WHITE);
+			std::cout << std::endl << std::endl;
+		}
+
 		void WarningCheck(bool condition, std::string reason, std::string file, int line, std::string function)
 		{
 			if (condition)
@@ -112,7 +105,6 @@ namespace gadt
 			}
 		}
 
-		//system pause
 		void SystemPause()
 		{
 #ifdef __GADT_GNUC
@@ -122,8 +114,6 @@ namespace gadt
 			system("pause");
 #endif
 		}
-		
-		//clear system screen
 		void SystemClear()
 		{
 #ifdef __GADT_GNUC

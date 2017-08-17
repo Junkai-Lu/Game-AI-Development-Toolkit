@@ -30,110 +30,153 @@ namespace gadt
 {
 	namespace shell
 	{
-		//global variables
-		const char* ShellPageBase::g_SHELL_HELP_COMMAND_STR = "ls";
-		const char* ShellPageBase::g_SHELL_RETURN_COMMAND_STR = "..";
-		const char* ShellPageBase::g_SHELL_ROOT_COMMAND_STR = ".";
-		const char* ShellPageBase::g_SHELL_CLEAR_COMMAND_STR = "clear";
-		const char* ShellPageBase::g_SHELL_EXIT_COMMAND_STR = "exit";
-		const size_t ShellPageBase::g_SHELL_MAX_COMMAND_LENGTH = 15;
-
-		//CommandParser
-		bool CommandParser::CheckStringLegality(std::string str)
+		//shell defination.
+		namespace define
 		{
-			for (auto c : str)
+			//get the name of command type.
+			std::string GetCommandTypeName(size_t i)
 			{
-				if (c == 92 || c == 47 || c == 58 || c == 42 || c == 34 || c == 60 || c == 62 || c == 124)
-				{
-					return false;
-				}
+				static const char* type_name[g_COMMAND_TYPE_NUMBER] = {
+					"DEFAULT COMMAND",
+					"DATA COMMAND",
+					"PARAMS COMMAND",
+					"DATA_AND_PARAMS_COMMAND",
+					"CHILD_PAGE"
+				};
+				return std::string(type_name[i]);
 			}
-			return true;
-		}
-		bool CommandParser::ParseParameters(std::string params_str)
-		{
-			if (params_str.length() == 0) { return true; }
-			if (params_str[0] == ' ') { return ParseParameters(params_str.substr(1, params_str.length() - 1)); }
 
-			size_t divide_pos = params_str.find(" ");
-			if (divide_pos != std::string::npos)
+			//get the symbol of command type.
+			std::string GetCommandTypeSymbol(size_t i)
 			{
-				std::string param = params_str.substr(0, divide_pos);
-				std::string remains = params_str.substr(divide_pos + 1, params_str.length() - divide_pos);
-				if (CheckStringLegality(param) == false)
-				{
-					return false;
-				}
-				_params.push_back(param);
-				return ParseParameters(remains);
+				static const char* type_symbol[g_COMMAND_TYPE_NUMBER] = {
+					"[XX]",
+					"[YX]",
+					"[XY]",
+					"[YY]",
+					"[ P]"
+				};
+				return std::string(type_symbol[i]);
 			}
-			if (CheckStringLegality(params_str))
+
+			//default params check func.
+			bool DefaultParamsCheck(const ParamsList & list)
 			{
-				_params.push_back(params_str);
 				return true;
 			}
-			return false;
-		}
-		bool CommandParser::ParseCommands(std::string cmd_str)
-		{
-			if (cmd_str.length() == 0) { return true; }
-			if (cmd_str[0] == ' ') { return ParseParameters(cmd_str.substr(1, cmd_str.length() - 1)); }
-			size_t divide_pos = cmd_str.find("/");
-			if (divide_pos != std::string::npos)
+
+			//default no params check func.
+			bool DefaultNoParamsCheck(const ParamsList& list)
 			{
-				std::string cmd = cmd_str.substr(0, divide_pos);
-				std::string remains = cmd_str.substr(divide_pos + 1, cmd_str.length() - divide_pos);
-				if (CheckStringLegality(cmd) == false)
-				{
-					return false;
-				}
-				_commands.push_back(cmd);
-				return ParseCommands(remains);
+				return list.size() == 0 ? true : false;
 			}
-			if (CheckStringLegality(cmd_str))
-			{
-				_commands.push_back(cmd_str);
-				return true;
-			}
-			return false;
-		}
-		bool CommandParser::ParseOriginalCommand(std::string original_command)
-		{
-			size_t space_pos = original_command.find(" ");
-			if (space_pos != std::string::npos)
-			{
-				//find space, divide command into command part and param part.
-				std::string commands = original_command.substr(0, space_pos);
-				std::string params = original_command.substr(space_pos, original_command.length() - space_pos);
-				return ParseCommands(commands) && ParseParameters(params);
-			}
-			//no params, parse commands.
-			return ParseCommands(original_command);
 		}
 
-		//ShellPageBase
-		ShellPageBase::ShellPageBase(GameShell* belonging_shell, std::string name) :
-			_belonging_shell(belonging_shell),
-			_name(name),
-			_index(AllocPageIndex()),
-			_info_func([]()->void {})
+		//shell command class.
+		namespace command
 		{
+			//CommandParser
+			bool CommandParser::CheckStringLegality(std::string str)
+			{
+				for (auto c : str)
+				{
+					if (c == 92 || c == 47 || c == 58 || c == 42 || c == 34 || c == 60 || c == 62 || c == 124)
+					{
+						return false;
+					}
+				}
+				return true;
+			}
+			bool CommandParser::ParseParameters(std::string params_str)
+			{
+				if (params_str.length() == 0) { return true; }
+				if (params_str[0] == ' ') { return ParseParameters(params_str.substr(1, params_str.length() - 1)); }
+
+				size_t divide_pos = params_str.find(" ");
+				if (divide_pos != std::string::npos)
+				{
+					std::string param = params_str.substr(0, divide_pos);
+					std::string remains = params_str.substr(divide_pos + 1, params_str.length() - divide_pos);
+					if (CheckStringLegality(param) == false)
+					{
+						return false;
+					}
+					_params.push_back(param);
+					return ParseParameters(remains);
+				}
+				if (CheckStringLegality(params_str))
+				{
+					_params.push_back(params_str);
+					return true;
+				}
+				return false;
+			}
+			bool CommandParser::ParseCommands(std::string cmd_str)
+			{
+				if (cmd_str.length() == 0) { return true; }
+				if (cmd_str[0] == ' ') { return ParseParameters(cmd_str.substr(1, cmd_str.length() - 1)); }
+				size_t divide_pos = cmd_str.find("/");
+				if (divide_pos != std::string::npos)
+				{
+					std::string cmd = cmd_str.substr(0, divide_pos);
+					std::string remains = cmd_str.substr(divide_pos + 1, cmd_str.length() - divide_pos);
+					if (CheckStringLegality(cmd) == false)
+					{
+						return false;
+					}
+					_commands.push_back(cmd);
+					return ParseCommands(remains);
+				}
+				if (CheckStringLegality(cmd_str))
+				{
+					_commands.push_back(cmd_str);
+					return true;
+				}
+				return false;
+			}
+			bool CommandParser::ParseOriginalCommand(std::string original_command)
+			{
+				size_t space_pos = original_command.find(" ");
+				if (space_pos != std::string::npos)
+				{
+					//find space, divide command into command part and param part.
+					std::string commands = original_command.substr(0, space_pos);
+					std::string params = original_command.substr(space_pos, original_command.length() - space_pos);
+					return ParseCommands(commands) && ParseParameters(params);
+				}
+				//no params, parse commands.
+				return ParseCommands(original_command);
+			}
 		}
-		void ShellPageBase::ClearScreen() const
+
+		//shell pages class
+		namespace page
 		{
-			console::SystemClear();
-			_info_func();
-			std::cout << ">> ";
-			console::Cprintf("[ Shell ", console::DEEP_YELLOW);
-			console::Cprintf("<" + _name + ">", console::YELLOW);
-			console::Cprintf(" ]\n", console::DEEP_YELLOW);
-			std::cout << ">> ";
-			console::Cprintf(std::string("use '") + std::string(g_SHELL_HELP_COMMAND_STR) + std::string("' to get more command\n\n"), console::DEEP_GREEN);
+			//ShellPageBase
+			ShellPageBase::ShellPageBase(GameShell* belonging_shell, std::string name) :
+				_belonging_shell(belonging_shell),
+				_name(name),
+				_index(AllocPageIndex()),
+				_info_func([]()->void {})
+			{
+			}
 		}
 
 		//GameShell
 		GameShell* GameShell::_g_focus_game = nullptr;
-		void GameShell::ShowPath() const
+
+		//public constructor function
+		GameShell::GameShell(std::string name) :
+			_page_table(),
+			_name(name),
+			_info_func([]()->void {}),
+			_shell_cmd(this,"shell_cmd")
+		{
+			ShellCmdInit();
+		}
+
+		//print current dir.
+		void GameShell::PrintDir() const
 		{
 			//print shell name.
 			console::Cprintf(GameShell::focus_game()->name(), console::PURPLE);
@@ -157,11 +200,13 @@ namespace gadt
 			}
 			std::cout << "/";
 		}
+
+		//print input tips.
 		void GameShell::InputTip(std::string tip)
 		{
 			if (focus_game() != nullptr)
 			{
-				focus_game()->ShowPath();
+				focus_game()->PrintDir();
 				if (tip != "")
 				{
 					std::cout << "/";
@@ -174,20 +219,148 @@ namespace gadt
 				console::Cprintf("ERROR: focus game not exist", console::PURPLE);
 			}
 		}
-		GameShell::GameShell(std::string name) :
-			_page_table(),
-			_name(name),
-			_info_func([]()->void {})
+
+		//return to root page
+		void GameShell::ReturnToPreviousPage()
 		{
+			if (_dir_list.size() > 1)
+			{
+				_dir_list.pop_back();
+			}
 		}
+
+		//clear screen
+		void GameShell::ClearScreen() const
+		{
+			console::SystemClear();
+			focus_page()->_info_func();
+			std::cout << ">> ";
+			console::Cprintf("[ Shell ", console::DEEP_YELLOW);
+			console::Cprintf("<" + focus_page()->_name + ">", console::YELLOW);
+			console::Cprintf(" ]\n", console::DEEP_YELLOW);
+			std::cout << ">> ";
+			console::Cprintf(std::string("use '") + std::string(define::g_HELP_COMMAND_NAME) + std::string("' to get more command\n\n"), console::DEEP_GREEN);
+		}
+
+		//initialize shell commands.
+		void GameShell::ShellCmdInit()
+		{
+			using CommandPtr = typename page::ShellPage<int>::CommandPtr;
+			using ParamsCommand = typename page::ShellPage<int>::ParamsCommand;
+			using ChildPageCommand = typename page::ShellPage<int>::ChildPageCommand;
+
+			auto ListCommandFunc = [&](const ParamsList& params)->void{
+				if (params.size() == 0)
+				{
+					focus_page()->PrintCommandList("-n");
+				}
+				else
+				{
+					focus_page()->PrintCommandList(params[0]);
+				}
+			};
+			auto ListCommandCond = [](const ParamsList& params)->bool{
+				if (params.size() == 0)
+				{
+					return true;
+				}
+				else if (params.size() == 1)
+				{
+					if (params[0] == "-n" || params[0] == "-t")
+					{
+						return true;
+					}
+					console::ShowMessage("'" + std::string(define::g_LIST_COMMAND_NAME) + "' only accept -n or -t as parameter");
+					return false;
+				}
+				console::ShowMessage("'" + std::string(define::g_LIST_COMMAND_NAME) + "' only accept one paramater");
+				return false;
+			};
+
+			auto root_command = CommandPtr(new ChildPageCommand(
+				define::g_ROOT_COMMAND_NAME, 
+				define::g_ROOT_COMMAND_DESC, 
+				this, 
+				define::g_ROOT_COMMAND_NAME
+			));
+			auto return_command = CommandPtr(new ChildPageCommand(
+				define::g_RETURN_COMMAND_NAME, 
+				define::g_RETURN_COMMAND_DESC, 
+				this,
+				define::g_RETURN_COMMAND_NAME
+			));
+			auto exit_command = CommandPtr(new ParamsCommand(
+				define::g_EXIT_COMMAND_NAME, 
+				define::g_EXIT_COMMAND_DESC, 
+				[](const ParamsList& params)->void { exit(0); },
+				define::DefaultNoParamsCheck
+			));
+			auto list_command = CommandPtr(new ParamsCommand(
+				define::g_LIST_COMMAND_NAME, 
+				define::g_LIST_COMMAND_DESC, 
+				ListCommandFunc, 
+				ListCommandCond
+			));
+			auto help_command = CommandPtr(new ParamsCommand(
+				define::g_HELP_COMMAND_NAME,
+				define::g_HELP_COMMAND_DESC,
+				[&](const ParamsList& data)->void { _shell_cmd.PrintCommandList("-n"); },
+				define::DefaultNoParamsCheck
+			));
+			auto clear_command = CommandPtr(new ParamsCommand(
+				define::g_CLEAR_COMMAND_NAME, 
+				define::g_CLEAR_COMMAND_DESC, 
+				[&](const ParamsList& data)->void { this->ClearScreen(); }, 
+				define::DefaultNoParamsCheck
+			));
+
+			_shell_cmd.InsertCommand(define::g_ROOT_COMMAND_NAME	, root_command);
+			_shell_cmd.InsertCommand(define::g_RETURN_COMMAND_NAME	, return_command);
+			_shell_cmd.InsertCommand(define::g_EXIT_COMMAND_NAME	, exit_command);
+			_shell_cmd.InsertCommand(define::g_LIST_COMMAND_NAME	, list_command);
+			_shell_cmd.InsertCommand(define::g_HELP_COMMAND_NAME	, help_command);
+			_shell_cmd.InsertCommand(define::g_CLEAR_COMMAND_NAME	, clear_command);
+		}
+
+		//execute command in focus page.
+		void GameShell::ExecuteCommandInFocusPage(std::string command, const ParamsList& params)
+		{
+			if (_shell_cmd.command_exist(command))
+			{
+				_shell_cmd.ExecuteCommand(command, params);
+			}
+			else
+			{
+				focus_page()->ExecuteCommand(command, params);
+			}
+		}
+
+		//enter page by name.
+		void GameShell::EnterPage(std::string name)
+		{
+			if (name == define::g_RETURN_COMMAND_NAME)
+			{
+				ReturnToPreviousPage();
+			}
+			else if (name == define::g_ROOT_COMMAND_NAME)
+			{
+				ReturnToRootPage();
+			}
+			else
+			{
+				_dir_list.push_back(name);
+			}
+		}
+
+		//start from appointed page.
 		void GameShell::StartFromPage(std::string name)
 		{
 			if (page_exist(name))
 			{
 				be_focus();
 				_dir_list.push_back(name);
-				focus_page()->ClearScreen();
-				CommandParser parser;
+				ClearScreen();
+				command::CommandParser parser;
 				for (;;)
 				{
 					if (_dir_list.empty())
@@ -210,50 +383,34 @@ namespace gadt
 						//is the last command, excute it.
 						if (parser.is_last_command())
 						{
-							focus_page()->ExecuteCommand(parser.fir_command(), parser.params());
+							ExecuteCommandInFocusPage(parser.fir_command(), parser.params());
 							parser.clear();
 						}
 						else
 						{
 							//enter next page.
 							std::string page_name = parser.fir_command();
-							if (page_exist(page_name))
+							if (page_exist(page_name) && 
+								(
+									focus_page()->ExistChildPage(page_name) ||
+									page_name == define::g_RETURN_COMMAND_NAME ||
+									page_name == define::g_ROOT_COMMAND_NAME
+								)
+								)
 							{
 								EnterPage(page_name);
 								parser.to_next_command();
 							}
 							else
 							{
-								console::ShowError("page " + page_name + " not found 1");
+								console::ShowError("page " + page_name + " not found");
 								parser.clear();
 							}
 						}
 					}
 				}
 			}
-			console::ShowError("page " + name + "not found 2");
-		}
-		void GameShell::EnterPage(std::string name)
-		{
-			if (name == ShellPageBase::g_SHELL_RETURN_COMMAND_STR)
-			{
-				ReturnToPreviousPage();
-			}
-			else if(name == ShellPageBase::g_SHELL_ROOT_COMMAND_STR)
-			{
-				ReturnToRootPage();
-			}
-			else
-			{
-				_dir_list.push_back(name);
-			}
-		}
-		void GameShell::ReturnToPreviousPage()
-		{
-			if (_dir_list.size() > 1)
-			{
-				_dir_list.pop_back();
-			}
+			console::ShowError("page " + name + "not found");
 		}
 	}
 }

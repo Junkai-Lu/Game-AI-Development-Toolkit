@@ -103,28 +103,21 @@ namespace gadt
 		class costream
 		{
 		private:
-			std::ostream& _os;		
-			static ConsoleColor _global_color;
+			std::ostream& _os;
+			ConsoleColor _color;
 
 			//change colors by setting using winapi in windows or output string in linux.
-			static void change_color(ConsoleColor color);
+			static std::string change_color(ConsoleColor color);
 
 		public:
-			//constructor with appointed std::ostream
-			costream(std::ostream& os) : 
-				_os(os)
-			{
-			}
-			
-			//output stream
+			costream(std::ostream& os) : _os(os),_color(DEFAULT) {}
 			costream& operator<<(ConsoleColor color)
 			{
-				_global_color = color;
-				change_color(color);
+				_color = color;
+				_os << change_color(color);
 				return *this;
 			}
 
-			//output stream
 			template<typename datatype>
 			inline costream& operator<<(datatype d)
 			{
@@ -132,24 +125,13 @@ namespace gadt
 				return *this;
 			}
 
-			//print data with color
 			template <typename t_data>
 			inline void print(t_data data, ConsoleColor color)
 			{
-				ConsoleColor temp_color = _global_color;
-				change_color(color);
-				_os << data;
-				change_color(temp_color);
-			}
-
-			static ConsoleColor global_color()
-			{
-				return _global_color;
+				ConsoleColor temp_color = ccout._color;
+				ccout << color << data << temp_color;
 			}
 		};
-
-		//a golbal color ostream 
-		extern costream ccout;
 		
 		//bool to string. that can be replaced by '<< boolalpha'
 		inline std::string BoolToString(bool b)
@@ -188,7 +170,7 @@ namespace gadt
 		void ShowError(std::string reason);
 
 		//show message in terminal.
-		void ShowMessage(std::string message, bool show_msg = true);
+		void ShowMessage(std::string message);
 
 		//if 'condition' is true that report detail.
 		void WarningCheck(bool condition, std::string reason, std::string file, int line, std::string function);
@@ -199,6 +181,9 @@ namespace gadt
 		//system clear
 		void SystemClear();
 	}
+
+	//a golbal color ostream 
+	extern console::costream ccout;
 
 	namespace timer
 	{
@@ -404,6 +389,5 @@ namespace gadt
 				return ss.str();
 			}
 		};
-
 	}
 }
