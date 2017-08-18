@@ -277,6 +277,38 @@ namespace gadt
 				return false;
 			};
 
+			auto HelpCommandFunc = [&](const ParamsList& params)->void {
+				if (params.size() == 1)
+				{
+
+				}
+				else
+				{
+					_shell_cmd.PrintCommandList("-n");
+				}
+			};
+			auto HelpCommandCond = [&](const ParamsList& params)->bool {
+				if (params.size() == 0)
+				{
+					return true;
+				}
+				else if (params.size() == 1)
+				{
+					std::string name = params.front();
+					if (this->focus_page()->ExistCommand(name))
+					{
+						return true;
+					}
+					else
+					{
+						console::ShowMessage(std::string("command '") + params.front() + "' not found.");
+						return false;
+					}
+				}
+				console::ShowMessage(std::string("'") + define::g_HELP_COMMAND_NAME + "' only accept one parameter.");
+				return false;
+			};
+
 			auto root_command = CommandPtr(new ChildPageCommand(
 				define::g_ROOT_COMMAND_NAME, 
 				define::g_ROOT_COMMAND_DESC, 
@@ -292,7 +324,7 @@ namespace gadt
 			auto exit_command = CommandPtr(new ParamsCommand(
 				define::g_EXIT_COMMAND_NAME, 
 				define::g_EXIT_COMMAND_DESC, 
-				[](const ParamsList& params)->void { exit(0); },
+				[&](const ParamsList& params)->void { this->_dir_list.clear(); },
 				define::DefaultNoParamsCheck
 			));
 			auto list_command = CommandPtr(new ParamsCommand(
@@ -304,8 +336,8 @@ namespace gadt
 			auto help_command = CommandPtr(new ParamsCommand(
 				define::g_HELP_COMMAND_NAME,
 				define::g_HELP_COMMAND_DESC,
-				[&](const ParamsList& data)->void { _shell_cmd.PrintCommandList("-n"); },
-				define::DefaultNoParamsCheck
+				HelpCommandFunc,
+				HelpCommandCond
 			));
 			auto clear_command = CommandPtr(new ParamsCommand(
 				define::g_CLEAR_COMMAND_NAME, 

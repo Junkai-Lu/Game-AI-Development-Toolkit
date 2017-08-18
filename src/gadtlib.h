@@ -125,8 +125,8 @@ namespace gadt
 				return *this;
 			}
 
-			template <typename t_data>
-			inline void print(t_data data, ConsoleColor color)
+			template <typename datatype>
+			static inline void print(datatype data, ConsoleColor color)
 			{
 				ConsoleColor temp_color = ccout._color;
 				ccout << color << data << temp_color;
@@ -163,7 +163,7 @@ namespace gadt
 		template<typename T>
 		inline void Cprintf(T data, ConsoleColor color)
 		{
-			ccout.print<T>(data, color);
+			costream::print<T>(data, color);
 		}
 
 		//show error in terminal.

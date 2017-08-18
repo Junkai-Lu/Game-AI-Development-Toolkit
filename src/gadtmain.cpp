@@ -69,22 +69,22 @@ void ShellDefine()
 	//Unit Test Page
 	for (auto p : unittest::func_list)
 	{
-		test->AddFunction(p.first, [=](int)->void {
+		test->AddFunction(p.first, "test lib " + p.first, [=](){
 			unittest::RunTest(p);
-		}, "test lib " + p.first);
+		});
 	}
-	test->AddFunction("all", [](int)->void {
+	test->AddFunction("all","run all test", [](){
 		for (auto p : unittest::func_list)
 		{
 			unittest::RunTest(p);
 		}
-	}, "run all test");
+	});
 	test->AddChildPage("mcts", "monte carlo tree search test");
-	mcts->AddFunction("node", [](int)->void {unittest::TestMctsNode(); }, "node part");
-	mcts->AddFunction("search", [](int)->void {unittest::TestMctsSearch(); }, "search part");
+	mcts->AddFunction("node", "node part", [](){unittest::TestMctsNode(); });
+	mcts->AddFunction("search","search part", [](){unittest::TestMctsSearch(); });
 
 	//Start Shell
-	gadt.RunPage("root");
+	gadt.StartFromPage("root");
 }
 
 int main()

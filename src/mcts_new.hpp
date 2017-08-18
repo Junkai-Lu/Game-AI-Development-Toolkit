@@ -564,7 +564,7 @@ namespace gadt
 					<< "    timeout: " << _timeout << std::endl
 					<< "    max_iteration: " << _max_iteration << std::endl
 					<< "    enable_gc: " << _enable_gc << std::endl
-					<< "    enable_log: " << _log_controller.enable() << std::endl
+					<< "    log_enable: " << _log_controller.log_enabled() << std::endl
 					<< "}" << std::endl;
 				return ss.str();
 			}
@@ -677,9 +677,9 @@ namespace gadt
 				//output log if enabled.
 				if (_log_controller.log_enabled())
 				{ 
-					JsonConvert json_convert(root_node, _log_controller.StateToStr);
+					//JsonConvert json_convert(root_node, _log_controller.StateToStr());
 					std::ofstream os(_log_controller.json_output_path());
-					json_convert.output_json(os);
+					//json_convert.output_json(os);
 					log() << "[MCTS] iteration finished." << std::endl
 						<< "[MCTS] actions = {" << std::endl;
 				}

@@ -77,7 +77,12 @@ namespace gadt
 			inline bool log_enabled() const { return _enable_log; }
 
 			//return true if json output enabled
-			inline bool json_output_enabled() const { return _enable_json_output };
+			inline bool json_output_enabled() const { return _enable_json_output; };
+
+			inline std::ostream& output_stream() const
+			{
+				return *_log_ostream;
+			}
 
 			//convert state to string
 			inline std::string StateToStr(const State& state) const
