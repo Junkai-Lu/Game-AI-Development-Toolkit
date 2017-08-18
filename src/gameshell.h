@@ -36,7 +36,7 @@ namespace gadt
 		//shell defination.
 		namespace define
 		{
-			constexpr const bool   g_ENABLE_WARNING = true;			//enable warning.
+			constexpr const bool   g_SHELL_ENABLE_WARNING = true;			//enable warning.
 			constexpr const size_t g_COMMAND_TYPE_NUMBER = 5;		//command type number.
 			constexpr const size_t g_MAX_COMMAND_LENGTH = 15;		//max length of the command. 
 

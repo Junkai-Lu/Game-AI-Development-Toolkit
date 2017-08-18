@@ -315,7 +315,7 @@ namespace gadt
 			GADT_ASSERT(2, index.get_jump(14));
 			GADT_ASSERT(2, index.get_jump(24));
 
-			player::PlayerGroup<1, 5, int> players(2);
+			player::PlayerGroup<int,1, 5> players(2);
 			players.data(2) = 1;
 			GADT_ASSERT(1, players.data());
 
@@ -453,6 +453,24 @@ namespace gadt
 			GADT_ASSERT(alloc.remain_size(), alloc.total_size());
 
 		}
+		void TestTable()
+		{
+			gadt::table::ConsoleTable table(3, 5,{
+				{"1","2","3"},
+				{ "4","5","6" },
+				{ "7","8","9" },
+				{ "10","11","12" }
+			});
+			GADT_ASSERT(table.get_row(0).size(), 3);
+			GADT_ASSERT(table.get_column(0).size(), 5);
+			GADT_ASSERT(table[0][1]->str, "2");
+			table.set_cell_in_row(0, { "hello" });
+			table.set_cell_in_column(1, { "world" });
+			GADT_ASSERT(table.cell(0, 0).str, "hello");
+			GADT_ASSERT(table.cell(2, 0).str, "hello");
+			GADT_ASSERT(table.cell(1, 2).str, "world");
+			table.print();
+		}
 
 		const std::vector<FuncPair> func_list = {
 			{ "bitboard"		,TestBitBoard		},
@@ -462,7 +480,8 @@ namespace gadt
 			{ "mcts::search"	,TestMctsSearch		},
 			{ "visual_tree"		,TestVisualTree		},
 			{ "stl::alloc"		,TestStlAllocator	},
-			{ "stl::list"		,TestStlList		}
+			{ "stl::list"		,TestStlList		},
+			{ "table"			,TestTable			}
 		};
 		void RunTest(FuncPair func_pair)
 		{

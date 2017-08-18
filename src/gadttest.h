@@ -79,9 +79,9 @@ namespace gadt
 			bool AllowUpdateValue(const State& state, Result winner);
 		}
 
-		void TestMctsAlloc();
 		void TestMctsNode();
 		void TestMctsSearch();
+		void TestTable();
 
 		typedef std::pair<std::string, std::function<void()>> FuncPair;
 		extern const std::vector<FuncPair> func_list;

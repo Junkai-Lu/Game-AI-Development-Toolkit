@@ -223,7 +223,6 @@ namespace gadt
 
 	namespace player
 	{
-		
 		//PlayerIndex allows to define a index start from any number and with any length.
 		template<int begin_index, size_t length>
 		class PlayerIndex
@@ -290,7 +289,7 @@ namespace gadt
 		};
 
 		//PlayerGroup is an ordered container of player data that derived from PlayerIndex.
-		template<int begin_index, size_t length, typename Tdata>
+		template<typename Tdata, int begin_index, size_t length>
 		class PlayerGroup: public PlayerIndex<begin_index, length>
 		{
 		protected:
@@ -388,6 +387,132 @@ namespace gadt
 				ss << "]";
 				return ss.str();
 			}
+		};
+	}
+
+	namespace table
+	{
+		//enable warning in table.
+		constexpr const bool g_TABLE_ENABLE_WARNING = true;
+
+		//basic cell of table.
+		struct TableCell
+		{
+			std::string				str;
+			console::ConsoleColor	color;
+
+			TableCell() :
+				str(),
+				color(console::DEFAULT)
+			{
+			}
+
+			TableCell(std::string _str) :
+				str(_str),
+				color(console::DEFAULT)
+			{
+			}
+
+			TableCell(console::ConsoleColor _color) :
+				str(),
+				color(_color)
+			{
+			}
+
+			TableCell(std::string _str,console::ConsoleColor _color) :
+				str(_str),
+				color(_color)
+			{
+			}
+		};
+
+		//console table
+		class ConsoleTable
+		{
+		private:
+			using pointer = TableCell*;
+			using reference = TableCell&;
+			using CellSet = std::vector<std::vector<TableCell>>;
+			using Column = std::vector<TableCell*>;
+			using Row = std::vector<TableCell*>;	
+			using CellOutputFunc = std::function<void(const TableCell&, std::ostream&, size_t)>;
+			using FrameOutputFunc = std::function<void(std::string str, std::ostream&)>;
+
+			const size_t _column_size;
+			const size_t _row_size;
+
+			CellSet				_cells;
+			std::vector<Column> _column;
+			std::vector<Row>	_row;
+			std::vector<size_t> _column_width;
+			
+			static constexpr const size_t _default_width = 1;
+
+		private:
+			//initialize cells and column/row
+			void init_cells();
+
+			//basic output.
+			void basic_output(std::ostream& os, CellOutputFunc cell_cb, FrameOutputFunc frame_cb, bool enable_frame, bool enable_index);
+
+		public:
+			//constructor function
+			ConsoleTable(size_t column_size, size_t row_size);
+
+			//constructor function with initializer list.
+			ConsoleTable(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<std::string>> list);
+
+			inline const Row& get_row(size_t index) 
+			{
+				GADT_CHECK_WARNING(g_TABLE_ENABLE_WARNING, index >= _row_size, "TABLE01: out of row range.");
+				return _row[index]; 
+			}
+
+			inline const Column& get_column(size_t index) 
+			{ 
+				GADT_CHECK_WARNING(g_TABLE_ENABLE_WARNING, index >= _column_size, "TABLE02: out of column range.");
+				return _column[index]; 
+			}
+			
+			inline reference cell(size_t column, size_t row)
+			{
+				GADT_CHECK_WARNING(g_TABLE_ENABLE_WARNING, row >= _row_size, "TABLE01: out of row range.");
+				GADT_CHECK_WARNING(g_TABLE_ENABLE_WARNING, column >= _column_size, "TABLE02: out of column range.");
+				return (_cells[column])[row];
+			}
+
+			inline size_t row_size() const 
+			{
+				return _row_size; 
+			}
+			
+			inline size_t column_size() const 
+			{
+				return _column_size; 
+			}
+
+			inline const Row& operator[](size_t index)
+			{
+				return get_row(index);
+			}
+
+			inline void set_width(size_t column, size_t width)
+			{
+				GADT_CHECK_WARNING(g_TABLE_ENABLE_WARNING, column >= _column_size, "TABLE02: out of column range.");
+				_column_width[column] = width;
+			}
+
+			void set_cell_in_row(size_t row, TableCell cell);
+
+			void set_cell_in_row(size_t row, std::initializer_list<TableCell> cell_list);
+
+			void set_cell_in_column(size_t column, TableCell cell);
+
+			void set_cell_in_column(size_t column, std::initializer_list<TableCell> cell_list);
+
+			std::string output_string(bool enable_frame = true, bool enable_index = true);
+
+			void print(bool enable_frame = true, bool enable_index = true);
 		};
 	}
 }
