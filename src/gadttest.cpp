@@ -455,6 +455,7 @@ namespace gadt
 		}
 		void TestTable()
 		{
+			std::ios::sync_with_stdio(false);
 			gadt::table::ConsoleTable table(3, 5,{
 				{"1","2","3"},
 				{ "4","5","6" },
@@ -470,6 +471,7 @@ namespace gadt
 			GADT_ASSERT(table.cell(2, 0).str, "hello");
 			GADT_ASSERT(table.cell(1, 2).str, "world");
 			table.print();
+			std::cout << table.output_string();
 		}
 
 		const std::vector<FuncPair> func_list = {

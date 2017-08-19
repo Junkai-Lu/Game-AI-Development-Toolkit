@@ -103,33 +103,32 @@ namespace gadt
 		class costream
 		{
 		private:
-			std::ostream& _os;
-			ConsoleColor _color;
+			static ConsoleColor _current_color;
 
 			//change colors by setting using winapi in windows or output string in linux.
-			static std::string change_color(ConsoleColor color);
+			static void change_color(ConsoleColor color);
 
 		public:
-			costream(std::ostream& os) : _os(os),_color(DEFAULT) {}
 			costream& operator<<(ConsoleColor color)
 			{
-				_color = color;
-				_os << change_color(color);
+				change_color(color);
 				return *this;
 			}
 
 			template<typename datatype>
 			inline costream& operator<<(datatype d)
 			{
-				_os << d;
+				std::cout << d;
 				return *this;
 			}
 
 			template <typename datatype>
 			static inline void print(datatype data, ConsoleColor color)
 			{
-				ConsoleColor temp_color = ccout._color;
-				ccout << color << data << temp_color;
+				ConsoleColor temp_color = _current_color;
+				change_color(color);
+				std::cout << data;
+				change_color(temp_color);
 			}
 		};
 		
@@ -181,9 +180,6 @@ namespace gadt
 		//system clear
 		void SystemClear();
 	}
-
-	//a golbal color ostream 
-	extern console::costream ccout;
 
 	namespace timer
 	{

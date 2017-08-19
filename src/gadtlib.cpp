@@ -32,18 +32,18 @@ using std::string;
 
 namespace gadt
 {
-	//a golbal color ostream 
-	console::costream ccout(std::cout);
-
 	namespace console
 	{
+		//set global console color.
+		ConsoleColor costream::_current_color = DEFAULT;
+
 		//change_color
-		std::string costream::change_color(ConsoleColor color)
+		void costream::change_color(ConsoleColor color)
 		{
+			_current_color = color;
 #ifdef __GADT_MSVC
 			HANDLE handle = ::GetStdHandle(STD_OUTPUT_HANDLE);
 			SetConsoleTextAttribute(handle, color);
-			return std::string("");
 #elif defined(__GADT_GNUC)
 			static std::string color_str[16] =
 			{
@@ -65,10 +65,10 @@ namespace gadt
 				string("\e[0;40;37m")		//white = 15
 											//string("\e[0;40;37m")		//white = 15
 			};
-			return color_str[color];
+			std::cout << color_str[color];
 #endif
 		}
-		
+
 		//show error
 		void ShowError(std::string reason)
 		{
@@ -264,19 +264,23 @@ namespace gadt
 				{
 					std::string index = console::IntergerToString(column + 1);
 					os << index << std::string(((_column_width[column]+1) * 2) - index.length(), ' ');
-					//os << column + 1 << std::string((_column_width[column] * 2), ' ');
 				}
 				os << std::endl;
 			}
 
 			//print upper line of the table.
 			if (enable_index) { os << space_before_line; }
-			os << "©³";
+			frame_cb("©³", os);
 			for (size_t column = 0; column < _column_size; column++)
 			{
-				os << Reprint(_column_width[column], "©¥");
-				if (column != _column_size - 1) { os << "©Ó"; }
-				else { os << "©·" << std::endl; }
+				frame_cb(Reprint(_column_width[column], "©¥"), os);
+				//os << Reprint(_column_width[column], "©¥");
+				if (column != _column_size - 1) { frame_cb("©Ó", os); }
+				else 
+				{
+					frame_cb("©·", os); 
+					os << std::endl;
+				}
 			}
 
 			for (size_t row = 0; row < _row_size; row++)
@@ -287,7 +291,8 @@ namespace gadt
 					std::string index = console::IntergerToString(row + 1);
 					os << ' ' << index << std::string(space_before_line_size - index.length() - 1, ' ');
 				}
-				os << "©§";
+				std::string t("©§");
+				frame_cb(t, os);
 				for (size_t column = 0; column < _column_size; column++)
 				{
 					const size_t width = _column_width[column] * 2;
@@ -297,8 +302,12 @@ namespace gadt
 					{
 						os << std::string(width - c.str.length(), ' ');
 					}
-					if (column != _column_size - 1) { os << "©¦"; }
-					else { os << "©§" << std::endl; }
+					if (column != _column_size - 1) { frame_cb("©¦",os); }
+					else 
+					{
+						frame_cb("©§",os);
+						os << std::endl;
+					}
 				}
 
 				//print second line
@@ -306,23 +315,37 @@ namespace gadt
 				{
 					os << space_before_line;
 				}
-				if (row != _row_size - 1) { os << "©Ä"; }
-				else { os << "©»"; }
+				if (row != _row_size - 1) { frame_cb("©Ä", os); }
+				else { frame_cb("©»", os); }
 				
 				for (size_t column = 0; column < _column_size; column++)
 				{
-					if (row != _row_size - 1) { os << Reprint(_column_width[column], "©¤"); }
-					else { os << Reprint(_column_width[column], "©¥"); }
+					if (row != _row_size - 1) { frame_cb(Reprint(_column_width[column], "©¤"), os); }
+					else { frame_cb(Reprint(_column_width[column], "©¥"), os); }
 					
 					if (column != _column_size - 1) 
 					{
-						if (row != _row_size - 1) { os << "©à"; }
-						else { os << "©Û"; }
+						if (row != _row_size - 1) 
+						{ 
+							frame_cb("©à", os); 
+						}
+						else 
+						{
+							frame_cb("©Û", os); 
+						}
 					}
 					else 
 					{
-						if (row != _row_size - 1) { os << "©Ì" << std::endl; }
-						else { os << "©¿" << std::endl; }
+						if (row != _row_size - 1) 
+						{
+							frame_cb("©Ì", os);
+							os << std::endl;
+						}
+						else 
+						{
+							frame_cb("©¿", os); 
+							os << std::endl;
+						}
 					}
 				}
 			}
@@ -434,6 +457,10 @@ namespace gadt
 				if (str.length() > width)
 				{
 					str = str.substr(0, width);
+				}
+				else
+				{
+					//str = str + std::string(width - str.length(), ' ');
 				}
 				console::Cprintf(str, c.color);
 			};
