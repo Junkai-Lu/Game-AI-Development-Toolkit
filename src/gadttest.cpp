@@ -359,7 +359,8 @@ namespace gadt
 				tic_tac_toe::AllowUpdateValue,
 				max_node
 			);
-			//mcts.EnableLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr, std::cout);
+			mcts.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr);
+			mcts.EnableJsonOutput();
 			tic_tac_toe::State state;
 			tic_tac_toe::Action action = mcts.DoMcts(state, { timeout, max_iteration, false });
 			//std::cout << action.x << action.y << std::endl;

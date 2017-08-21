@@ -36,11 +36,46 @@ namespace gadt
 		//allow check warning if it is true.
 		constexpr const bool g_ENABLE_MINIMAX_WARNING = true;
 
-		//AgentIndex is the type index of each player, default is int8_t.
+		//AgentIndex is the index of each player, default is int8_t. 0 is the default no-winner index.
 		using AgentIndex = int8_t;
 		using EvalValue = double;
 
-		//minimax search node.
+		/*
+		* MinimaxSetting is the setting of MCTS.
+		*
+		* MinimaxSetting() would use default setting.
+		* MinimaxSetting(params) would generate custom setting.
+		*/
+		struct MinimaxSetting
+		{
+			double timeout;
+			size_t max_depth;
+			bool ab_prune_enabled;
+
+			//default setting constructor.
+			MinimaxSetting() :
+				timeout(30),
+				max_depth(10),
+				ab_prune_enabled(false)
+			{
+			}
+
+			//custom setting constructor.
+			MinimaxSetting(double _timeout, size_t _max_depth, bool _ab_prune_enabled) :
+				timeout(_timeout),
+				max_depth(_max_depth),
+				ab_prune_enabled(_ab_prune_enabled)
+			{
+			}
+		};
+
+		/*
+		* MinimaxNode is the node class in the minimax search.
+		*
+		* [State] is the game-state class, which is defined by the user.
+		* [Action] is the game-action class, which is defined by the user.
+		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
+		*/
 		template<typename State, typename Action, bool _is_debug>
 		class MinimaxNode
 		{
@@ -50,7 +85,7 @@ namespace gadt
 			using Node = MinimaxNode<State, Action, _is_debug>;
 			using ActionSet = std::vector<Action>;
 
-			struct ParamPackage
+			struct FuncPackage
 			{
 			public:
 				using GetNewStateFunc = std::function<State(const State&, const Action&)>;
@@ -67,7 +102,7 @@ namespace gadt
 				const EvalForParentFunc		EvalForParent;		//get the eval for parent node.
 
 			public:
-				ParamPackage(
+				FuncPackage(
 					AgentIndex				_no_winner_index,
 					GetNewStateFunc			_GetNewState,
 					MakeActionFunc			_MakeAction,
@@ -88,7 +123,7 @@ namespace gadt
 			const size_t		_depth;		//depth of the node
 			ActionSet			_actions;	//action set
 			AgentIndex			_winner;	//winner of the node.
-			const ParamPackage& _params;	//parameters package
+			const FuncPackage& _params;	//parameters package
 
 		private:
 			inline void NodeInit()
@@ -100,7 +135,7 @@ namespace gadt
 		public:
 
 			//constructor for root node
-			MinimaxNode(const State& state, const ParamPackage& params):
+			MinimaxNode(const State& state, const FuncPackage& params):
 				_state(state),
 				_depth(0),
 				_actions(),
@@ -111,7 +146,7 @@ namespace gadt
 			}
 
 			//constructor for child node.
-			MinimaxNode(const State& parent_state, const Action& taken_action, size_t depth, const ParamPackage& params):
+			MinimaxNode(const State& parent_state, const Action& taken_action, size_t depth, const FuncPackage& params):
 				_state(params.GetNewState(parent_state,taken_action)),
 				_depth(depth),
 				_actions(),
@@ -150,26 +185,71 @@ namespace gadt
 			}
 		};
 
-		//minimax search.
-		template<typename State, typename Action, bool _is_debug>
+		/*
+		* MinimaxSearch is a template of Minimax search.
+		*
+		* [State] is the game-state class, which is defined by the user.
+		* [Action] is the game-action class, which is defined by the user.
+		* [_is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
+		*/
+		template<typename State, typename Action, bool _is_debug = false>
 		class MinimaxSearch
 		{
 		public:
 			using Node			= MinimaxNode<State, Action, _is_debug>;
 			using ActionSet		= typename Node::ActionSet;
-			using ParamPackage	= typename Node::ParamPackage;
+			using FuncPackage	= typename Node::FuncPackage;
 			using LogController	= log::SearchLogger<State, Action>;
 			using VisualTree	= visual_tree::VisualTree;
 			using VisualNode	= visual_tree::VisualNode;
 			
 		private:
 			
-			const ParamPackage	_params;
-			LogController		_log_controller;
+			FuncPackage		_func_package;
+			MinimaxSetting	_setting;
+			LogController	_log_controller;
+
+		private:
+
+			//return true if is debug.
+			constexpr bool is_debug() const
+			{
+				return _is_debug;
+			}
+
+			//get info of this search.
+			std::string info() const
+			{
+				std::stringstream ss;
+				ss << std::boolalpha << "{" << std::endl
+					<< "    timeout: " << _setting.timeout << std::endl
+					<< "    max_depth: " << _setting.max_depth << std::endl
+					<< "    ab_prune_enabled: " << _setting.ab_prune_enabled << std::endl
+					<< "}" << std::endl;
+				return ss.str();
+			}
+
+			//get reference of log ostream
+			inline std::ostream& logger()
+			{
+				return _log_controller.log_ostream();
+			}
+
+			//return true if log enabled.
+			inline bool log_enabled() const
+			{
+				return _log_controller.log_enabled();
+			}
+
+			//return true if json output enabled.
+			inline bool json_output_enabled() const
+			{
+				return _log_controller.json_output_enabled();
+			}
 
 		public:
 			//constructor func.
-			MinimaxSearch(ParamPackage params):
+			MinimaxSearch(FuncPackage params):
 				_params(params),
 				_visual_tree(),
 				_log_controller()
@@ -178,9 +258,10 @@ namespace gadt
 
 			//TODO
 			//excute nega minimax search
-			Action DoNegamax(const State& state)
+			Action DoNegamax(const State& state, MinimaxSetting setting = MinimaxSetting())
 			{
-				return Action();
+				_setting = setting;
+
 			}
 
 			//TODO
@@ -191,18 +272,47 @@ namespace gadt
 			}
 
 			//enable log
-			void EnableSearchLog(typename LogController::StateToStrFunc StateToStr, typename LogController::ActionToStrFunc ActionToStr)
+			void InitLog(typename LogController::StateToStrFunc StateToStr, typename LogController::ActionToStrFunc ActionToStr)
 			{
-				_log_controller.Enable(StateToStr, ActionToStr);
+				_log_controller.Init(StateToStr, ActionToStr);
 			}
 
-			//disable log
-			void DisableSearchLog()
+			//enable log by ostream.
+			inline void EnableLog(std::ostream& os = std::cout)
 			{
-				_log_controller.Disable();
+				_log_controller.EnableLog(os);
+			}
+
+			//disable log.
+			inline void DisableLog()
+			{
+				_log_controller.DisableLog();
+			}
+
+			//enable json output
+			inline void EnableJsonOutput(std::string output_path = "./MinimaxOutput.json")
+			{
+				_log_controller.EnableJsonOutput(output_path);
+			}
+
+			//disable json output.
+			inline void DisableJsonOutput()
+			{
+				_log_controller.DisableJsonOutput();
 			}
 		};
 
-		
+		/*
+		* ExpectimaxSearch is a template of Expectimax search.
+		*
+		* [State] is the game-state class, which is defined by the user.
+		* [Action] is the game-action class, which is defined by the user.
+		* [_is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
+		*/
+		template<typename State, typename Action, bool _is_debug = false>
+		class ExpectimaxSearch
+		{
+			//TODO
+		};
 	}
 }

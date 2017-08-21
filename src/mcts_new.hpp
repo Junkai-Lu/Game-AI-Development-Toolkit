@@ -62,6 +62,35 @@ namespace gadt
 		}
 
 		/*
+		* MctsSetting is the setting of MCTS.
+		*
+		* MctsSetting() would use default setting.
+		* MctsSetting(params) would generate custom setting.
+		*/
+		struct MctsSetting
+		{
+			double	timeout;			//set timeout (seconds).
+			size_t	max_iteration;		//set max iteration times.
+			bool	gc_enabled;			//allow garbage collection if the tree run out of memory.
+
+										//default setting constructor.
+			MctsSetting() :
+				timeout(30),
+				max_iteration(10000),
+				gc_enabled(false)
+			{
+			}
+
+			//custom setting constructor.
+			MctsSetting(double _timeout, size_t _max_iteration, bool _gc_enabled) :
+				timeout(_timeout),
+				max_iteration(_max_iteration),
+				gc_enabled(_gc_enabled)
+			{
+			}
+		};
+
+		/*
 		* MctsNode is the node class in the monte carlo tree search.
 		*
 		* [State] is the game-state class, which is defined by the user.
@@ -464,29 +493,6 @@ namespace gadt
 			}
 		};
 
-		struct MctsSetting
-		{
-			double	timeout;			//set timeout (seconds).
-			size_t	max_iteration;		//set max iteration times.
-			bool	gc_enabled;			//allow garbage collection if the tree run out of memory.
-
-			//default setting constructor.
-			MctsSetting():
-				timeout(30),
-				max_iteration(10000),
-				gc_enabled(false)
-			{
-			}
-
-			//custom setting constructor.
-			MctsSetting(double _timeout, size_t _max_iteration, bool _gc_enabled):
-				timeout(_timeout),
-				max_iteration(_max_iteration),
-				gc_enabled(_gc_enabled)
-			{
-			}
-		};
-
 		/*
 		* MctsSearch is a template of monte carlo tree search.
 		*
@@ -519,16 +525,22 @@ namespace gadt
 
 		private:
 			FuncPackage		_func_package;			//function package of the search.
+			MctsSetting		_setting;				//mcts setting.
 			LogController	_log_controller;		//controller of the logs.
 			Allocator&		_allocator;				//the allocator for the search.
 			const bool		_private_allocator;		//use private allocator.
-			MctsSetting		_setting;				//mcts setting.
 
 		public:
 			//package of default functions.
 			const DefaultFuncPackage DefaultFunc;
 
 		private:
+
+			//return true if is debug.
+			constexpr bool is_debug() const
+			{
+				return _is_debug;
+			}
 
 			//get info of this search.
 			std::string info() const
@@ -540,7 +552,6 @@ namespace gadt
 					<< "    timeout: " << _setting.timeout << std::endl
 					<< "    max_iteration: " << _setting.max_iteration << std::endl
 					<< "    enable_gc: " << _setting.gc_enabled << std::endl
-					<< "    log_enable: " << _log_controller.log_enabled() << std::endl
 					<< "}" << std::endl;
 				return ss.str();
 			}
@@ -561,12 +572,6 @@ namespace gadt
 			inline bool json_output_enabled() const
 			{
 				return _log_controller.json_output_enabled();
-			}
-
-			//return return if gc enabled.
-			inline bool gc_enabled() const
-			{
-				return _gc_enabled;
 			}
 
 			//define functions as default.
@@ -821,13 +826,6 @@ namespace gadt
 			{
 				_log_controller.DisableJsonOutput();
 			}
-
-			//return the value of _is_debug.
-			constexpr inline bool is_debug() const
-			{
-				return _is_debug;
-			}
 		};
-
 	}
 }
