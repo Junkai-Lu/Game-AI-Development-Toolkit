@@ -158,14 +158,13 @@ namespace gadt
 			using Node			= MinimaxNode<State, Action, _is_debug>;
 			using ActionSet		= typename Node::ActionSet;
 			using ParamPackage	= typename Node::ParamPackage;
-			using LogController	= log::SearchLogController<State, Action>;
+			using LogController	= log::SearchLogger<State, Action>;
 			using VisualTree	= visual_tree::VisualTree;
 			using VisualNode	= visual_tree::VisualNode;
 			
 		private:
 			
 			const ParamPackage	_params;
-			VisualTree			_visual_tree;
 			LogController		_log_controller;
 
 		public:

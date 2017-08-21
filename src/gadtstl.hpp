@@ -8,14 +8,14 @@ namespace gadt
 	namespace log
 	{
 		/*
-		* SearchLogController is an template of log controller that is used for search logs.
+		* SearchLogger is an template of log controller that is used for search logs.
 		*
 		* [State] is the game state type.
 		* [Action] is the game action type.
 		* [Result] is the game result type and could be ignore if it is unnecessary.
 		*/
 		template<typename State, typename Action, typename Result = int>
-		class SearchLogController
+		class SearchLogger
 		{
 		private:
 			using VisualTree = visual_tree::VisualTree;
@@ -43,7 +43,7 @@ namespace gadt
 
 		public:
 			//default constructor.
-			SearchLogController() :
+			SearchLogger() :
 				_initialized(false),
 				_state_to_str_func([](const State&)->std::string {return ""; }),
 				_action_to_str_func([](const Action&)->std::string {return ""; }),
@@ -56,7 +56,7 @@ namespace gadt
 			}
 
 			//initialized constructor.
-			SearchLogController(
+			SearchLogger(
 				StateToStrFunc state_to_str_func, 
 				ActionToStrFunc action_to_str_func,
 				ResultToStrFunc result_to_str_func = [](const Result&)->std::string {return ""; }
@@ -79,29 +79,43 @@ namespace gadt
 			//return true if json output enabled
 			inline bool json_output_enabled() const { return _enable_json_output; };
 
-			inline std::ostream& output_stream() const
+			//get log output stream.
+			inline std::ostream& log_ostream() const
 			{
 				return *_log_ostream;
 			}
 
-			//convert state to string
-			inline std::string StateToStr(const State& state) const
+			//get json output path
+			inline std::string json_output_path() const
 			{
-				return _state_to_str_func(state);
+				return _json_output_path;
 			}
 
-			//convert action to string
-			inline std::string ActionToStr(const Action& action) const
+			//get ref of visual tree.
+			inline VisualTree& visual_tree()
 			{
-				return _action_to_str_func(action);
+				return _visual_tree;
 			}
 
-			//convert action to string
-			inline std::string ResultToStr(const Result& result) const
+			//get state to string function.
+			inline StateToStrFunc state_to_str_func()
 			{
-				return _result_to_str_func(result);
+				return _state_to_str_func;
 			}
 
+			//get action to string function.
+			inline ActionToStrFunc action_to_str_func()
+			{
+				return _action_to_str_func;
+			}
+
+			//get result to string function.
+			inline ResultToStrFunc result_to_str_func()
+			{
+				return _result_to_str_func;
+			}
+
+			//initialize logger.
 			void Init(
 				StateToStrFunc state_to_str_func,
 				ActionToStrFunc action_to_str_func,
@@ -140,17 +154,14 @@ namespace gadt
 				_enable_json_output = false;
 			}
 
-			//get json output path
-			inline std::string json_output_path() const
+			//output json to path.
+			inline void OutputJson() const
 			{
-				return _json_output_path;
+				std::ofstream ofs(_json_output_path);
+				_visual_tree.output_json(ofs);
 			}
 
-			//get ref of visual tree.
-			inline VisualTree& visual_tree()
-			{
-				return _visual_tree;
-			}
+			
 		};
 	}
 

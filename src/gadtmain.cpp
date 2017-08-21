@@ -65,7 +65,6 @@ void ShellDefine()
 	auto* mcts = gadt.CreateShellPage("mcts");
 
 	root->AddChildPage("test", "start unit test");
-	root->AddFunction("table", "table", []() {unittest::TestTable(); });
 
 	//Unit Test Page
 	for (auto p : unittest::func_list)

@@ -461,13 +461,13 @@ namespace gadt
 			}
 
 			//to json string.
-			inline std::string to_json()
+			inline std::string to_json() const
 			{
 				return _root_node->to_json();
 			}
 
 			//output json to ostream.
-			inline void output_json(std::ostream& os)
+			inline void output_json(std::ostream& os) const
 			{
 				os << to_json();
 			}

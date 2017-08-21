@@ -361,7 +361,7 @@ namespace gadt
 			);
 			//mcts.EnableLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr, std::cout);
 			tic_tac_toe::State state;
-			tic_tac_toe::Action action = mcts.DoMcts(state, timeout, max_iteration, false);
+			tic_tac_toe::Action action = mcts.DoMcts(state, { timeout, max_iteration, false });
 			//std::cout << action.x << action.y << std::endl;
 		}
 		void TestVisualTree()
@@ -470,8 +470,8 @@ namespace gadt
 			GADT_ASSERT(table.cell(0, 0).str, "hello");
 			GADT_ASSERT(table.cell(2, 0).str, "hello");
 			GADT_ASSERT(table.cell(1, 2).str, "world");
-			table.print();
-			std::cout << table.output_string();
+			//table.print();
+			//std::cout << table.output_string();
 		}
 
 		const std::vector<FuncPair> func_list = {

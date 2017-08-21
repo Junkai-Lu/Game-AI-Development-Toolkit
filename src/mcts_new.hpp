@@ -80,8 +80,6 @@ namespace gadt
 			using ActionSet		= std::vector<Action>;								//ActionSet is the set of Action.
 			using NodePtrSet	= std::vector<pointer>;							//ChildSet is the set of ptrs to child nodes.
 			
-
-
 			//function package
 			struct FuncPackage
 			{
@@ -396,14 +394,13 @@ namespace gadt
 		* [Result] is the game-result class, which stand for a terminal state of the game.
 		*/
 		template<typename State, typename Action, typename Result, bool _is_debug>
-		class MctsToJson
+		class MctsJsonConvertor
 		{
 		public:
 			using SearchNode     = MctsNode<State, Action, Result, _is_debug>;
 			using VisualTree     = visual_tree::VisualTree;
 			using VisualNode	 = visual_tree::VisualNode;
 			using StateToStrFunc = std::function<std::string(const State& state)>;
-			using CustomInfoFunc = std::function<void(const SearchNode&, VisualNode&)>;
 
 		private:
 			const char* DEPTH_NAME           = "depth";
@@ -417,10 +414,8 @@ namespace gadt
 			
 		private:
 			SearchNode*    _mcts_root_node;
-			VisualTree     _json_tree;
-			bool           _include_state;
+			VisualTree*    _visual_tree;
 			StateToStrFunc _StateToStr;
-			CustomInfoFunc _CustomInfo;
 
 		private:
 			//search node convert to json node.
@@ -432,11 +427,7 @@ namespace gadt
 				visual_node.add_value(WIN_TIME_NAME, search_node.win_time());
 				visual_node.add_value(CHILD_NUM_NAME, search_node.child_num());
 				visual_node.add_value(IS_TERMIANL_NAME, search_node.is_end_state());
-				if (_include_state)
-				{
-					visual_node.add_value(STATE_NAME, _StateToStr(search_node.state()));
-				}
-				_CustomInfo(search_node, visual_node);
+				visual_node.add_value(STATE_NAME, _StateToStr(search_node.state()));
 				for (size_t i = 0;i<search_node.child_num();i++)
 				{
 					auto node_ptr = search_node.child_node(i);
@@ -455,51 +446,44 @@ namespace gadt
 			}
 
 			//search tree convert to json tree.
-			void ConvertToVisualTree(SearchNode* mcts_root_node,VisualTree& visual_tree)
+			void ConvertToVisualTree()
 			{
-				visual_tree.clear();
-				convert_node(*mcts_root_node, *visual_tree.root_node());//generate new visual tree.
-				visual_tree.traverse_nodes([&](VisualNode& node)->void {AddCount(node); });	//refresh count value.
+				_visual_tree->clear();
+				convert_node(*_mcts_root_node, *_visual_tree->root_node());//generate new visual tree.
+				_visual_tree->traverse_nodes([&](VisualNode& node)->void {AddCount(node); });	//refresh count value.
 			}
 
 		public:
 			//constructor function.
-			MctsToJson(SearchNode* mcts_root_node, StateToStrFunc StateToStr) :
+			MctsJsonConvertor(SearchNode* mcts_root_node,VisualTree* visual_tree, StateToStrFunc StateToStr) :
 				_mcts_root_node(mcts_root_node),
-				_json_tree(),
-				_include_state(true),
-				_StateToStr(StateToStr),
-				_CustomInfo([](const SearchNode&, VisualNode&)->void {})
+				_visual_tree(visual_tree),
+				_StateToStr(StateToStr)
 			{
-				ConvertToVisualTree(mcts_root_node, _json_tree);
+				ConvertToVisualTree();
+			}
+		};
+
+		struct MctsSetting
+		{
+			double	timeout;			//set timeout (seconds).
+			size_t	max_iteration;		//set max iteration times.
+			bool	gc_enabled;			//allow garbage collection if the tree run out of memory.
+
+			//default setting constructor.
+			MctsSetting():
+				timeout(30),
+				max_iteration(10000),
+				gc_enabled(false)
+			{
 			}
 
-			MctsToJson(SearchNode* mcts_root_node):
-				_mcts_root_node(mcts_root_node),
-				_json_tree(),
-				_include_state(false),
-				_StateToStr([](const State&)->std::string { return ""; }),
-				_CustomInfo([](const SearchNode&, VisualNode&)->void {})
+			//custom setting constructor.
+			MctsSetting(double _timeout, size_t _max_iteration, bool _gc_enabled):
+				timeout(_timeout),
+				max_iteration(_max_iteration),
+				gc_enabled(_gc_enabled)
 			{
-				ConvertToVisualTree(mcts_root_node, _json_tree);
-			}
-
-			//refresh json tree by mcts search tree.
-			inline void refresh()
-			{
-				_json_tree = ConvertToVisualTree(_mcts_root_node);
-			}
-
-			//set custom info function.
-			inline void set_custom_info(CustomInfoFunc CustomInfo)
-			{
-				_CustomInfo = CustomInfo;
-			}
-
-			//output json.
-			inline void output_json(std::ostream& os)
-			{
-				_json_tree.output_json(os);
 			}
 		};
 
@@ -515,12 +499,12 @@ namespace gadt
 		class MctsSearch
 		{
 		public:
-			using Node			= MctsNode<State, Action, Result, _is_debug>;		//searcg node.	
-			using JsonConvert	= MctsToJson<State, Action, Result, _is_debug>;		//json tree
-			using LogController = log::SearchLogController<State, Action, Result>;  //log controller
-			using Allocator		= typename Node::Allocator;							//allocator of nodes
-			using ActionSet		= typename Node::ActionSet;							//set of Action
-			using NodePtrSet	= typename Node::NodePtrSet;						//set of ptrs to child nodes.
+			using Node			= MctsNode<State, Action, Result, _is_debug>;			//searcg node.	
+			using JsonConvert	= MctsJsonConvertor<State, Action, Result, _is_debug>;	//json tree
+			using LogController = log::SearchLogger<State, Action, Result>;		//log controller
+			using Allocator		= typename Node::Allocator;								//allocator of nodes
+			using ActionSet		= typename Node::ActionSet;								//set of Action
+			using NodePtrSet	= typename Node::NodePtrSet;							//set of ptrs to child nodes.
 			
 		private:
 			using FuncPackage	= typename Node::FuncPackage;
@@ -538,21 +522,13 @@ namespace gadt
 			LogController	_log_controller;		//controller of the logs.
 			Allocator&		_allocator;				//the allocator for the search.
 			const bool		_private_allocator;		//use private allocator.
-			double			_timeout;				//set timeout (seconds).
-			size_t			_max_iteration;			//set max iteration times.
-			bool			_enable_gc;				//allow garbage collection if the tree run out of memory.
+			MctsSetting		_setting;				//mcts setting.
 
 		public:
 			//package of default functions.
 			const DefaultFuncPackage DefaultFunc;
 
 		private:
-
-			//get reference of log ostream
-			inline std::ostream& log()
-			{
-				return _log_controller.output_stream();
-			}
 
 			//get info of this search.
 			std::string info() const
@@ -561,24 +537,36 @@ namespace gadt
 				ss << std::boolalpha << "{" << std::endl
 					<< "    allocator: " << _allocator.info() << std::endl
 					<< "    is_private_allocator: " << _private_allocator << std::endl
-					<< "    timeout: " << _timeout << std::endl
-					<< "    max_iteration: " << _max_iteration << std::endl
-					<< "    enable_gc: " << _enable_gc << std::endl
+					<< "    timeout: " << _setting.timeout << std::endl
+					<< "    max_iteration: " << _setting.max_iteration << std::endl
+					<< "    enable_gc: " << _setting.gc_enabled << std::endl
 					<< "    log_enable: " << _log_controller.log_enabled() << std::endl
 					<< "}" << std::endl;
 				return ss.str();
 			}
 
-			//enable log
-			inline bool enable_log() const
+			//get reference of log ostream
+			inline std::ostream& logger()
 			{
-				return _log_controller.enable();
+				return _log_controller.log_ostream();
 			}
 
-			//enable gc
-			inline bool enable_gc() const
+			//return true if log enabled.
+			inline bool log_enabled() const
 			{
-				return _enable_gc;
+				return _log_controller.log_enabled();
+			}
+
+			//return true if json output enabled.
+			inline bool json_output_enabled() const
+			{
+				return _log_controller.json_output_enabled();
+			}
+
+			//return return if gc enabled.
+			inline bool gc_enabled() const
+			{
+				return _gc_enabled;
 			}
 
 			//define functions as default.
@@ -628,21 +616,22 @@ namespace gadt
 			}
 
 			//excute iteration function.
-			Action ExcuteMCTS(State root_state, double timeout, size_t max_iteration, bool enable_gc)
+			Action ExcuteMCTS(State root_state)
 			{
-				if (_log_controller.log_enabled())
+				if (log_enabled())
 				{
-					log() << "[MCTS] start excute monte carlo tree search..." << std::endl
-						<< "[MCTS] info = " << info() << std::endl;
+					logger() << "[MCTS] start excute monte carlo tree search..." << std::endl
+						  << "[MCTS] info = " << info() << std::endl;
 				}
+
 				Node* root_node = _allocator.construct(root_state, _func_package);
 				ActionSet root_actions = root_node->action_set();
 				timer::TimePoint start_tp;
 				size_t iteration_time = 0;
-				for (iteration_time = 0; iteration_time < max_iteration; iteration_time++)
+				for (iteration_time = 0; iteration_time < _setting.max_iteration; iteration_time++)
 				{
 					//stop search if timout.
-					if (start_tp.time_since_created() > timeout && is_debug() == false)
+					if (start_tp.time_since_created() > _setting.timeout && is_debug() == false)
 					{
 						break;//timeout, stop search.
 					}
@@ -650,7 +639,7 @@ namespace gadt
 					//excute garbage collection if need.
 					if (_allocator.is_full())
 					{
-						if (enable_gc)
+						if (_setting.gc_enabled)
 						{
 							//do garbage collection.
 
@@ -665,37 +654,41 @@ namespace gadt
 						}
 					}
 
+					//excute next.
 					Result new_result;
 					root_node->Selection(new_result, _allocator, _func_package);
 				}
 
 				//return the best result
-				if (is_debug()) { GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, root_actions.size() == 0, "MCTS101: root node do not exist any available action."); }
-				UcbValue max_value = 0;
-				size_t max_value_node_index = 0;
+				if (is_debug()) 
+				{
+					GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, root_actions.size() == 0, "MCTS101: root node do not exist any available action."); 
+				}
 
 				//output log if enabled.
-				if (_log_controller.log_enabled())
-				{ 
-					//JsonConvert json_convert(root_node, _log_controller.StateToStr());
-					std::ofstream os(_log_controller.json_output_path());
-					//json_convert.output_json(os);
-					log() << "[MCTS] iteration finished." << std::endl
+				if (log_enabled())
+				{
+					logger() << "[MCTS] iteration finished." << std::endl
 						<< "[MCTS] actions = {" << std::endl;
 				}
 
 				//output Json if enabled.
-				if (_log_controller.json_output_enabled())
+				if (json_output_enabled())
 				{
-
+					JsonConvert(root_node, &_log_controller.visual_tree(), _log_controller.state_to_str_func());
+					_log_controller.OutputJson();
 				}
+
+				//select best action.
+				UcbValue max_value = 0;
+				size_t max_value_node_index = 0;
 				for (size_t i = 0; i < root_actions.size(); i++)
 				{
 					auto child_ptr = root_node->child_node(i);
 					if (is_debug()) { GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, root_node->child_node(0) == nullptr, "MCTS107: empty child node under root node."); }
 					if (_log_controller.log_enabled())
 					{
-						log() << "action " << i << ": "<< _log_controller.ActionToStr(root_actions[i])<<", value: ";
+						logger() << "action " << i << ": "<< _log_controller.action_to_str_func()(root_actions[i])<<", value: ";
 					}
 					if (child_ptr != nullptr)
 					{
@@ -705,24 +698,23 @@ namespace gadt
 							max_value = child_value;
 							max_value_node_index = i;
 						}
-						if (_log_controller.log_enabled())
-						{
-							log() << "[" << child_value << "]" << std::endl;
-						}
+						if (log_enabled()) { logger() << "[" << child_value << "]" << std::endl; }
 					}
 					else
 					{
-						if (_log_controller.log_enabled())
-						{
-							log() << "[ deleted ]" << std::endl;
-						}
+						if (log_enabled()) { logger() << "[ deleted ]" << std::endl; }
 					}
 				}
-				if (_log_controller.log_enabled())
+
+				if (log_enabled()) 
 				{
-					log() << "[MCTS] best action index: "<< max_value_node_index << std::endl;
+					logger() << "[MCTS] best action index: "<< max_value_node_index << std::endl;
 				}
-				if (is_debug()) { GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, root_actions.size() == 0, "MCTS102: best value for root node equal to 0."); }
+
+				if (is_debug()) 
+				{
+					GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, root_actions.size() == 0, "MCTS102: best value for root node equal to 0."); 
+				}
 				return root_actions[max_value_node_index];
 			}
 
@@ -782,32 +774,52 @@ namespace gadt
 				}
 			}
 
-			//do search with default parameters.
+			//do search with default setting.
 			Action DoMcts(const State root_state)
 			{
-				return ExcuteMCTS(root_state, _timeout, _max_iteration, _enable_gc);
+				_setting = MctsSetting();
+				return ExcuteMCTS(root_state);
 			}
 
-			//do search with custom parameters.
-			Action DoMcts(const State root_state, double timeout, size_t max_iteration, bool enable_gc)
+			//do search with custom setting.
+			Action DoMcts(const State root_state, MctsSetting setting)
 			{
-				return ExcuteMCTS(root_state, timeout, max_iteration, enable_gc);
+				_setting = setting;
+				return ExcuteMCTS(root_state);
 			}
 
 			//enable log output to ostream.
-			inline void EnableLog(
+			inline void InitLog(
 				typename LogController::StateToStrFunc     _state_to_str,
 				typename LogController::ActionToStrFunc    _action_to_str,
-				typename LogController::ResultToStrFunc    _result_to_str,
-				std::ostream& log = std::cout
+				typename LogController::ResultToStrFunc    _result_to_str
 			)
 			{
-				_log_controller.EnableLog(_state_to_str, _action_to_str, _result_to_str, log);
+				_log_controller.Init(_state_to_str, _action_to_str, _result_to_str);
 			}
 
+			//enable log by ostream.
+			inline void EnableLog(std::ostream& os = std::cout)
+			{
+				_log_controller.EnableLog(os);
+			}
+
+			//disable log.
 			inline void DisableLog()
 			{
 				_log_controller.DisableLog();
+			}
+
+			//enable json output
+			inline void EnableJsonOutput(std::string output_path = "./MctsOutput.json")
+			{
+				_log_controller.EnableJsonOutput(output_path);
+			}
+
+			//disable json output.
+			inline void DisableJsonOutput()
+			{
+				_log_controller.DisableJsonOutput();
 			}
 
 			//return the value of _is_debug.
