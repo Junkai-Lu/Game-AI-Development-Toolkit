@@ -502,7 +502,7 @@ namespace gadt
 		* [_is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
 		*/
 		template<typename State, typename Action, typename Result, bool _is_debug = false>
-		class MctsSearch
+		class MonteCarloTreeSearch
 		{
 		public:
 			using Node			= MctsNode<State, Action, Result, _is_debug>;			//searcg node.	
@@ -725,7 +725,7 @@ namespace gadt
 
 		public:
 			//use private allocator.
-			MctsSearch(
+			MonteCarloTreeSearch(
 				typename FuncPackage::GetNewStateFunc		_GetNewState,
 				typename FuncPackage::MakeActionFunc		_MakeAction,
 				typename FuncPackage::DetemineWinnerFunc	_DetemineWinner,
@@ -748,7 +748,7 @@ namespace gadt
 			}
 
 			//use public allocator.
-			MctsSearch(
+			MonteCarloTreeSearch(
 				typename FuncPackage::GetNewStateFunc		_GetNewState,
 				typename FuncPackage::MakeActionFunc		_MakeAction,
 				typename FuncPackage::DetemineWinnerFunc	_DetemineWinner,
@@ -771,7 +771,7 @@ namespace gadt
 			}
 
 			//deconstructor function
-			~MctsSearch()
+			~MonteCarloTreeSearch()
 			{
 				if (_private_allocator)
 				{

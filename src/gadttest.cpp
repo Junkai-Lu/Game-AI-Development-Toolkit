@@ -351,7 +351,7 @@ namespace gadt
 			const size_t max_node = 1000;
 			const size_t max_iteration = 1000;
 			const double timeout = 100;
-			mcts_new::MctsSearch<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mcts(
+			mcts_new::MonteCarloTreeSearch<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mcts(
 				tic_tac_toe::GetNewState,
 				tic_tac_toe::MakeAction,
 				tic_tac_toe::DetemineWinner,
