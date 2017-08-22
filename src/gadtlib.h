@@ -498,6 +498,8 @@ namespace gadt
 				_column_width[column] = width;
 			}
 
+			void set_width(std::initializer_list<size_t> width_list);
+
 			void set_cell_in_row(size_t row, TableCell cell);
 
 			void set_cell_in_row(size_t row, std::initializer_list<TableCell> cell_list);

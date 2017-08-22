@@ -132,7 +132,7 @@ namespace gadt
 			inline void EnableLog(std::ostream& os)
 			{
 				_enable_log = true;
-				_log_ostream = os;
+				_log_ostream = &os;
 			}
 
 			//disable log.
@@ -161,7 +161,6 @@ namespace gadt
 				_visual_tree.output_json(ofs);
 			}
 
-			
 		};
 	}
 

@@ -34,7 +34,7 @@ namespace gadt
 	namespace minimax
 	{
 		//allow check warning if it is true.
-		constexpr const bool g_ENABLE_MINIMAX_WARNING = true;
+		constexpr const bool g_MINIMAX_ENABLE_WARNING = true;
 
 		//AgentIndex is the index of each player, default is int8_t. 0 is the default no-winner index.
 		using AgentIndex = int8_t;
@@ -51,20 +51,30 @@ namespace gadt
 			double timeout;
 			size_t max_depth;
 			bool ab_prune_enabled;
+			AgentIndex no_winner_index;	//the index of no winner
+			EvalValue original_eval; //original evale value.
 
 			//default setting constructor.
 			MinimaxSetting() :
 				timeout(30),
 				max_depth(10),
-				ab_prune_enabled(false)
+				ab_prune_enabled(false),
+				no_winner_index(0)
 			{
 			}
 
 			//custom setting constructor.
-			MinimaxSetting(double _timeout, size_t _max_depth, bool _ab_prune_enabled) :
+			MinimaxSetting(
+				double _timeout, 
+				size_t _max_depth, 
+				bool _ab_prune_enabled, 
+				AgentIndex _no_winner_index = 0, 
+				EvalValue _original_eval = 0
+			) :
 				timeout(_timeout),
 				max_depth(_max_depth),
-				ab_prune_enabled(_ab_prune_enabled)
+				ab_prune_enabled(_ab_prune_enabled),
+				no_winner_index(_no_winner_index)
 			{
 			}
 		};
@@ -95,7 +105,6 @@ namespace gadt
 
 			public:
 				//necessary functions.
-				const AgentIndex			no_winner_index;	//the index of no winner
 				const GetNewStateFunc		GetNewState;		//get a new state from previous state and action.
 				const MakeActionFunc		MakeAction;			//the function which create action set by the state.
 				const DetemineWinnerFunc	DetemineWinner;		//return no_winner_index if a state is not terminal state.
@@ -103,13 +112,11 @@ namespace gadt
 
 			public:
 				FuncPackage(
-					AgentIndex				_no_winner_index,
 					GetNewStateFunc			_GetNewState,
 					MakeActionFunc			_MakeAction,
 					DetemineWinnerFunc		_DetemineWinner,
 					EvalForParentFunc		_EvalForParent
 				) :
-					no_winner_index(_no_winner_index),
 					GetNewState(_GetNewState),
 					MakeAction(_MakeAction),
 					DetemineWinner(_DetemineWinner),
@@ -119,69 +126,76 @@ namespace gadt
 			};
 
 		private:
-			const State			_state;		//game state
-			const size_t		_depth;		//depth of the node
-			ActionSet			_actions;	//action set
-			AgentIndex			_winner;	//winner of the node.
-			const FuncPackage& _params;	//parameters package
+			const State			  _state;	//game state
+			const size_t		  _depth;	//depth of the node
+			ActionSet			  _actions;	//action set
+			AgentIndex			  _winner;	//winner of the node.
+			const FuncPackage&	  _func;    //function package
+			const MinimaxSetting& _setting; //setting package.
 
 		private:
+
+			//
 			inline void NodeInit()
 			{
-				_winner = _params.DetemineWinner(_state);
-				_params.MakeAction(_state, _actions);
+				_winner = _func.DetemineWinner(_state);
+				_func.MakeAction(_state, _actions);
 			}
 
 		public:
 
 			//constructor for root node
-			MinimaxNode(const State& state, const FuncPackage& params):
+			MinimaxNode(const State& state, const FuncPackage& func, const MinimaxSetting& setting):
 				_state(state),
-				_depth(0),
+				_depth(setting.max_depth),
 				_actions(),
 				_winner(),
-				_params(params)
+				_func(func),
+				_setting(setting)
 			{
-				NodeInit(params);
+				NodeInit();
 			}
 
 			//constructor for child node.
-			MinimaxNode(const State& parent_state, const Action& taken_action, size_t depth, const FuncPackage& params):
-				_state(params.GetNewState(parent_state,taken_action)),
+			MinimaxNode(const State& parent_state, const Action& taken_action, size_t depth, const FuncPackage& func, const MinimaxSetting& setting):
+				_state(func.GetNewState(parent_state,taken_action)),
 				_depth(depth),
 				_actions(),
 				_winner(),
-				_params(params)
+				_func(func),
+				_setting(setting)
 			{
-				NodeInit(params);
+				NodeInit();
+			}
+
+			//get state of the node.
+			inline const State& state() const
+			{
+				return _state;
+			}
+
+			//get depth of current node.
+			inline size_t depth() const
+			{
+				return _depth;
+			}
+
+			//get the action set of the node.
+			inline const ActionSet& action_set() const
+			{
+				return _actions;
+			}
+
+			//get winner of state.
+			inline AgentIndex winner() const
+			{
+				return _winner;
 			}
 
 			//return true if the node is terminal.
 			inline bool is_terminal_state() const
 			{
-				return _winner != _params.no_winner_index;
-			}
-
-			//get value of this node for parent node.
-			EvalValue GetHighestValueForParent() const
-			{
-				if (_depth == 0 || is_terminal_state())
-				{
-					return _params.EvalForParent(_state, _winner);
-				}
-				GADT_CHECK_WARNING(g_ENABLE_MINIMAX_WARNING, _actions.size() == 0, "MM101: empty action set");
-				Node first_child(_state, _actions[0], _depth - 1, _params);
-				EvalValue best_value = first_child.GetValue();
-				for (size_t i = 1; i < _actions.size(); i++)
-				{
-					Node child(_state, _actions[i], _depth - 1, _params);
-					EvalValue child_value = child.GetValueForParent();
-					if (child_value >= best_value)
-					{
-						best_value = child_value;
-					}
-				}
-				return best_value;
+				return _winner != _setting.no_winner_index;
 			}
 		};
 
@@ -201,11 +215,11 @@ namespace gadt
 			using FuncPackage	= typename Node::FuncPackage;
 			using LogController	= log::SearchLogger<State, Action>;
 			using VisualTree	= visual_tree::VisualTree;
-			using VisualNode	= visual_tree::VisualNode;
+			using VisualNodePtr	= visual_tree::VisualNode*;
 			
 		private:
 			
-			FuncPackage		_func_package;
+			FuncPackage		_func;
 			MinimaxSetting	_setting;
 			LogController	_log_controller;
 
@@ -247,28 +261,159 @@ namespace gadt
 				return _log_controller.json_output_enabled();
 			}
 
+			//convert minimax node to visual node.
+			void MinimaxNodeToVisualNode(const Node& node, VisualNodePtr visual_node)
+			{
+				static constexpr const char* STATE_NAME = "state";
+				static constexpr const char* DEPTH_NAME = "depth";
+				static constexpr const char* WINNER_NAME = "winner";
+				static constexpr const char* IS_TERMINAL_STATE_NAME = "is_terminal_state";
+
+				visual_node->add_value(STATE_NAME, _log_controller.state_to_str_func()(node.state()));
+				visual_node->add_value(DEPTH_NAME, node.depth());
+				visual_node->add_value(WINNER_NAME, node.winner());
+				visual_node->add_value(IS_TERMINAL_STATE_NAME, node.is_terminal_state());
+			}
+
+			//get the highest eval for parent of node.
+			EvalValue NegamaxEvalForParents(const Node& node, VisualNodePtr parent_visual_node, size_t& leaf_node_count)
+			{
+				
+				VisualNodePtr visual_node = nullptr;
+				const size_t original_leaf_node_count = leaf_node_count;
+
+				if (json_output_enabled())
+				{
+					visual_node = parent_visual_node->create_child();
+					MinimaxNodeToVisualNode(node, visual_node);
+				}
+
+				if (node.depth() == 0 || node.is_terminal_state())
+				{
+					//get the eavl of the parent node.
+					leaf_node_count++;
+					EvalValue eval = _func.EvalForParent(node.state(), node.winner());
+
+					if (json_output_enabled())
+					{
+						visual_node->add_value("eval", eval);
+					}
+
+					return eval;
+				}
+
+				if (is_debug())
+				{
+					GADT_CHECK_WARNING(g_MINIMAX_ENABLE_WARNING, node.action_set().size() == 0, "MM101: empty action set");
+				}
+				
+				//pick up best value in child nodes.
+				Node first_child(node.state(), node.action_set()[0], node.depth() - 1, _func,_setting);
+				EvalValue best_value = NegamaxEvalForParents(first_child, visual_node, leaf_node_count);
+				for (size_t i = 1; i < node.action_set().size(); i++)
+				{
+					Node child(node.state(), node.action_set()[i], node.depth() - 1, _func, _setting);
+					EvalValue child_value = NegamaxEvalForParents(child, visual_node, leaf_node_count);
+					if (child_value >= best_value) { best_value = child_value; }
+				}
+
+				if (json_output_enabled())
+				{
+					visual_node->add_value("leaf node count", leaf_node_count - original_leaf_node_count);
+					visual_node->add_value("value for parent", -best_value);
+				}
+				return -best_value;
+			}
+
 		public:
 			//constructor func.
-			MinimaxSearch(FuncPackage params):
-				_params(params),
-				_visual_tree(),
+			MinimaxSearch(
+				typename FuncPackage::GetNewStateFunc		GetNewState,
+				typename FuncPackage::MakeActionFunc		MakeAction,
+				typename FuncPackage::DetemineWinnerFunc	DetemineWinner,
+				typename FuncPackage::EvalForParentFunc		EvalForParent
+			):
+				_func(GetNewState,MakeAction,DetemineWinner,EvalForParent),
+				_setting(),
 				_log_controller()
 			{
 			}
 
-			//TODO
 			//excute nega minimax search
 			Action DoNegamax(const State& state, MinimaxSetting setting = MinimaxSetting())
 			{
 				_setting = setting;
+				Node root(state, _func, _setting);
+				VisualNodePtr root_visual_node = nullptr;
 
+				if (is_debug())
+				{
+					GADT_CHECK_WARNING(g_MINIMAX_ENABLE_WARNING, root.is_terminal_state(), "MM102: execute search for terminal state.");
+				}
+
+				if (log_enabled())
+				{
+					logger() << ">> Minimax Search start" << std::endl;
+				}
+
+				if (json_output_enabled())
+				{
+					root_visual_node = _log_controller.visual_tree().root_node();
+				}
+
+				std::vector<EvalValue> eval_set(root.action_set().size());
+				size_t leaf_node_count = 0;
+
+				//pick up best action.
+				Node first_child(state, root.action_set()[0], root.depth() - 1, _func, _setting);
+				EvalValue best_value = NegamaxEvalForParents(first_child, root_visual_node, leaf_node_count);
+				eval_set[0] = best_value;
+				size_t best_action_index = 0;
+				for (size_t i = 1; i < root.action_set().size(); i++)
+				{
+					Node child(state, root.action_set()[i], root.depth() - 1, _func, _setting);
+					eval_set[i] = NegamaxEvalForParents(child, root_visual_node, leaf_node_count);
+					
+					if (eval_set[i] > best_value)
+					{
+						best_action_index = i;
+						best_value = eval_set[i];
+					}
+				}
+				
+
+				if (log_enabled())
+				{
+					table::ConsoleTable tb(4, root.action_set().size() + 1);
+					tb.set_cell_in_row(0, { {"Index" }, {"Action"},{"Eval"},{"Is Best"} });
+					tb.set_width({ 3,10,4,4 });
+					for (size_t i = 0; i < root.action_set().size(); i++)
+					{
+						tb.set_cell_in_row(i + 1, {
+							{ console::IntergerToString(i) },
+							{ _log_controller.action_to_str_func()(root.action_set()[i])},
+							{ console::DoubleToString(eval_set[i])},
+							{ i == best_action_index ? "Y ":"  "}
+						});
+					}
+					logger() << tb.output_string(true, false) << std::endl;
+				}
+
+				if (json_output_enabled())
+				{
+					root_visual_node->add_value("leaf node count", leaf_node_count);
+					_log_controller.OutputJson();
+				}
+
+				//return best action.
+				return root.action_set()[best_action_index];
 			}
 
 			//TODO
 			//excute alpha-beta search.
-			Action DoAlphaBeta(const State& state)
+			Action DoAlphaBeta(const State& state, MinimaxSetting setting = MinimaxSetting())
 			{
-				return Action();
+				_setting = setting;
 			}
 
 			//enable log

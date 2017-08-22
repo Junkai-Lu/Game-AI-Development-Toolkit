@@ -118,6 +118,7 @@ namespace gadt
 					}
 					ss << " ";
 				} 
+				ss << "  [" << state.next_player << "] is next";
 				return ss.str();
 			}
 
@@ -133,6 +134,15 @@ namespace gadt
 				std::stringstream ss;
 				ss << result;
 				return ss.str();
+			}
+
+			minimax::EvalValue EvalForParent(const State& state, const minimax::AgentIndex winner)
+			{
+				if (winner == 0)
+				{
+					return 0;
+				}
+				return state.next_player == winner ? -1 : 1;
 			}
 		}
 
@@ -351,7 +361,8 @@ namespace gadt
 			const size_t max_node = 1000;
 			const size_t max_iteration = 1000;
 			const double timeout = 100;
-			mcts_new::MonteCarloTreeSearch<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mcts(
+			mcts_new::MonteCarloTreeSearch<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mcts
+			(
 				tic_tac_toe::GetNewState,
 				tic_tac_toe::MakeAction,
 				tic_tac_toe::DetemineWinner,
@@ -363,7 +374,7 @@ namespace gadt
 			mcts.EnableJsonOutput();
 			tic_tac_toe::State state;
 			tic_tac_toe::Action action = mcts.DoMcts(state, { timeout, max_iteration, false });
-			//std::cout << action.x << action.y << std::endl;
+			GADT_ASSERT((action.x == action.y || (action.x == 0 && action.y == 0) || (action.x == 0 && action.y == 2)), true);
 		}
 		void TestVisualTree()
 		{
@@ -474,6 +485,25 @@ namespace gadt
 			//table.print();
 			//std::cout << table.output_string();
 		}
+		void TestMinimax()
+		{
+			const double timeout = 10;
+			const size_t max_depth = 10;
+			const bool enable_ab = false;
+			
+			minimax::MinimaxSearch<tic_tac_toe::State, tic_tac_toe::Action, true> minimax(
+				tic_tac_toe::GetNewState,
+				tic_tac_toe::MakeAction,
+				tic_tac_toe::DetemineWinner, 
+				tic_tac_toe::EvalForParent
+				);
+			minimax.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr);
+			//minimax.EnableJsonOutput();
+			minimax.EnableLog();
+			tic_tac_toe::State state;
+			tic_tac_toe::Action action = minimax.DoNegamax(state, { timeout, max_depth, false });
+			GADT_ASSERT((action.x == action.y || (action.x == 0 && action.y == 0) || (action.x == 0 && action.y == 2)), true);
+		}
 
 		const std::vector<FuncPair> func_list = {
 			{ "bitboard"		,TestBitBoard		},
@@ -484,7 +514,8 @@ namespace gadt
 			{ "visual_tree"		,TestVisualTree		},
 			{ "stl::alloc"		,TestStlAllocator	},
 			{ "stl::list"		,TestStlList		},
-			{ "table"			,TestTable			}
+			{ "table"			,TestTable			},
+			{ "minimax"			,TestMinimax		}
 		};
 		void RunTest(FuncPair func_pair)
 		{

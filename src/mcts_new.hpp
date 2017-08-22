@@ -720,6 +720,7 @@ namespace gadt
 				{
 					GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, root_actions.size() == 0, "MCTS102: best value for root node equal to 0."); 
 				}
+
 				return root_actions[max_value_node_index];
 			}
 

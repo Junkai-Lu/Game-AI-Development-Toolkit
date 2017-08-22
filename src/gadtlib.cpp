@@ -384,6 +384,19 @@ namespace gadt
 			}
 		}
 		
+		void ConsoleTable::set_width(std::initializer_list<size_t> width_list)
+		{
+			size_t i = 0;
+			for (size_t width : width_list)
+			{
+				if (i < column_size())
+				{
+					_column_width[i] = width;
+				}
+				i++;
+			}
+		}
+
 		void ConsoleTable::set_cell_in_row(size_t row, TableCell cell)
 		{
 			for (pointer cell_ptr : get_row(row))
@@ -401,6 +414,7 @@ namespace gadt
 				{
 					*get_row(row)[i] = cell;
 				}
+				i++;
 			}
 		}
 
@@ -421,6 +435,7 @@ namespace gadt
 				{
 					*get_column(column)[i] = cell;
 				}
+				i++;
 			}
 		}
 		

@@ -22,6 +22,7 @@
 #include "gadtlib.h"
 #include "bitboard.hpp"
 #include "mcts_new.hpp"
+#include "minimax.hpp"
 #include "visual_tree.h"
 
 #pragma once
