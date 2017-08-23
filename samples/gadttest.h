@@ -19,11 +19,11 @@
 * THE SOFTWARE.
 */
 
-#include "gadtlib.h"
-#include "bitboard.hpp"
-#include "mcts_new.hpp"
-#include "minimax.hpp"
-#include "visual_tree.h"
+#include "../src/gadtlib.h"
+#include "../src/bitboard.hpp"
+#include "../src/mcts_new.hpp"
+#include "../src/minimax.hpp"
+#include "../src/visual_tree.h"
 
 #pragma once
 

@@ -33,14 +33,14 @@
 */
 
 
-#include "gadtlib.h"		//basic library of GADT
-#include "gadttest.h"		//a simple unittest
-#include "gameshell.h"		//game shell
-#include "bitboard.hpp"		//bit board data struct
-#include "mcts.hpp"			//monte carlo tree search for games.
-#include "minimax.hpp"		//minimax,and alphabeta for games.
+#include "../src/gadtlib.h"			//basic library of GADT
+#include "../src/gameshell.h"		//game shell
+#include "../src/bitboard.hpp"		//bit board data struct
+#include "../src/mcts.hpp"			//monte carlo tree search for games.
+#include "../src/minimax.hpp"		//minimax,and alphabeta for games.
+#include "../src/mcts_new.hpp"		////monte carlo tree search for games, new version.
 
-#include "mcts_new.hpp"
+#include "gadttest.h"				//a simple unittest
 
 using namespace gadt;
 
