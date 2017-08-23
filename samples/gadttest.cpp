@@ -483,8 +483,8 @@ namespace gadt
 			GADT_ASSERT(table.cell(0, 0).str, "hello");
 			GADT_ASSERT(table.cell(2, 0).str, "hello");
 			GADT_ASSERT(table.cell(1, 2).str, "world");
-			table.print();
-			std::cout << table.output_string();
+			//table.print();
+			//std::cout << table.output_string();
 		}
 		void TestMinimax()
 		{
@@ -498,14 +498,14 @@ namespace gadt
 				tic_tac_toe::DetemineWinner, 
 				tic_tac_toe::EvalForParent
 				);
-			minimax.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr);
+			//minimax.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr);
 			//minimax.EnableJsonOutput();
-			minimax.EnableLog();
+			//minimax.EnableLog();
 			tic_tac_toe::State state;
 			tic_tac_toe::Action action = minimax.DoNegamax(state, { timeout, max_depth, false });
 			GADT_ASSERT((action.x == action.y || (action.x == 0 && action.y == 0) || (action.x == 0 && action.y == 2)), true);
 		}
-
+		
 		const std::vector<FuncPair> func_list = {
 			{ "bitboard"		,TestBitBoard		},
 			{ "file"			,TestFileLib		},
