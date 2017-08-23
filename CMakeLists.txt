@@ -8,15 +8,15 @@ SET(SRC_LIST
         ./src/gadtlib.h
         ./src/gadtlib.cpp
         ./src/bitboard.hpp
-        ./src/gadttest.h 
-        ./src/gadttest.cpp
         ./src/gameshell.h 
         ./src/gameshell.cpp 
         ./src/mcts.hpp 
         ./src/mcts_new.hpp
         ./src/visual_tree.h
         ./src/visual_tree.cpp
-        ./src/gadtmain.cpp
+		./sample/gadttest.h 
+        ./sample/gadttest.cpp
+        ./sample/gadtmain.cpp
         )
  
 ADD_EXECUTABLE(Game-AI-Dev-Toolkit ${SRC_LIST})
