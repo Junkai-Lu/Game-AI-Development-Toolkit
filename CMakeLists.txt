@@ -14,9 +14,9 @@ SET(SRC_LIST
         ./src/mcts_new.hpp
         ./src/visual_tree.h
         ./src/visual_tree.cpp
-		./sample/gadttest.h 
-        ./sample/gadttest.cpp
-        ./sample/gadtmain.cpp
+		./samples/gadttest.h 
+        ./samples/gadttest.cpp
+        ./samples/gadtmain.cpp
         )
  
 ADD_EXECUTABLE(Game-AI-Dev-Toolkit ${SRC_LIST})
