@@ -28,10 +28,11 @@ namespace gadt
 	namespace shell
 	{
 		//declartion.
-		class ShellPageBase;
 		class GameShell;
+		class ShellPageBase;
 		using DirList = std::list<std::string>;
 		using ParamsList = std::vector<std::string>;
+		using ParamsCheckFunc = std::function<bool(const ParamsList&)>;
 
 		//shell defination.
 		namespace define
@@ -234,7 +235,6 @@ namespace gadt
 			class CommandBase
 			{
 			public:
-				using ParamsCheckFunc = std::function<bool(const ParamsList&)>;
 				using DefaultCommandFunc = std::function<void()>;
 				using DataCommandFunc = std::function<void(DataType&)>;
 				using ParamsCommandFunc = std::function<void(const ParamsList&)>;
@@ -295,108 +295,22 @@ namespace gadt
 
 			//default func command record.
 			template<typename DataType>
-			class DefaultCommand :public CommandBase<DataType>
-			{
-			private:
-				DefaultCommandFunc _default_command_func;
-
-			public:
-
-				DefaultCommand(std::string name, std::string desc, DefaultCommandFunc default_command_func) :
-					CommandBase<DataType>(DEFAULT_COMMAND, name, desc, define::DefaultNoParamsCheck),
-					_default_command_func(default_command_func)
-				{
-				}
-
-				void Run(DataType& data, const ParamsList& params) override
-				{
-					_default_command_func();
-				}
-			};
+			class DefaultCommand;
 
 			//data only command record.
 			template<typename DataType>
-			class DataCommand :public CommandBase<DataType>
-			{
-			private:
-				DataCommandFunc _no_params_command_func;
-
-			public:
-				DataCommand(std::string name, std::string desc, DataCommandFunc no_params_command_func) :
-					CommandBase<DataType>(DATA_COMMAND, name, desc, define::DefaultNoParamsCheck),
-					_no_params_command_func(no_params_command_func)
-				{
-				}
-
-				void Run(DataType& data, const ParamsList& params) override
-				{
-					_no_params_command_func(data);
-				}
-			};
+			class DataCommand;
 
 			//default func command record.
 			template<typename DataType>
-			class ParamsCommand :public CommandBase<DataType>
-			{
-			private:
-				ParamsCommandFunc _params_command_func;
-
-			public:
-
-				ParamsCommand(std::string name, std::string desc, ParamsCommandFunc params_command_func, ParamsCheckFunc check) :
-					CommandBase<DataType>(PARAMS_COMMAND, name, desc, check),
-					_params_command_func(params_command_func)
-				{
-				}
-
-				void Run(DataType& data, const ParamsList& params) override
-				{
-					_params_command_func(params);
-				}
-			};
+			class ParamsCommand;
 
 			//data and params command record.
 			template<typename DataType>
-			class DataAndParamsCommand :public CommandBase<DataType>
-			{
-			private:
-				DataAndParamsCommandFunc _data_params_command_func;
+			class DataAndParamsCommand;
 
-			public:
-				DataAndParamsCommand(std::string name, std::string desc, DataAndParamsCommandFunc data_params_command_func, ParamsCheckFunc params_check) :
-					CommandBase<DataType>(DATA_AND_PARAMS_COMMAND, name, desc, params_check),
-					_data_params_command_func(data_params_command_func)
-				{
-				}
-
-				void Run(DataType& data, const ParamsList& params) override
-				{
-					_data_params_command_func(data, params);
-				}
-			};
-
-			//child page command record
 			template<typename DataType>
-			class ChildPageCommand :public CommandBase<DataType>
-			{
-			private:
-				GameShell* _belonging_shell;
-				std::string _page_name;
-
-			public:
-
-				ChildPageCommand(std::string name, std::string desc, GameShell* belonging_shell, std::string page_name) :
-					CommandBase<DataType>(CHILD_PAGE_COMMAND, name, desc, [](const ParamsList& list)->bool {return list.size() == 0 ? true : false; }),
-					_belonging_shell(belonging_shell),
-					_page_name(page_name)
-				{
-				}
-
-				void Run(DataType& data, const ParamsList& params) override
-				{
-					_belonging_shell->EnterPage(_page_name);
-				}
-			};
+			class ChildPageCommand;
 
 		}
 
@@ -406,7 +320,7 @@ namespace gadt
 			//ShellPageBase
 			class ShellPageBase
 			{
-				friend class GameShell;
+				friend class ::gadt::shell::GameShell;
 			public:
 				using InfoFunc		= std::function<void()>;
 				using CommandParser	= command::CommandParser;
@@ -467,13 +381,16 @@ namespace gadt
 				virtual void ExecuteCommand(std::string command, const ParamsList&) = 0;
 
 				//print command list.
-				virtual void PrintCommandList(std::string param) = 0;
+				virtual void PrintCommandList(std::string param) const = 0;
+
+				//return true if the command exist.
+				virtual bool ExistCommand(std::string name) const = 0;
+
+				//return true if the function exist.
+				virtual bool ExistFunc(std::string name) const = 0;
 
 				//return true if the page exist.
-				virtual bool ExistChildPage(std::string name) = 0;
-
-				//return true if the page exist.
-				virtual bool ExistCommand(std::string name) = 0;
+				virtual bool ExistChildPage(std::string name) const = 0;
 
 			public:
 
@@ -491,8 +408,7 @@ namespace gadt
 			class ShellPage final :public ShellPageBase
 			{
 			private:
-
-				friend class GameShell;
+				friend class ::gadt::shell::GameShell;
 
 				using CommandBase				= command::CommandBase<DataType>;
 				using DefaultCommand			= command::DefaultCommand<DataType>;
@@ -501,7 +417,6 @@ namespace gadt
 				using DataAndParamsCommand		= command::DataAndParamsCommand<DataType>;
 				using ChildPageCommand			= command::ChildPageCommand<DataType>;
 				using CommandPtr				= std::unique_ptr<CommandBase>;
-				using ParamsCheckFunc			= typename CommandBase::ParamsCheckFunc;
 				using DefaultCommandFunc		= typename CommandBase::DefaultCommandFunc;
 				using DataCommandFunc			= typename CommandBase::DataCommandFunc;
 				using ParamsCommandFunc			= typename CommandBase::ParamsCommandFunc;
@@ -516,7 +431,7 @@ namespace gadt
 			private:
 
 				//print command list
-				void PrintCommandList(std::string param) override
+				void PrintCommandList(std::string param) const override
 				{
 					
 					std::cout << std::endl;
@@ -529,10 +444,10 @@ namespace gadt
 							{
 								std::cout << ">> ";
 								console::Cprintf("[" + define::GetCommandTypeName(i) + "]\n", console::YELLOW);
-								for (auto name : _cmd_name_list[i])
+								for (std::string name : _cmd_name_list[i])
 								{
 									//const std::string& name = pair.first;
-									const std::string& desc = _command_list[name].get()->desc();
+									std::string desc = _command_list.at(name)->desc();
 									std::cout << "   '";
 									console::Cprintf(name, console::RED);
 									std::cout << "'" << std::string(define::g_MAX_COMMAND_LENGTH, ' ').substr(0, define::g_MAX_COMMAND_LENGTH - name.length())
@@ -563,12 +478,18 @@ namespace gadt
 					}
 				}
 
-				//return true if the page exist.
-				bool ExistChildPage(std::string name) override
+				//return true if the command name exist
+				bool ExistCommand(std::string command) const override
 				{
-					if (command_exist(name))
+					return _command_list.count(command) > 0;
+				}
+
+				//return true if the function exist.
+				bool ExistFunc(std::string name) const override
+				{
+					if (ExistCommand(name))
 					{
-						if (_command_list[name].get()->type() == command::CHILD_PAGE_COMMAND)
+						if (_command_list.at(name).get()->type() != command::CHILD_PAGE_COMMAND)
 						{
 							return true;
 						}
@@ -577,11 +498,11 @@ namespace gadt
 				}
 
 				//return true if the page exist.
-				bool ExistCommand(std::string name) override
+				bool ExistChildPage(std::string name) const override
 				{
-					if (command_exist(name))
+					if (ExistCommand(name))
 					{
-						if (_command_list[name].get()->type() != command::CHILD_PAGE_COMMAND)
+						if (_command_list.at(name).get()->type() == command::CHILD_PAGE_COMMAND)
 						{
 							return true;
 						}
@@ -593,12 +514,6 @@ namespace gadt
 				inline DataType& data()
 				{
 					return _data;
-				}
-
-				//return true if the command name exist
-				inline bool command_exist(std::string command) const
-				{
-					return _command_list.count(command) > 0;
 				}
 
 				//return true if the command is legal.
@@ -646,12 +561,16 @@ namespace gadt
 				//copy constructor is disallowed.
 				ShellPage(ShellPage&) = delete;
 
+				
+
 			public:
+
+				
 
 				//execute command by name
 				void ExecuteCommand(std::string command, const ParamsList& params) override
 				{
-					if (command_exist(command))
+					if (ExistCommand(command))
 					{
 						auto& cmd = _command_list[command];
 						if (cmd->params_check(params) == true)
@@ -757,6 +676,7 @@ namespace gadt
 			};
 		}
 
+
 		/*
 		* GameShell a unix-style shell. allow user to add function and pages.
 		*
@@ -764,10 +684,10 @@ namespace gadt
 		*/
 		class GameShell final
 		{
-			friend ShellPageBase;
+			friend ::gadt::shell::page::ShellPageBase;
 		private:
-			using CommandParser = command::CommandParser;
-			using ShellPageBase = page::ShellPageBase;
+			using CommandParser = ::gadt::shell::command::CommandParser;
+			using ShellPageBase = ::gadt::shell::page::ShellPageBase;
 
 			using InfoFunc = typename ShellPageBase::InfoFunc;
 			using PagePtr = std::shared_ptr<ShellPageBase>;
@@ -851,12 +771,6 @@ namespace gadt
 				return _g_focus_game;
 			}
 
-			//return true if the cmd is a shell command.
-			inline bool is_shell_command(std::string cmd) const
-			{
-				return _shell_cmd.command_exist(cmd);
-			}
-
 		public:
 			//get name of shell.
 			inline std::string name() const
@@ -914,5 +828,125 @@ namespace gadt
 				return ptr.get();
 			}
 		};
+
+		namespace command
+		{
+			//default func command record.
+			template<typename DataType>
+			class DefaultCommand :public CommandBase<DataType>
+			{
+			public:
+				using CommandFunc = typename CommandBase<DataType>::DefaultCommandFunc;
+
+			private:
+				CommandFunc _default_command_func;
+
+			public:
+
+				DefaultCommand(std::string name, std::string desc, CommandFunc default_command_func) :
+					CommandBase<DataType>(DEFAULT_COMMAND, name, desc, define::DefaultNoParamsCheck),
+					_default_command_func(default_command_func)
+				{
+				}
+
+				void Run(DataType& data, const ParamsList& params) override
+				{
+					_default_command_func();
+				}
+			};
+
+			//data only command record.
+			template<typename DataType>
+			class DataCommand :public CommandBase<DataType>
+			{
+			public:
+				using CommandFunc = typename CommandBase<DataType>::DataCommandFunc;
+
+			private:
+				CommandFunc _no_params_command_func;
+
+			public:
+				DataCommand(std::string name, std::string desc, CommandFunc no_params_command_func) :
+					CommandBase<DataType>(DATA_COMMAND, name, desc, define::DefaultNoParamsCheck),
+					_no_params_command_func(no_params_command_func)
+				{
+				}
+
+				void Run(DataType& data, const ParamsList& params) override
+				{
+					_no_params_command_func(data);
+				}
+			};
+
+			//default func command record.
+			template<typename DataType>
+			class ParamsCommand :public CommandBase<DataType>
+			{
+			public:
+				using CommandFunc = typename CommandBase<DataType>::ParamsCommandFunc;
+
+			private:
+				CommandFunc _params_command_func;
+
+			public:
+
+				ParamsCommand(std::string name,std::string desc, CommandFunc params_command_func,ParamsCheckFunc check) :
+					CommandBase<DataType>(PARAMS_COMMAND, name, desc, check),
+					_params_command_func(params_command_func)
+				{
+				}
+
+				void Run(DataType& data, const ParamsList& params) override
+				{
+					_params_command_func(params);
+				}
+			};
+
+			//data and params command record.
+			template<typename DataType>
+			class DataAndParamsCommand :public CommandBase<DataType>
+			{
+			public:
+				using CommandFunc = typename CommandBase<DataType>::DataAndParamsCommandFunc;
+
+			private:
+				CommandFunc _data_params_command_func;
+
+			public:
+				DataAndParamsCommand(std::string name, std::string desc, CommandFunc data_params_command_func, ParamsCheckFunc params_check ) :
+					CommandBase<DataType>(DATA_AND_PARAMS_COMMAND, name, desc, params_check),
+					_data_params_command_func(data_params_command_func)
+				{
+				}
+
+				void Run(DataType& data, const ParamsList& params) override
+				{
+					_data_params_command_func(data, params);
+				}
+			};
+
+			//child page command record
+			template<typename DataType>
+			class ChildPageCommand :public CommandBase<DataType>
+			{
+			private:
+				::gadt::shell::GameShell* _belonging_shell;
+				std::string _page_name;
+
+			public:
+
+				ChildPageCommand(std::string name, std::string desc, GameShell* belonging_shell, std::string page_name) :
+					CommandBase<DataType>(CHILD_PAGE_COMMAND, name, desc, [](const ParamsList& list)->bool {return list.size() == 0 ? true : false; }),
+					_belonging_shell(belonging_shell),
+					_page_name(page_name)
+				{
+				}
+
+				void Run(DataType& data, const ParamsList& params) override
+				{
+					_belonging_shell->EnterPage(_page_name);
+				}
+			};
+		}
 	}
 }

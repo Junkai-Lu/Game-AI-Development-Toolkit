@@ -214,6 +214,8 @@ namespace gadt
 
 	namespace table
 	{
+		const size_t ConsoleTable::_default_width = 1;
+
 		void ConsoleTable::init_cells()
 		{
 			//init columns
@@ -239,47 +241,34 @@ namespace gadt
 			}
 		}
 
-		void ConsoleTable::basic_output(std::ostream & os, CellOutputFunc cell_cb, FrameOutputFunc frame_cb, bool enable_frame, bool enable_index)
+		void ConsoleTable::basic_output(std::ostream & os, CellOutputFunc cell_cb, bool enable_frame, bool enable_index)
 		{
+			std::string frame = enable_frame ? "+-|" : "   ";
 			const size_t space_before_line_size = 4;
 			std::string space_before_line(space_before_line_size, ' ');
 			
-			// ©³ ©» ©¿ ©· ©¥ ©§ ©Û ©Ó  ©Ì ©Ä ©¤ ©¦ ©à
-			auto Reprint = [](size_t time, std::string s)->std::string 
-			{
-				std::string temp;
-				for (size_t i = 0; i < time; i++)
-				{
-					temp += s;
-				}
-				return temp;
-			};
-
 			//print indexs upper the table.
 			if (enable_index)
 			{
 				os << space_before_line;
-				os << "  ";
+				os << " ";
 				for (size_t column = 0; column < _column_size; column++)
 				{
 					std::string index = console::IntergerToString(column + 1);
-					os << index << std::string(((_column_width[column]+1) * 2) - index.length(), ' ');
+					os << index << std::string((_column_width[column] * 2) - index.length() + 1, ' ');
 				}
 				os << std::endl;
 			}
 
 			//print upper line of the table.
 			if (enable_index) { os << space_before_line; }
-			frame_cb("©³", os);
+			os << frame[0];
 			for (size_t column = 0; column < _column_size; column++)
 			{
-				frame_cb(Reprint(_column_width[column], "©¥"), os);
-				//os << Reprint(_column_width[column], "©¥");
-				if (column != _column_size - 1) { frame_cb("©Ó", os); }
-				else 
+				os << std::string(_column_width[column] * 2, frame[1]) << frame[0];
+				if (column == _column_size - 1) 
 				{
-					frame_cb("©·", os); 
-					os << std::endl;
+					os << std::endl; 
 				}
 			}
 
@@ -291,8 +280,7 @@ namespace gadt
 					std::string index = console::IntergerToString(row + 1);
 					os << ' ' << index << std::string(space_before_line_size - index.length() - 1, ' ');
 				}
-				std::string t("©§");
-				frame_cb(t, os);
+				os << frame[2];
 				for (size_t column = 0; column < _column_size; column++)
 				{
 					const size_t width = _column_width[column] * 2;
@@ -302,11 +290,10 @@ namespace gadt
 					{
 						os << std::string(width - c.str.length(), ' ');
 					}
-					if (column != _column_size - 1) { frame_cb("©¦",os); }
+					if (column != _column_size - 1) { os << frame[2]; }
 					else 
 					{
-						frame_cb("©§",os);
-						os << std::endl;
+						os << frame[2] << std::endl;
 					}
 				}
 
@@ -315,37 +302,15 @@ namespace gadt
 				{
 					os << space_before_line;
 				}
-				if (row != _row_size - 1) { frame_cb("©Ä", os); }
-				else { frame_cb("©»", os); }
+				os << frame[0];
 				
 				for (size_t column = 0; column < _column_size; column++)
 				{
-					if (row != _row_size - 1) { frame_cb(Reprint(_column_width[column], "©¤"), os); }
-					else { frame_cb(Reprint(_column_width[column], "©¥"), os); }
-					
-					if (column != _column_size - 1) 
+					os << std::string(_column_width[column] * 2, frame[1]);
+					os << frame[0];
+					if (column == _column_size - 1) 
 					{
-						if (row != _row_size - 1) 
-						{ 
-							frame_cb("©à", os); 
-						}
-						else 
-						{
-							frame_cb("©Û", os); 
-						}
-					}
-					else 
-					{
-						if (row != _row_size - 1) 
-						{
-							frame_cb("©Ì", os);
-							os << std::endl;
-						}
-						else 
-						{
-							frame_cb("©¿", os); 
-							os << std::endl;
-						}
+						os << std::endl;
 					}
 				}
 			}
@@ -450,17 +415,8 @@ namespace gadt
 				}
 				os << str;
 			};
-			FrameOutputFunc frame_cb = [](std::string s, std::ostream& os)->void {
-				os << s;
-			};
-			if (!enable_frame)
-			{
-				frame_cb = [](std::string s, std::ostream& os)->void {
-					os << std::string(s.length(), ' ');
-				};
-			}
 			std::stringstream ss;
-			basic_output(ss, cell_cb, frame_cb,enable_frame, enable_index);
+			basic_output(ss, cell_cb, enable_frame, enable_index);
 			return ss.str();
 		}
 
@@ -479,18 +435,7 @@ namespace gadt
 				}
 				console::Cprintf(str, c.color);
 			};
-			FrameOutputFunc frame_cb = [](std::string s, std::ostream& os)->void {
-				os << s;
-			};
-			if (!enable_frame)
-			{
-				frame_cb = [](std::string s, std::ostream& os)->void {
-					os << std::string(s.length(), ' ');
-				};
-			}
-			basic_output(std::cout, callback, frame_cb, enable_frame, enable_index);
+			basic_output(std::cout, callback, enable_frame, enable_index);
 		}
 	}
 }
-
-

@@ -153,7 +153,7 @@ namespace gadt
 		namespace page
 		{
 			//ShellPageBase
-			ShellPageBase::ShellPageBase(GameShell* belonging_shell, std::string name) :
+			ShellPageBase::ShellPageBase(::gadt::shell::GameShell* belonging_shell, std::string name) :
 				_belonging_shell(belonging_shell),
 				_name(name),
 				_index(AllocPageIndex()),
@@ -284,7 +284,7 @@ namespace gadt
 				}
 				else
 				{
-					_shell_cmd.PrintCommandList("-n");
+					_shell_cmd.PrintCommandList(std::string("-n"));
 				}
 			};
 			auto HelpCommandCond = [&](const ParamsList& params)->bool {
@@ -295,7 +295,7 @@ namespace gadt
 				else if (params.size() == 1)
 				{
 					std::string name = params.front();
-					if (this->focus_page()->ExistCommand(name))
+					if (this->focus_page()->ExistFunc(name))
 					{
 						return true;
 					}
@@ -357,7 +357,7 @@ namespace gadt
 		//execute command in focus page.
 		void GameShell::ExecuteCommandInFocusPage(std::string command, const ParamsList& params)
 		{
-			if (_shell_cmd.command_exist(command))
+			if (_shell_cmd.ExistCommand(command))
 			{
 				_shell_cmd.ExecuteCommand(command, params);
 			}

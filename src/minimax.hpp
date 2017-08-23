@@ -26,6 +26,7 @@
 */
 
 #include "gadtlib.h"
+#include "gadtstl.hpp"
 
 #pragma once
 

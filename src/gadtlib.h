@@ -442,14 +442,14 @@ namespace gadt
 			std::vector<Row>	_row;
 			std::vector<size_t> _column_width;
 			
-			static constexpr const size_t _default_width = 1;
+			static const size_t _default_width;
 
 		private:
 			//initialize cells and column/row
 			void init_cells();
 
 			//basic output.
-			void basic_output(std::ostream& os, CellOutputFunc cell_cb, FrameOutputFunc frame_cb, bool enable_frame, bool enable_index);
+			void basic_output(std::ostream& os, CellOutputFunc cell_cb, bool enable_frame, bool enable_index);
 
 		public:
 			//constructor function

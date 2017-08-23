@@ -474,16 +474,17 @@ namespace gadt
 				{ "7","8","9" },
 				{ "10","11","12" }
 			});
+			table.set_width({ 3,3,3,3 });
 			GADT_ASSERT(table.get_row(0).size(), 3);
 			GADT_ASSERT(table.get_column(0).size(), 5);
 			GADT_ASSERT(table[0][1]->str, "2");
-			table.set_cell_in_row(0, { "hello" });
-			table.set_cell_in_column(1, { "world" });
+			table.set_cell_in_row(0, { "hello", console::BLUE });
+			table.set_cell_in_column(1, { "world", console::RED });
 			GADT_ASSERT(table.cell(0, 0).str, "hello");
 			GADT_ASSERT(table.cell(2, 0).str, "hello");
 			GADT_ASSERT(table.cell(1, 2).str, "world");
-			//table.print();
-			//std::cout << table.output_string();
+			table.print();
+			std::cout << table.output_string();
 		}
 		void TestMinimax()
 		{
