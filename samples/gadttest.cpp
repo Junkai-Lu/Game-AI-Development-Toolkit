@@ -1,6 +1,5 @@
 /*
-* a simple unit test for GADT.
-*
+* This file include the unit test for Paradoxes.
 */
 
 /* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
@@ -452,18 +451,61 @@ namespace gadt
 				}
 			};
 			using TestAlloc = stl::Allocator<TestClass, true>;
-			const size_t ub = 300000;
+			const size_t ub = 10000;
 			TestAlloc alloc(ub);
 			for (size_t i = 0; i < ub / 2; i++)
 			{
 				TestClass* p = alloc.construct(i, i + i, i*i);
 				GADT_ASSERT(p->a, i);
-				//GADT_ASSERT(p->num[0], i);
 				alloc.destory(p);
 			}
 			GADT_ASSERT(alloc.is_full(), false);
 			GADT_ASSERT(alloc.remain_size(), alloc.total_size());
+			for (size_t i = 0; i < ub; i++)
+			{
+				TestClass* p = alloc.construct(i, i + i, i*i);
+				GADT_ASSERT(p->a, i);
+			}
+			GADT_ASSERT(alloc.is_full(), true);
+			alloc.flush();
+			GADT_ASSERT(alloc.is_empty(), true);
+		}
+		void TestStlLinearAlloc()
+		{
+			struct TestClass
+			{
+				size_t a;
+				size_t b;
+				size_t c;
+				std::vector<size_t> num;
 
+				TestClass(size_t _a, size_t _b, size_t _c) :
+					a(_a),
+					b(_b),
+					c(_c),
+					num{ _a,_b,_c }
+				{
+				}
+			};
+			using TestAlloc = stl::LinearAllocator<TestClass, true>;
+			const size_t ub = 10000;
+			TestAlloc alloc(ub);
+			for (size_t i = 0; i < ub / 2; i++)
+			{
+				TestClass* p = alloc.construct_next(i, i + i, i*i);
+				GADT_ASSERT(p->a, i);
+				//GADT_ASSERT(p->num[0], i);
+				alloc.destory_last();
+			}
+			GADT_ASSERT(alloc.is_full(), false);
+			GADT_ASSERT(alloc.remain_size(), alloc.total_size());
+			for (size_t i = 0; i < ub; i++)
+			{
+				TestClass* p = alloc.construct_next(i, i + i, i*i);
+			}
+			GADT_ASSERT(alloc.is_full(), true);
+			alloc.flush();
+			GADT_ASSERT(alloc.is_empty(), true);
 		}
 		void TestTable()
 		{
@@ -514,6 +556,7 @@ namespace gadt
 			{ "mcts::search"	,TestMctsSearch		},
 			{ "visual_tree"		,TestVisualTree		},
 			{ "stl::alloc"		,TestStlAllocator	},
+			{ "stl::linear"		,TestStlLinearAlloc },
 			{ "stl::list"		,TestStlList		},
 			{ "table"			,TestTable			},
 			{ "minimax"			,TestMinimax		}
