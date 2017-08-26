@@ -712,8 +712,6 @@ namespace gadt
 
 	namespace random
 	{
-		
-
 		template<typename T, bool _is_debug = false>
 		class RandomPool
 		{
@@ -805,9 +803,9 @@ namespace gadt
 			}
 
 			//get element reference by index.
-			inline const pointer get_element(size_t index) const
+			inline const reference get_element(size_t index) const
 			{
-				return _ele_alloc[index];
+				return _ele_alloc[index]->data;
 			}
 
 			//get weight of element by index.
@@ -823,19 +821,17 @@ namespace gadt
 			//get random element.
 			inline const reference random() const
 			{
-				if (size() > 0)
+				GADT_CHECK_WARNING(_is_debug, size() == 0, "random pool is empty.");
+				size_t rnd = rand() % _accumulated_range;
+				for (size_t i = 0; i < size(); i++)
 				{
-					size_t rnd = rand() % _accumulated_range;
-					for (size_t i = 0; i < size(); i++)
+					if (_ele_alloc[i]->lower_limit >= rnd)
 					{
-						if (_ele_alloc[i]->lower_limit >= rnd)
-						{
-							return *_ele_alloc[i];
-						}
+						return _ele_alloc[i]->data;
 					}
-					GADT_CHECK_WARNING(_is_debug, true, "unsuccessful random pick up.");
 				}
-				return nullptr;
+				GADT_CHECK_WARNING(_is_debug, true, "unsuccessful random pick up.");
+				return _ele_alloc[0]->data;
 			}
 
 			//get the size of the element.
@@ -844,7 +840,7 @@ namespace gadt
 				return _ele_alloc.size();
 			}
 
-			const T& operator[](size_t index)
+			const reference operator[](size_t index)
 			{
 				return get_element(index);
 			}

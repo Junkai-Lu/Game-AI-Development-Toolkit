@@ -555,8 +555,11 @@ namespace gadt
 			{
 				pool.add(i, i);
 				GADT_ASSERT(pool.get_weight(i), i);
+				GADT_ASSERT(pool[i], i);
+				GADT_ASSERT(pool.get_element(i), i);
 			}
 			GADT_ASSERT(pool.size(), ub);
+			GADT_ASSERT(pool.random() > 0, true);
 		}
 
 		const std::vector<FuncPair> func_list = {

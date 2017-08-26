@@ -951,6 +951,16 @@ namespace gadt
 				}
 				return t;
 			}
+			inline BitPoker operator&(const BitPoker target) const
+			{
+				return BitPoker(_data & target._data);
+			}
+			inline BitPoker operator|(const BitPoker target) const
+			{
+				return BitPoker(_data | target._data);
+			}
+			inline void operator&=(const BitPoker target) { _data &= target._data; }
+			inline void operator|=(const BitPoker target) { _data |= target._data; }
 		};
 
 		//bit Mahjong
