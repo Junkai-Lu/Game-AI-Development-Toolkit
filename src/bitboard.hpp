@@ -335,6 +335,16 @@ namespace gadt
 			//iter type.
 			using Iter = BitIter<size_t, BitBoard64>;
 
+			void refresh()
+			{
+#ifdef GADT_DEBUG_INFO
+				for (size_t i = 0; i < upper_bound(); i++)
+				{
+					_debug_data[i] = get(i);
+				}
+#endif
+			}
+
 		public:
 			inline BitBoard64() :
 				_data(0)
@@ -565,8 +575,20 @@ namespace gadt
 			{
 				return BitBoard64(~_data);
 			}
-			inline void operator&=(const BitBoard64 target) { _data &= target._data; }
-			inline void operator|=(const BitBoard64 target) { _data |= target._data; }
+			inline void operator&=(const BitBoard64 target) 
+			{
+				_data &= target._data; 
+#ifdef GADT_DEBUG_INFO
+				refresh();
+#endif
+			}
+			inline void operator|=(const BitBoard64 target) 
+			{
+				_data |= target._data; 
+#ifdef GADT_DEBUG_INFO
+				refresh();
+#endif
+			}
 			inline size_t operator*(const BitBoard64 target) const
 			{
 				return this->operator&(target).total();
@@ -599,6 +621,16 @@ namespace gadt
 
 			//iter type.
 			using Iter = BitIter<size_t, BitPoker>;
+
+			void refresh()
+			{
+#ifdef GADT_DEBUG_INFO
+				for (size_t i = 0; i < upper_bound(); i++)
+				{
+					_debug_data[i] = get(i);
+				}
+#endif
+			}
 
 		public:
 			inline BitPoker() :
@@ -959,8 +991,20 @@ namespace gadt
 			{
 				return BitPoker(_data | target._data);
 			}
-			inline void operator&=(const BitPoker target) { _data &= target._data; }
-			inline void operator|=(const BitPoker target) { _data |= target._data; }
+			inline void operator&=(const BitPoker target) 
+			{
+				_data &= target._data; 
+#ifdef GADT_DEBUG_INFO
+				refresh();
+#endif
+			}
+			inline void operator|=(const BitPoker target) 
+			{
+				_data |= target._data; 
+#ifdef GADT_DEBUG_INFO
+				refresh();
+#endif
+			}
 		};
 
 		//bit Mahjong
