@@ -547,7 +547,18 @@ namespace gadt
 			tic_tac_toe::Action action = minimax.DoNegamax(state, { timeout, max_depth, false });
 			GADT_ASSERT((action.x == action.y || (action.x == 0 && action.y == 0) || (action.x == 0 && action.y == 2)), true);
 		}
-		
+		void TestRandomPool()
+		{
+			const size_t ub = 20;
+			random::RandomPool<size_t, true> pool(ub);
+			for (size_t i = 0; i < ub; i++)
+			{
+				pool.add(i, i);
+				GADT_ASSERT(pool.get_weight(i), i);
+			}
+			GADT_ASSERT(pool.size(), ub);
+		}
+
 		const std::vector<FuncPair> func_list = {
 			{ "bitboard"		,TestBitBoard		},
 			{ "file"			,TestFileLib		},
@@ -559,6 +570,7 @@ namespace gadt
 			{ "stl::linear"		,TestStlLinearAlloc },
 			{ "stl::list"		,TestStlList		},
 			{ "table"			,TestTable			},
+			{ "random_pool"		,TestRandomPool		},
 			{ "minimax"			,TestMinimax		}
 		};
 		void RunTest(FuncPair func_pair)

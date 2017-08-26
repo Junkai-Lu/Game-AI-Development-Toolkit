@@ -259,6 +259,12 @@ namespace gadt
 				delete_memory();
 			}
 
+			//return the value of _is_debug.
+			constexpr inline bool is_debug() const
+			{
+				return _is_debug;
+			}
+
 		public:
 			//constructor function with allocation.
 			Allocator(size_t count) :
@@ -380,11 +386,7 @@ namespace gadt
 				return ss.str();
 			}
 
-			//return the value of _is_debug.
-			constexpr inline bool is_debug() const
-			{
-				return _is_debug;
-			}
+			
 		};
 
 		/*
@@ -586,6 +588,12 @@ namespace gadt
 				_length = 0;
 			}
 
+			//return the value of _is_debug.
+			constexpr inline bool is_debug() const
+			{
+				return _is_debug;
+			}
+
 		public:
 			//constructor function with allocation.
 			LinearAllocator(size_t count) :
@@ -642,6 +650,13 @@ namespace gadt
 				return nullptr;
 			}
 
+			//get first element.
+			pointer element(size_t index) const
+			{
+				GADT_CHECK_WARNING(is_debug(), index >= _length, "out of range");
+				return _fir_element + index;
+			}
+
 			//total size of alloc.
 			inline size_t total_size() const
 			{
@@ -686,40 +701,49 @@ namespace gadt
 				return ss.str();
 			}
 
-			//return the value of _is_debug.
-			constexpr inline bool is_debug() const
+			
+
+			pointer operator[](size_t index) const
 			{
-				return _is_debug;
+				return element(index);
 			}
 		};
 	}
 
 	namespace random
 	{
-		template<typename T>
+		
+
+		template<typename T, bool _is_debug = false>
 		class RandomPool
 		{
-		private:
+		public:
 			template<typename T>
 			struct RandomPoolElement
 			{
 				const size_t weight;
-				const size_t range_max;
+				const size_t lower_limit;
 				T data;
 
 				template<class... Types>
-				RandomPoolElement(size_t _weight, size_t _range_max, Types&&... args):
+				RandomPoolElement(size_t _weight, size_t _lower_limit, Types&&... args) :
 					weight(_weight),
-					range_max(_range_max),
+					lower_limit(_lower_limit),
 					data(std::forward<Types>(args)...)
 				{
 				}
 			};
 
 		private:
+			using pointer = T*;
+			using reference = T&;
+			using Element = RandomPoolElement<T>;
+			using Allocator = stl::LinearAllocator<Element, _is_debug>;
 
-			stl::LinearAllocator<T>		_ele_alloc;
-			size_t						_accumulated_range;
+		private:
+
+			Allocator	_ele_alloc;
+			size_t		_accumulated_range;
 
 		public:
 			//default constructor.
@@ -747,12 +771,27 @@ namespace gadt
 				_accumulated_range = 0;
 			}
 
-			//add new element.
+			//add new element by copy.
+			inline bool add(size_t weight, T data)
+			{
+				if (_ele_alloc.construct_next(weight, _accumulated_range, data))
+				{
+					_accumulated_range += weight;
+					return true;
+				}
+				return false;
+			}
+
+			//add new element by constructor.
 			template<class... Types>
 			inline bool add(size_t weight, Types&&... args)
 			{
-				_accumulated_range += weight;
-				_ele_alloc.construct_next(weight, _accumulated_range, args);
+				if(_ele_alloc.construct_next(weight, _accumulated_range, args));
+				{
+					_accumulated_range += weight;
+					return true;
+				}
+				return false;
 			}
 
 			//get chance that element[index] be selected.
@@ -760,27 +799,49 @@ namespace gadt
 			{
 				if (index < _ele_alloc.size())
 				{
-					//
+					return double(_ele_alloc[index]->weight) / double(_accumulated_range);
 				}
-				return 0;
+				return 0.0;
 			}
 
 			//get element reference by index.
-			inline const T& get_element(size_t index) const
+			inline const pointer get_element(size_t index) const
 			{
-
+				return _ele_alloc[index];
 			}
 
 			//get weight of element by index.
 			inline size_t get_weight(size_t index) const
 			{
-
+				if (index < _ele_alloc.size())
+				{
+					return _ele_alloc[index]->weight;
+				}
+				return 0;
 			}
 
 			//get random element.
-			inline const T& random() const
+			inline const reference random() const
 			{
+				if (size() > 0)
+				{
+					size_t rnd = rand() % _accumulated_range;
+					for (size_t i = 0; i < size(); i++)
+					{
+						if (_ele_alloc[i]->lower_limit >= rnd)
+						{
+							return *_ele_alloc[i];
+						}
+					}
+					GADT_CHECK_WARNING(_is_debug, true, "unsuccessful random pick up.");
+				}
+				return nullptr;
+			}
 
+			//get the size of the element.
+			inline size_t size() const
+			{
+				return _ele_alloc.size();
 			}
 
 			const T& operator[](size_t index)
