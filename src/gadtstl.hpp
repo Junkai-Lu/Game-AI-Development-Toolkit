@@ -712,26 +712,25 @@ namespace gadt
 
 	namespace random
 	{
+		template<typename T>
+		struct RandomPoolElement
+		{
+			const size_t weight;
+			const size_t lower_limit;
+			T data;
+
+			template<class... Types>
+			RandomPoolElement(size_t _weight, size_t _lower_limit, Types&&... args) :
+				weight(_weight),
+				lower_limit(_lower_limit),
+				data(std::forward<Types>(args)...)
+			{
+			}
+		};
+
 		template<typename T, bool _is_debug = false>
 		class RandomPool
 		{
-		public:
-			template<typename T>
-			struct RandomPoolElement
-			{
-				const size_t weight;
-				const size_t lower_limit;
-				T data;
-
-				template<class... Types>
-				RandomPoolElement(size_t _weight, size_t _lower_limit, Types&&... args) :
-					weight(_weight),
-					lower_limit(_lower_limit),
-					data(std::forward<Types>(args)...)
-				{
-				}
-			};
-
 		private:
 			using pointer = T*;
 			using reference = T&;
