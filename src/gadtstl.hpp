@@ -783,7 +783,7 @@ namespace gadt
 			template<class... Types>
 			inline bool add(size_t weight, Types&&... args)
 			{
-				if(_ele_alloc.construct_next(weight, _accumulated_range, args));
+				if(_ele_alloc.construct_next(weight, _accumulated_range, std::forward<Types>(args)...));
 				{
 					_accumulated_range += weight;
 					return true;
