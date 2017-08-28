@@ -117,7 +117,8 @@ namespace gadt
 		void SystemClear()
 		{
 #ifdef __GADT_GNUC
-			system("clear");
+			if (!system("clear"))
+				std::cout << "clear failed" <<std::endl;
 #elif defined(__GADT_MSVC)
 			system("cls");
 #endif

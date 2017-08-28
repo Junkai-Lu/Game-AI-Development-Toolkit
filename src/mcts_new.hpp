@@ -192,16 +192,17 @@ namespace gadt
 
 		public:
 			const State&		state()					const { return _state; }
-			const AgentIndex	winner_index()			const { return _winner_index; }
-			const uint32_t		visited_time()			const { return _visited_time; }
-			const uint32_t		win_time()				const { return _win_time; }
-			const uint8_t		next_action_index()		const { return _next_action_index; }
-			const size_t		child_num()				const { return _child_nodes.size(); }
 			const NodePtrSet&	child_set()				const { return _child_nodes; }
 			const MctsNode*		child_node(size_t i)	const { return _child_nodes[i]; }
-			const size_t		action_num()			const { return _action_set.size(); }
 			const ActionSet&	action_set()			const { return _action_set; }
 			const Action&		action(size_t i)		const { return _action_set[i]; }
+			size_t				action_num()			const { return _action_set.size(); }
+			AgentIndex			winner_index()			const { return _winner_index; }
+			uint32_t			visited_time()			const { return _visited_time; }
+			uint32_t			win_time()				const { return _win_time; }
+			uint8_t				next_action_index()		const { return _next_action_index; }
+			size_t				child_num()				const { return _child_nodes.size(); }
+			
 
 		private:
 			//a value means no winner, which is differ from any other AgentIndex.
