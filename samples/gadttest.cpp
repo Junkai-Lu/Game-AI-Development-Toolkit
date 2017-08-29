@@ -349,7 +349,7 @@ namespace gadt
 				tic_tac_toe::AllowUpdateValue
 			);
 			mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> node(state, func);
-			gadt::stl::Allocator<mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>, true> alloc(100);
+			gadt::stl::StackAllocator<mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>, true> alloc(100);
 
 			auto p = alloc.construct(state, func);
 			GADT_ASSERT(node.action_num(), 9);
@@ -418,7 +418,7 @@ namespace gadt
 			for (size_t i = 0; i < 9; i++)
 			{
 				GADT_ASSERT(list.size(), i);
-				list.insert({ i / 3,i % 3,tic_tac_toe::BLACK });
+				list.push_back({ i / 3,i % 3,tic_tac_toe::BLACK });
 			}
 			size_t count = 0;
 			for (list.reset_iterator(); list.is_end() == false; list.to_next_iterator())
@@ -450,7 +450,7 @@ namespace gadt
 				{
 				}
 			};
-			using TestAlloc = stl::Allocator<TestClass, true>;
+			using TestAlloc = stl::StackAllocator<TestClass, true>;
 			const size_t ub = 10000;
 			TestAlloc alloc(ub);
 			for (size_t i = 0; i < ub / 2; i++)

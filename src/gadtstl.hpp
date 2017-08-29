@@ -167,14 +167,15 @@ namespace gadt
 	namespace stl
 	{
 		/*
-		* Allocator is a memory allocator, whose memory is preallocate at the time when the object is created.
+		* StackAllocator is a memory allocator, whose memory is preallocate at the time when the object is created.
+		* its memory is allocated by stack, all the element in it can be opearted.
 		*
 		* [T] is the class type.
 		* [size] is the max size of the allocator.
 		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
 		*/
 		template<typename T, bool _is_debug = false>
-		class Allocator
+		class StackAllocator final
 		{
 		private:
 			using pointer = T*;
@@ -267,7 +268,7 @@ namespace gadt
 
 		public:
 			//constructor function with allocation.
-			Allocator(size_t count) :
+			StackAllocator(size_t count) :
 				_count(count),
 				_available_index(),
 				_fir_element(nullptr),
@@ -277,7 +278,7 @@ namespace gadt
 			}
 
 			//copy constructor function.
-			Allocator(const Allocator& target) :
+			StackAllocator(const StackAllocator& target) :
 				_count(target._count),
 				_available_index(target._available_index),
 				_fir_element(nullptr),
@@ -295,7 +296,7 @@ namespace gadt
 			}
 
 			//destructor function.
-			~Allocator()
+			~StackAllocator()
 			{
 				deallocate();
 			}
@@ -390,178 +391,15 @@ namespace gadt
 		};
 
 		/*
-		* ListNode is the basic unit of gadt::stl::List.
+		* LinearAllocator is a memory allocator, whose memory is preallocate at the time when the object is created.
+		* its memory is allocated by array, can only the last element could be operated.
 		*
-		* [T] is the class type of the link list.
+		* [T] is the class type.
+		* [size] is the max size of the allocator.
 		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
 		*/
 		template<typename T, bool _is_debug = false>
-		class ListNode
-		{
-		public:
-			using pointer = ListNode<T, _is_debug>*;
-
-		private:
-			const T _value;
-			pointer _next_node;
-
-		public:
-			//constructor function.
-			inline ListNode(const T& value) :
-				_value(value),
-				_next_node(nullptr)
-			{
-			}
-
-			//copy constructor function is disallowed.
-			ListNode(const ListNode&) = delete;
-
-			inline const T& value() const { return _value; }
-			inline pointer next_node() const { return _next_node; }
-			inline void set_next_node(pointer p) { _next_node = p; }
-		};
-
-		/*
-		* List is a template of link list.
-		*
-		* [T] is the class type of the link list.
-		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
-		*/
-		template<typename T, bool _is_debug = false>
-		class List
-		{
-		public:
-			using Node = ListNode<T, _is_debug>;
-			using Allocator = gadt::stl::Allocator<Node, _is_debug>;
-			using node_pointer = Node*;
-
-		private:
-			const bool   _private_allocator;
-			Allocator&	 _allocator;
-			node_pointer _first_node;
-			node_pointer _last_node;
-			node_pointer _iterator;
-			size_t       _size;
-
-		public:
-			List(size_t allocator_count) :
-				_private_allocator(true),
-				_allocator(*(new Allocator(allocator_count))),
-				_first_node(nullptr),
-				_last_node(nullptr),
-				_iterator(nullptr),
-				_size(0)
-			{
-			}
-
-			List(Allocator& allocator) :
-				_private_allocator(false),
-				_allocator(allocator),
-				_first_node(nullptr),
-				_last_node(nullptr),
-				_iterator(nullptr),
-				_size(0)
-			{
-			}
-
-			inline ~List()
-			{
-				if (_private_allocator)
-				{
-					delete &_allocator;
-				}
-			}
-
-			//insert a new value in the end of the list.
-			void insert(const T& value)
-			{
-				_size++;//incr size of the list.
-				auto ptr = _allocator.construct(value);
-				if (_first_node == nullptr)
-				{
-					_first_node = ptr;
-					_last_node = ptr;
-					_iterator = ptr;
-				}
-				else
-				{
-					_last_node->set_next_node(ptr);
-					_last_node = _last_node->next_node();
-				}
-			}
-
-			//get the size of the list.
-			inline size_t size() const
-			{
-				return _size;
-			}
-
-			//clear all nodes from allocator.
-			void clear()
-			{
-				node_pointer ptr = _first_node;
-				if (_first_node != nullptr)//to avoid the first node is not exist.
-				{
-					for (;;)
-					{
-						node_pointer temp_ptr = ptr->next_node();
-						_allocator.destory(ptr);
-						if (temp_ptr == nullptr)
-						{
-							break;
-						}
-						ptr = temp_ptr;
-					}
-				}
-				_first_node = nullptr;
-				_last_node = nullptr;
-				_iterator = nullptr;
-			}
-
-			//to next iterator.
-			bool to_next_iterator()
-			{
-				if (_iterator != nullptr)
-				{
-					_iterator = _iterator->next_node();
-					return true;
-				}
-				return false;
-			}
-
-			//get T from iterator.
-			inline const T& iterator() const
-			{
-				return _iterator->value();
-			}
-
-			//reset iterator from begin.
-			inline void reset_iterator()
-			{
-				_iterator = _first_node;
-			}
-
-			//return true if the iterator point to the first node.
-			inline bool is_begin() const
-			{
-				return _iterator == _first_node;
-			}
-
-			//return true if the iterator point to the last node.
-			inline bool is_end() const
-			{
-				return _iterator == nullptr;
-			}
-
-			//get first itertor.
-			inline node_pointer begin() const { return _first_node; }
-
-			//get last iterator.
-			inline node_pointer end() const { return _last_node; }
-		};
-
-		template<typename T, bool _is_debug = false>
-		class LinearAllocator
+		class LinearAllocator final
 		{
 		private:
 			using pointer = T*;
@@ -701,13 +539,236 @@ namespace gadt
 				return ss.str();
 			}
 
-			
-
 			pointer operator[](size_t index) const
 			{
 				return element(index);
 			}
 		};
+
+		/*
+		* ListNode is the basic unit of gadt::stl::List.
+		*
+		* [T] is the class type of the link list.
+		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
+		*/
+		template<typename T>
+		struct ListNode
+		{
+		public:
+			using pointer = ListNode<T>*;
+
+		private:
+			const T _value;
+			pointer _next_node;
+			pointer _prev_node;
+
+		public:
+			//constructor function.
+			inline ListNode(const T& value) :
+				_value(value),
+				_next_node(nullptr),
+				_prev_node(nullptr)
+			{
+			}
+
+			//copy constructor function is disallowed.
+			ListNode(const ListNode&) = delete;
+
+			inline const T& value() const { return _value; }
+			inline pointer next_node() const { return _next_node; }
+			inline pointer prev_node() const { return _prev_node; }
+			inline void set_next_node(pointer p) { _next_node = p; }
+			inline void set_prev_node(pointer p) { _prev_node = p; }
+		};
+
+		/*
+		* List is a template of link list.
+		*
+		* [T] is the class type of the link list.
+		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
+		*/
+		template<typename T, bool _is_debug = false>
+		class List
+		{
+		public:
+			using Node = ListNode<T>;
+			using Allocator = gadt::stl::StackAllocator<Node, _is_debug>;
+			using node_pointer = Node*;
+
+		private:
+			const bool   _private_allocator;
+			Allocator&	 _allocator;
+			node_pointer _first_node;
+			node_pointer _last_node;
+			node_pointer _iterator;
+			size_t       _size;
+
+		private:
+			constexpr bool is_debug() const
+			{
+				return _is_debug;
+			}
+
+		public:
+			List(size_t allocator_count) :
+				_private_allocator(true),
+				_allocator(*(new Allocator(allocator_count))),
+				_first_node(nullptr),
+				_last_node(nullptr),
+				_iterator(nullptr),
+				_size(0)
+			{
+			}
+
+			List(Allocator& allocator) :
+				_private_allocator(false),
+				_allocator(allocator),
+				_first_node(nullptr),
+				_last_node(nullptr),
+				_iterator(nullptr),
+				_size(0)
+			{
+			}
+
+			inline ~List()
+			{
+				if (_private_allocator)
+				{
+					delete &_allocator;
+				}
+			}
+
+			//insert a new value in the end of the list.
+			bool push_back(const T& value)
+			{
+				_size++;//incr size of the list.
+				auto ptr = _allocator.construct(value);
+				if (ptr == nullptr)
+					return false;//constructor failed.
+				if (_first_node == nullptr)
+				{
+					_first_node = ptr;
+					_last_node = ptr;
+					_iterator = ptr;
+				}
+				else
+				{
+					_last_node->set_next_node(ptr);
+					ptr->set_prev_node(_last_node);
+					_last_node = _last_node->next_node();
+				}
+				return true;
+			}
+
+			bool push_front(const T& value)
+			{
+				_size++;
+				auto ptr = _allocator.construct(value);
+				if (ptr == nullptr)
+					return false;//constructor failed.
+				if (_first_node == nullptr)
+				{
+					_first_node = ptr;
+					_last_node = ptr;
+					_iterator = ptr;
+				}
+				else
+				{
+					ptr->set_next_node(_first_node);
+					_first_node->set_prev_node(ptr);
+					_first_node = ptr;
+				}
+				return true;
+			}
+
+			void pop_back()
+			{
+				GADT_CHECK_WARNING(is_debug(), _last_node == nullptr, "no element in the back of link list");
+				node_pointer temp = _last_node;
+				_last_node = _last_node->prev_node();
+				_last_node->set_next_node(nullptr);
+				_allocator.destory(temp);
+			}
+
+			void pop_front()
+			{
+				GADT_CHECK_WARNING(is_debug(), _first_node == nullptr, "no element in the front of link list");
+				node_pointer temp = _first_node;
+				_first_node = _first_node->next_node();
+				_first_node->set_prev_node(nullptr);
+				_allocator.destory(temp);
+			}
+
+			//get the size of the list.
+			inline size_t size() const
+			{
+				return _size;
+			}
+
+			//clear all nodes from allocator.
+			void clear()
+			{
+				node_pointer ptr = _first_node;
+				if (_first_node != nullptr)//to avoid the first node is not exist.
+				{
+					for (;;)
+					{
+						node_pointer temp_ptr = ptr->next_node();
+						_allocator.destory(ptr);
+						if (temp_ptr == nullptr)
+						{
+							break;
+						}
+						ptr = temp_ptr;
+					}
+				}
+				_first_node = nullptr;
+				_last_node = nullptr;
+				_iterator = nullptr;
+			}
+
+			//to next iterator.
+			bool to_next_iterator()
+			{
+				if (_iterator != nullptr)
+				{
+					_iterator = _iterator->next_node();
+					return true;
+				}
+				return false;
+			}
+
+			//get T from iterator.
+			inline const T& iterator() const
+			{
+				return _iterator->value();
+			}
+
+			//reset iterator from begin.
+			inline void reset_iterator()
+			{
+				_iterator = _first_node;
+			}
+
+			//return true if the iterator point to the first node.
+			inline bool is_begin() const
+			{
+				return _iterator == _first_node;
+			}
+
+			//return true if the iterator point to the last node.
+			inline bool is_end() const
+			{
+				return _iterator == nullptr;
+			}
+
+			//get first itertor.
+			inline node_pointer begin() const { return _first_node; }
+
+			//get last iterator.
+			inline node_pointer end() const { return _last_node; }
+		};
+
 	}
 
 	namespace random

@@ -105,9 +105,9 @@ namespace gadt
 			using pointer       = MctsNode<State, Action, Result, _is_debug>*;
 			using reference     = MctsNode<State, Action, Result, _is_debug>&;
 			using Node			= MctsNode<State, Action, Result, _is_debug>;		//MctsNode
-			using Allocator		= gadt::stl::Allocator<Node, _is_debug>;			//Allocate 
+			using Allocator		= gadt::stl::StackAllocator<Node, _is_debug>;		//Allocate 
 			using ActionSet		= std::vector<Action>;								//ActionSet is the set of Action.
-			using NodePtrSet	= std::vector<pointer>;							//ChildSet is the set of ptrs to child nodes.
+			using NodePtrSet	= std::vector<pointer>;								//ChildSet is the set of ptrs to child nodes.
 			
 			//function package
 			struct FuncPackage
