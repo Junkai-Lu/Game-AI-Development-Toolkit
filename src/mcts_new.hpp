@@ -73,7 +73,7 @@ namespace gadt
 			size_t	max_iteration;		//set max iteration times.
 			bool	gc_enabled;			//allow garbage collection if the tree run out of memory.
 
-										//default setting constructor.
+			//default setting constructor.
 			MctsSetting() :
 				timeout(30),
 				max_iteration(10000),
@@ -89,6 +89,10 @@ namespace gadt
 			{
 			}
 		};
+
+		//MCTS function package.
+		template<typename State, typename Action, typename Result, bool _is_debug>
+		struct MctsFuncPackage;
 
 		/*
 		* MctsNode is the node class in the monte carlo tree search.
@@ -108,78 +112,79 @@ namespace gadt
 			using Allocator		= gadt::stl::StackAllocator<Node, _is_debug>;		//Allocate 
 			using ActionSet		= std::vector<Action>;								//ActionSet is the set of Action.
 			using NodePtrSet	= std::vector<pointer>;								//ChildSet is the set of ptrs to child nodes.
-			
+			using FuncPackage	= MctsFuncPackage<State, Action, Result, _is_debug>;
+
 			//function package
-			struct FuncPackage
-			{
-			public:
-				using GetNewStateFunc		= std::function<State(const State&, const Action&)>;
-				using MakeActionFunc		= std::function<void(const State&, ActionSet&)>;	
-				using DetemineWinnerFunc	= std::function<AgentIndex(const State&)>;			
-				using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;	
-				using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;	
-				using TreePolicyValueFunc	= std::function<UcbValue(const Node&, const Node&)>;
-				using DefaultPolicyFunc		= std::function<const Action&(const ActionSet&)>;	
-				using AllowExtendFunc		= std::function<bool(const Node&)>;					
-				using AllowExcuteGcFunc		= std::function<bool(const Node&)>;					
-				using ValueForRootNodeFunc	= std::function<UcbValue(const Node&)>;				
+			//struct FuncPackage
+			//{
+			//public:
+			//	using GetNewStateFunc		= std::function<State(const State&, const Action&)>;
+			//	using MakeActionFunc		= std::function<void(const State&, ActionSet&)>;	
+			//	using DetemineWinnerFunc	= std::function<AgentIndex(const State&)>;			
+			//	using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;	
+			//	using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;	
+			//	using TreePolicyValueFunc	= std::function<UcbValue(const Node&, const Node&)>;
+			//	using DefaultPolicyFunc		= std::function<const Action&(const ActionSet&)>;	
+			//	using AllowExtendFunc		= std::function<bool(const Node&)>;					
+			//	using AllowExcuteGcFunc		= std::function<bool(const Node&)>;					
+			//	using ValueForRootNodeFunc	= std::function<UcbValue(const Node&)>;				
 
-			public:
-				//necessary functions.
-				const GetNewStateFunc		GetNewState;		//get a new state from previous state and action.
-				const MakeActionFunc		MakeAction;			//the function which create action set by the state.
-				const DetemineWinnerFunc	DetemineWinner;		//return no_winner_index if a state is not terminal state.
-				const StateToResultFunc		StateToResult;		//get a result from state and winner.
-				const AllowUpdateValueFunc	AllowUpdateValue;	//update values in the node by the result.
+			//public:
+			//	//necessary functions.
+			//	const GetNewStateFunc		GetNewState;		//get a new state from previous state and action.
+			//	const MakeActionFunc		MakeAction;			//the function which create action set by the state.
+			//	const DetemineWinnerFunc	DetemineWinner;		//return no_winner_index if a state is not terminal state.
+			//	const StateToResultFunc		StateToResult;		//get a result from state and winner.
+			//	const AllowUpdateValueFunc	AllowUpdateValue;	//update values in the node by the result.
 
-				//default functions.
-				TreePolicyValueFunc			TreePolicyValue;	//value of child node in selection process. the highest would be seleced.
-				DefaultPolicyFunc			DefaultPolicy;		//the default policy to select action.
-				AllowExtendFunc				AllowExtend;		//allow node to extend child node.
-				AllowExcuteGcFunc			AllowExcuteGc;		//the condition to excute gc in a node.
-				ValueForRootNodeFunc		ValueForRootNode;	//select best action of root node after iterations finished.
+			//	//default functions.
+			//	TreePolicyValueFunc			TreePolicyValue;	//value of child node in selection process. the highest would be seleced.
+			//	DefaultPolicyFunc			DefaultPolicy;		//the default policy to select action.
+			//	AllowExtendFunc				AllowExtend;		//allow node to extend child node.
+			//	AllowExcuteGcFunc			AllowExcuteGc;		//the condition to excute gc in a node.
+			//	ValueForRootNodeFunc		ValueForRootNode;	//select best action of root node after iterations finished.
 
-			public:
-				FuncPackage(
-					GetNewStateFunc			_GetNewState,
-					MakeActionFunc			_MakeAction,
-					DetemineWinnerFunc		_DetemineWinner,
-					StateToResultFunc		_StateToResult,
-					AllowUpdateValueFunc	_AllowUpdateValue,
-					TreePolicyValueFunc		_TreePolicyValue,
-					DefaultPolicyFunc		_DefaultPolicy,
-					AllowExtendFunc			_AllowExtend,
-					AllowExcuteGcFunc		_AllowExcuteGc,
-					ValueForRootNodeFunc	_ValueForRootNode
-				):
-					GetNewState			(_GetNewState),
-					MakeAction			(_MakeAction),
-					DetemineWinner		(_DetemineWinner),
-					StateToResult		(_StateToResult),
-					AllowUpdateValue	(_AllowUpdateValue),
-					TreePolicyValue		(_TreePolicyValue),
-					DefaultPolicy		(_DefaultPolicy),
-					AllowExtend			(_AllowExtend),
-					AllowExcuteGc		(_AllowExcuteGc),
-					ValueForRootNode	(_ValueForRootNode)
-				{
-				}
+			//public:
+			//	FuncPackage(
+			//		GetNewStateFunc			_GetNewState,
+			//		MakeActionFunc			_MakeAction,
+			//		DetemineWinnerFunc		_DetemineWinner,
+			//		StateToResultFunc		_StateToResult,
+			//		AllowUpdateValueFunc	_AllowUpdateValue,
+			//		TreePolicyValueFunc		_TreePolicyValue,
+			//		DefaultPolicyFunc		_DefaultPolicy,
+			//		AllowExtendFunc			_AllowExtend,
+			//		AllowExcuteGcFunc		_AllowExcuteGc,
+			//		ValueForRootNodeFunc	_ValueForRootNode
+			//	):
+			//		GetNewState			(_GetNewState),
+			//		MakeAction			(_MakeAction),
+			//		DetemineWinner		(_DetemineWinner),
+			//		StateToResult		(_StateToResult),
+			//		AllowUpdateValue	(_AllowUpdateValue),
+			//		TreePolicyValue		(_TreePolicyValue),
+			//		DefaultPolicy		(_DefaultPolicy),
+			//		AllowExtend			(_AllowExtend),
+			//		AllowExcuteGc		(_AllowExcuteGc),
+			//		ValueForRootNode	(_ValueForRootNode)
+			//	{
+			//	}
 
-				FuncPackage(
-					GetNewStateFunc			_GetNewState,
-					MakeActionFunc			_MakeAction,
-					DetemineWinnerFunc		_DetemineWinner,
-					StateToResultFunc		_StateToResult,
-					AllowUpdateValueFunc	_AllowUpdateValue
-				):
-					GetNewState			(_GetNewState),
-					MakeAction			(_MakeAction),
-					DetemineWinner		(_DetemineWinner),
-					StateToResult		(_StateToResult),
-					AllowUpdateValue	(_AllowUpdateValue)
-				{
-				}
-			};
+			//	FuncPackage(
+			//		GetNewStateFunc			_GetNewState,
+			//		MakeActionFunc			_MakeAction,
+			//		DetemineWinnerFunc		_DetemineWinner,
+			//		StateToResultFunc		_StateToResult,
+			//		AllowUpdateValueFunc	_AllowUpdateValue
+			//	):
+			//		GetNewState			(_GetNewState),
+			//		MakeAction			(_MakeAction),
+			//		DetemineWinner		(_DetemineWinner),
+			//		StateToResult		(_StateToResult),
+			//		AllowUpdateValue	(_AllowUpdateValue)
+			//	{
+			//	}
+			//};
 
 		private:
 			State			_state;				//state of this node.
@@ -416,6 +421,83 @@ namespace gadt
 			}
 		};
 
+		//function package
+		template<typename State, typename Action, typename Result, bool _is_debug>
+		struct MctsFuncPackage
+		{
+		private:
+			using Node = typename MctsNode<State, Action, Result, _is_debug>;
+			using ActionSet = std::vector<Action>;
+
+		public:
+			using GetNewStateFunc = std::function<State(const State&, const Action&)>;
+			using MakeActionFunc = std::function<void(const State&, ActionSet&)>;
+			using DetemineWinnerFunc = std::function<AgentIndex(const State&)>;
+			using StateToResultFunc = std::function<Result(const State&, AgentIndex)>;
+			using AllowUpdateValueFunc = std::function<bool(const State&, const Result&)>;
+			using TreePolicyValueFunc = std::function<UcbValue(const Node&, const Node&)>;
+			using DefaultPolicyFunc = std::function<const Action&(const ActionSet&)>;
+			using AllowExtendFunc = std::function<bool(const Node&)>;
+			using AllowExcuteGcFunc = std::function<bool(const Node&)>;
+			using ValueForRootNodeFunc = std::function<UcbValue(const Node&)>;
+
+		public:
+			//necessary functions.
+			const GetNewStateFunc		GetNewState;		//get a new state from previous state and action.
+			const MakeActionFunc		MakeAction;			//the function which create action set by the state.
+			const DetemineWinnerFunc	DetemineWinner;		//return no_winner_index if a state is not terminal state.
+			const StateToResultFunc		StateToResult;		//get a result from state and winner.
+			const AllowUpdateValueFunc	AllowUpdateValue;	//update values in the node by the result.
+
+															//default functions.
+			TreePolicyValueFunc			TreePolicyValue;	//value of child node in selection process. the highest would be seleced.
+			DefaultPolicyFunc			DefaultPolicy;		//the default policy to select action.
+			AllowExtendFunc				AllowExtend;		//allow node to extend child node.
+			AllowExcuteGcFunc			AllowExcuteGc;		//the condition to excute gc in a node.
+			ValueForRootNodeFunc		ValueForRootNode;	//select best action of root node after iterations finished.
+
+		public:
+			MctsFuncPackage(
+				GetNewStateFunc			_GetNewState,
+				MakeActionFunc			_MakeAction,
+				DetemineWinnerFunc		_DetemineWinner,
+				StateToResultFunc		_StateToResult,
+				AllowUpdateValueFunc	_AllowUpdateValue,
+				TreePolicyValueFunc		_TreePolicyValue,
+				DefaultPolicyFunc		_DefaultPolicy,
+				AllowExtendFunc			_AllowExtend,
+				AllowExcuteGcFunc		_AllowExcuteGc,
+				ValueForRootNodeFunc	_ValueForRootNode
+			) :
+				GetNewState(_GetNewState),
+				MakeAction(_MakeAction),
+				DetemineWinner(_DetemineWinner),
+				StateToResult(_StateToResult),
+				AllowUpdateValue(_AllowUpdateValue),
+				TreePolicyValue(_TreePolicyValue),
+				DefaultPolicy(_DefaultPolicy),
+				AllowExtend(_AllowExtend),
+				AllowExcuteGc(_AllowExcuteGc),
+				ValueForRootNode(_ValueForRootNode)
+			{
+			}
+
+			MctsFuncPackage(
+				GetNewStateFunc			_GetNewState,
+				MakeActionFunc			_MakeAction,
+				DetemineWinnerFunc		_DetemineWinner,
+				StateToResultFunc		_StateToResult,
+				AllowUpdateValueFunc	_AllowUpdateValue
+			) :
+				GetNewState(_GetNewState),
+				MakeAction(_MakeAction),
+				DetemineWinner(_DetemineWinner),
+				StateToResult(_StateToResult),
+				AllowUpdateValue(_AllowUpdateValue)
+			{
+			}
+		};
+
 		/*
 		* MctsToJson is used for convert mcts search tree to json tree.
 		*
@@ -513,8 +595,9 @@ namespace gadt
 			using ActionSet		= typename Node::ActionSet;								//set of Action
 			using NodePtrSet	= typename Node::NodePtrSet;							//set of ptrs to child nodes.
 			
+
 		private:
-			using FuncPackage	= typename Node::FuncPackage;
+			using FuncPackage = typename MctsFuncPackage<State, Action, Result, _is_debug>;
 			struct DefaultFuncPackage
 			{
 				typename FuncPackage::TreePolicyValueFunc		TreePolicyValue;
@@ -829,5 +912,6 @@ namespace gadt
 				_log_controller.DisableJsonOutput();
 			}
 		};
+
 	}
 }

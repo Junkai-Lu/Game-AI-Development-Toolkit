@@ -768,7 +768,6 @@ namespace gadt
 			//get last iterator.
 			inline node_pointer end() const { return _last_node; }
 		};
-
 	}
 
 	namespace random
