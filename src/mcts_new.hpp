@@ -426,7 +426,7 @@ namespace gadt
 		struct MctsFuncPackage
 		{
 		private:
-			using Node = typename MctsNode<State, Action, Result, _is_debug>;
+			using Node = MctsNode<State, Action, Result, _is_debug>;
 			using ActionSet = std::vector<Action>;
 
 		public:
@@ -597,7 +597,7 @@ namespace gadt
 			
 
 		private:
-			using FuncPackage = typename MctsFuncPackage<State, Action, Result, _is_debug>;
+			using FuncPackage = MctsFuncPackage<State, Action, Result, _is_debug>;
 			struct DefaultFuncPackage
 			{
 				typename FuncPackage::TreePolicyValueFunc		TreePolicyValue;
