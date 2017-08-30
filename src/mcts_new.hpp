@@ -90,7 +90,11 @@ namespace gadt
 			}
 		};
 
-		//MCTS function package.
+		/*
+		* MctsFuncPackage include all necessary functions for MCTS.
+		*
+		* use MctsFuncPackage(...) to construct a new function package. 
+		*/
 		template<typename State, typename Action, typename Result, bool _is_debug>
 		struct MctsFuncPackage;
 
@@ -108,83 +112,11 @@ namespace gadt
 		public:											
 			using pointer       = MctsNode<State, Action, Result, _is_debug>*;
 			using reference     = MctsNode<State, Action, Result, _is_debug>&;
-			using Node			= MctsNode<State, Action, Result, _is_debug>;		//MctsNode
-			using Allocator		= gadt::stl::StackAllocator<Node, _is_debug>;		//Allocate 
-			using ActionSet		= std::vector<Action>;								//ActionSet is the set of Action.
-			using NodePtrSet	= std::vector<pointer>;								//ChildSet is the set of ptrs to child nodes.
-			using FuncPackage	= MctsFuncPackage<State, Action, Result, _is_debug>;
-
-			//function package
-			//struct FuncPackage
-			//{
-			//public:
-			//	using GetNewStateFunc		= std::function<State(const State&, const Action&)>;
-			//	using MakeActionFunc		= std::function<void(const State&, ActionSet&)>;	
-			//	using DetemineWinnerFunc	= std::function<AgentIndex(const State&)>;			
-			//	using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;	
-			//	using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;	
-			//	using TreePolicyValueFunc	= std::function<UcbValue(const Node&, const Node&)>;
-			//	using DefaultPolicyFunc		= std::function<const Action&(const ActionSet&)>;	
-			//	using AllowExtendFunc		= std::function<bool(const Node&)>;					
-			//	using AllowExcuteGcFunc		= std::function<bool(const Node&)>;					
-			//	using ValueForRootNodeFunc	= std::function<UcbValue(const Node&)>;				
-
-			//public:
-			//	//necessary functions.
-			//	const GetNewStateFunc		GetNewState;		//get a new state from previous state and action.
-			//	const MakeActionFunc		MakeAction;			//the function which create action set by the state.
-			//	const DetemineWinnerFunc	DetemineWinner;		//return no_winner_index if a state is not terminal state.
-			//	const StateToResultFunc		StateToResult;		//get a result from state and winner.
-			//	const AllowUpdateValueFunc	AllowUpdateValue;	//update values in the node by the result.
-
-			//	//default functions.
-			//	TreePolicyValueFunc			TreePolicyValue;	//value of child node in selection process. the highest would be seleced.
-			//	DefaultPolicyFunc			DefaultPolicy;		//the default policy to select action.
-			//	AllowExtendFunc				AllowExtend;		//allow node to extend child node.
-			//	AllowExcuteGcFunc			AllowExcuteGc;		//the condition to excute gc in a node.
-			//	ValueForRootNodeFunc		ValueForRootNode;	//select best action of root node after iterations finished.
-
-			//public:
-			//	FuncPackage(
-			//		GetNewStateFunc			_GetNewState,
-			//		MakeActionFunc			_MakeAction,
-			//		DetemineWinnerFunc		_DetemineWinner,
-			//		StateToResultFunc		_StateToResult,
-			//		AllowUpdateValueFunc	_AllowUpdateValue,
-			//		TreePolicyValueFunc		_TreePolicyValue,
-			//		DefaultPolicyFunc		_DefaultPolicy,
-			//		AllowExtendFunc			_AllowExtend,
-			//		AllowExcuteGcFunc		_AllowExcuteGc,
-			//		ValueForRootNodeFunc	_ValueForRootNode
-			//	):
-			//		GetNewState			(_GetNewState),
-			//		MakeAction			(_MakeAction),
-			//		DetemineWinner		(_DetemineWinner),
-			//		StateToResult		(_StateToResult),
-			//		AllowUpdateValue	(_AllowUpdateValue),
-			//		TreePolicyValue		(_TreePolicyValue),
-			//		DefaultPolicy		(_DefaultPolicy),
-			//		AllowExtend			(_AllowExtend),
-			//		AllowExcuteGc		(_AllowExcuteGc),
-			//		ValueForRootNode	(_ValueForRootNode)
-			//	{
-			//	}
-
-			//	FuncPackage(
-			//		GetNewStateFunc			_GetNewState,
-			//		MakeActionFunc			_MakeAction,
-			//		DetemineWinnerFunc		_DetemineWinner,
-			//		StateToResultFunc		_StateToResult,
-			//		AllowUpdateValueFunc	_AllowUpdateValue
-			//	):
-			//		GetNewState			(_GetNewState),
-			//		MakeAction			(_MakeAction),
-			//		DetemineWinner		(_DetemineWinner),
-			//		StateToResult		(_StateToResult),
-			//		AllowUpdateValue	(_AllowUpdateValue)
-			//	{
-			//	}
-			//};
+			using Node			= MctsNode<State, Action, Result, _is_debug>;			//MctsNode
+			using Allocator		= gadt::stl::StackAllocator<Node, _is_debug>;			//Allocate 
+			using ActionSet		= std::vector<Action>;									//ActionSet is the set of Action.
+			using NodePtrSet	= std::vector<pointer>;									//ChildSet is the set of ptrs to child nodes.
+			using FuncPackage	= MctsFuncPackage<State, Action, Result, _is_debug>;	
 
 		private:
 			State			_state;				//state of this node.
@@ -430,16 +362,16 @@ namespace gadt
 			using ActionSet = std::vector<Action>;
 
 		public:
-			using GetNewStateFunc = std::function<State(const State&, const Action&)>;
-			using MakeActionFunc = std::function<void(const State&, ActionSet&)>;
-			using DetemineWinnerFunc = std::function<AgentIndex(const State&)>;
-			using StateToResultFunc = std::function<Result(const State&, AgentIndex)>;
-			using AllowUpdateValueFunc = std::function<bool(const State&, const Result&)>;
-			using TreePolicyValueFunc = std::function<UcbValue(const Node&, const Node&)>;
-			using DefaultPolicyFunc = std::function<const Action&(const ActionSet&)>;
-			using AllowExtendFunc = std::function<bool(const Node&)>;
-			using AllowExcuteGcFunc = std::function<bool(const Node&)>;
-			using ValueForRootNodeFunc = std::function<UcbValue(const Node&)>;
+			using GetNewStateFunc		= std::function<State(const State&, const Action&)>;
+			using MakeActionFunc		= std::function<void(const State&, ActionSet&)>;
+			using DetemineWinnerFunc	= std::function<AgentIndex(const State&)>;
+			using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;
+			using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;
+			using TreePolicyValueFunc	= std::function<UcbValue(const Node&, const Node&)>;
+			using DefaultPolicyFunc		= std::function<const Action&(const ActionSet&)>;
+			using AllowExtendFunc		= std::function<bool(const Node&)>;
+			using AllowExcuteGcFunc		= std::function<bool(const Node&)>;
+			using ValueForRootNodeFunc	= std::function<UcbValue(const Node&)>;
 
 		public:
 			//necessary functions.
@@ -449,7 +381,7 @@ namespace gadt
 			const StateToResultFunc		StateToResult;		//get a result from state and winner.
 			const AllowUpdateValueFunc	AllowUpdateValue;	//update values in the node by the result.
 
-															//default functions.
+			//default functions.
 			TreePolicyValueFunc			TreePolicyValue;	//value of child node in selection process. the highest would be seleced.
 			DefaultPolicyFunc			DefaultPolicy;		//the default policy to select action.
 			AllowExtendFunc				AllowExtend;		//allow node to extend child node.
@@ -493,7 +425,31 @@ namespace gadt
 				MakeAction(_MakeAction),
 				DetemineWinner(_DetemineWinner),
 				StateToResult(_StateToResult),
-				AllowUpdateValue(_AllowUpdateValue)
+				AllowUpdateValue(_AllowUpdateValue),
+				TreePolicyValue([](const Node& parent, const Node& child)->UcbValue {
+					UcbValue avg = static_cast<UcbValue>(child.win_time()) / static_cast<UcbValue>(child.visited_time());
+					return policy::UCB1(avg, static_cast<UcbValue>(parent.visited_time()), static_cast<UcbValue>(child.visited_time()));
+				}),
+				DefaultPolicy([](const ActionSet& actions)->const Action&{
+					if (_is_debug)
+					{
+						GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, actions.size() == 0, "MCTS104: empty action set during default policy.");
+					}
+					return actions[rand() % actions.size()];
+				}),
+				AllowExtend([](const Node& node)->bool {
+					return true;
+				}),
+				AllowExcuteGc([](const Node& node)->bool {
+					if (node.visited_time() < 10)
+					{
+						return true;
+					}
+					return false;
+				}),
+				ValueForRootNode([](const Node& node)->UcbValue {
+					return static_cast<UcbValue>(node.visited_time());
+				})
 			{
 			}
 		};
@@ -589,23 +545,14 @@ namespace gadt
 		{
 		public:
 			using Node			= MctsNode<State, Action, Result, _is_debug>;			//searcg node.	
-			using JsonConvert	= MctsJsonConvertor<State, Action, Result, _is_debug>;	//json tree
-			using LogController = log::SearchLogger<State, Action, Result>;		//log controller
-			using Allocator		= typename Node::Allocator;								//allocator of nodes
 			using ActionSet		= typename Node::ActionSet;								//set of Action
-			using NodePtrSet	= typename Node::NodePtrSet;							//set of ptrs to child nodes.
-			
 
 		private:
-			using FuncPackage = MctsFuncPackage<State, Action, Result, _is_debug>;
-			struct DefaultFuncPackage
-			{
-				typename FuncPackage::TreePolicyValueFunc		TreePolicyValue;
-				typename FuncPackage::DefaultPolicyFunc			DefaultPolicy;
-				typename FuncPackage::AllowExtendFunc			AllowExtend;
-				typename FuncPackage::AllowExcuteGcFunc			AllowExcuteGc;
-				typename FuncPackage::ValueForRootNodeFunc		ValueForRootNode;
-			};
+			using NodePtrSet    = typename Node::NodePtrSet;							//set of ptrs to child nodes.
+			using Allocator     = typename Node::Allocator;								//allocator of nodes
+			using LogController = log::SearchLogger<State, Action, Result>;				//log controller
+			using JsonConvert   = MctsJsonConvertor<State, Action, Result, _is_debug>;	//json tree
+			using FuncPackage   = MctsFuncPackage<State, Action, Result, _is_debug>;	//function package.
 
 		private:
 			FuncPackage		_func_package;			//function package of the search.
@@ -613,10 +560,6 @@ namespace gadt
 			LogController	_log_controller;		//controller of the logs.
 			Allocator&		_allocator;				//the allocator for the search.
 			const bool		_private_allocator;		//use private allocator.
-
-		public:
-			//package of default functions.
-			const DefaultFuncPackage DefaultFunc;
 
 		private:
 
@@ -656,52 +599,6 @@ namespace gadt
 			inline bool json_output_enabled() const
 			{
 				return _log_controller.json_output_enabled();
-			}
-
-			//define functions as default.
-			DefaultFuncPackage DefaultFuncInit()
-			{
-				auto TreePolicyValue = [](const Node& parent, const Node& child)->UcbValue{
-					UcbValue avg = static_cast<UcbValue>(child.win_time()) / static_cast<UcbValue>(child.visited_time());
-					return policy::UCB1(avg, static_cast<UcbValue>(parent.visited_time()), static_cast<UcbValue>(child.visited_time()));
-				};
-				auto DefaultPolicy = [](const ActionSet& actions)->const Action&{
-					if (_is_debug) 
-					{
-						GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, actions.size() == 0, "MCTS104: empty action set during default policy.");
-					}
-					return actions[rand() % actions.size()];
-				};
-				auto AllowExtend = [](const Node& node)->bool {
-					return true; 
-				};
-				auto AllowExcuteGc = [](const Node& node)->bool{
-					if (node.visited_time() < 10)
-					{
-						return true;
-					}
-					return false;
-				};
-				auto ValueForRootNode = [](const Node& node)->UcbValue{
-					return static_cast<UcbValue>(node.visited_time());
-				};
-				return {
-					TreePolicyValue,
-					DefaultPolicy,
-					AllowExtend,
-					AllowExcuteGc,
-					ValueForRootNode
-				};
-			}
-
-			//function package initilize.
-			void FuncInit()
-			{
-				_func_package.TreePolicyValue	= DefaultFunc.TreePolicyValue;
-				_func_package.DefaultPolicy		= DefaultFunc.DefaultPolicy;
-				_func_package.AllowExtend		= DefaultFunc.AllowExtend;
-				_func_package.AllowExcuteGc		= DefaultFunc.AllowExcuteGc;
-				_func_package.ValueForRootNode	= DefaultFunc.ValueForRootNode;
 			}
 
 			//excute iteration function.
@@ -826,10 +723,8 @@ namespace gadt
 					_AllowUpdateValue
 				),
 				_allocator(*(new Allocator(max_node))),
-				_private_allocator(true),
-				DefaultFunc(DefaultFuncInit())
+				_private_allocator(true)
 			{
-				FuncInit();
 			}
 
 			//use public allocator.
@@ -849,10 +744,24 @@ namespace gadt
 					_AllowUpdateValue
 				),
 				_allocator(allocator),
-				_private_allocator(false), 
-				DefaultFunc(DefaultFuncInit())
+				_private_allocator(false)
 			{
-				FuncInit();
+			}
+
+			//use private allocator.
+			MonteCarloTreeSearch(FuncPackage function_package, size_t max_node) :
+				_func_package(function_package),
+				_allocator(*(new Allocator(max_node))),
+				_private_allocator(true)
+			{
+			}
+
+			//use public allocator.
+			MonteCarloTreeSearch(FuncPackage function_package, Allocator allocator) :
+				_func_package(function_package),
+				_allocator(allocator),
+				_private_allocator(false)
+			{
 			}
 
 			//deconstructor function

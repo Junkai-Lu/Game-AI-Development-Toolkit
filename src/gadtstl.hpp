@@ -604,7 +604,7 @@ namespace gadt
 			size_t       _size;
 
 		private:
-			constexpr bool is_debug() const
+			constexpr inline  bool is_debug() const
 			{
 				return _is_debug;
 			}
@@ -768,6 +768,47 @@ namespace gadt
 			//get last iterator.
 			inline node_pointer end() const { return _last_node; }
 		};
+
+		template<typename Action, bool _is_debug>
+		class ActionPool
+		{
+		private:
+			using List = List<Action, _is_debug>;
+			using pointer = typename List::pointer;
+			using Allocator = typename List::Allocator;
+
+		private:
+			List _action_list;
+
+		public:
+			
+			inline ActionPool(Allocator& allocator):
+				_action_list(allocator)
+			{
+			}
+
+			inline void push_back(Action action)
+			{
+				_action_list.push_back(action);
+			}
+
+			inline void size() const
+			{
+				return _action_list.size();
+			}
+
+			inline pointer next_action() const
+			{
+				pointer next = _action_list.iterator();
+				_action_list.to_next_iterator();
+				return next;
+			}
+
+			inline bool is_end() const
+			{
+				return _action_list.is_end();
+			}
+		};
 	}
 
 	namespace random
@@ -801,6 +842,11 @@ namespace gadt
 
 			Allocator	_ele_alloc;
 			size_t		_accumulated_range;
+
+			constexpr inline bool is_debug() const
+			{
+				return _is_debug;
+			}
 
 		public:
 			//default constructor.
@@ -880,7 +926,7 @@ namespace gadt
 			//get random element.
 			inline const reference random() const
 			{
-				GADT_CHECK_WARNING(_is_debug, size() == 0, "random pool is empty.");
+				GADT_CHECK_WARNING(is_debug(), size() == 0, "random pool is empty.");
 				size_t rnd = rand() % _accumulated_range;
 				for (size_t i = 0; i < size(); i++)
 				{
@@ -889,7 +935,7 @@ namespace gadt
 						return _ele_alloc[i]->data;
 					}
 				}
-				GADT_CHECK_WARNING(_is_debug, true, "unsuccessful random pick up.");
+				GADT_CHECK_WARNING(is_debug(), true, "unsuccessful random pick up.");
 				return _ele_alloc[0]->data;
 			}
 
