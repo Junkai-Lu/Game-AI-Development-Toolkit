@@ -109,10 +109,10 @@ namespace gadt
 		template<typename State, typename Action, typename Result, bool _is_debug>
 		class MctsNode
 		{
-		public:											
-			using pointer       = MctsNode<State, Action, Result, _is_debug>*;
-			using reference     = MctsNode<State, Action, Result, _is_debug>&;
-			using Node			= MctsNode<State, Action, Result, _is_debug>;			//MctsNode
+		public:		
+			using Node = MctsNode<State, Action, Result, _is_debug>;					//MctsNode
+			using pointer       = Node*;
+			using reference     = Node&;
 			using Allocator		= gadt::stl::StackAllocator<Node, _is_debug>;			//Allocate 
 			using ActionSet		= std::vector<Action>;									//ActionSet is the set of Action.
 			using NodePtrSet	= std::vector<pointer>;									//ChildSet is the set of ptrs to child nodes.
@@ -123,24 +123,33 @@ namespace gadt
 			AgentIndex		_winner_index;		//the winner index of the state.
 			uint32_t		_visited_time;		//how many times that this node had been visited.
 			uint32_t		_win_time;			//win time accmulated by the simulation.
-			uint8_t			_next_action_index;	//the index of next action.
 			ActionSet		_action_set;		//action set of this node.
+			
+			pointer			_parent_node;		//pointer to parent node
+			pointer			_fir_child_node;	//pointer to left most child node.
+			pointer			_brother_node;		//pointer to breother node.
+
 			NodePtrSet		_child_nodes;		//the ptr of child nodes.
 
 		public:
-			const State&		state()					const { return _state; }
-			const NodePtrSet&	child_set()				const { return _child_nodes; }
-			const MctsNode*		child_node(size_t i)	const { return _child_nodes[i]; }
-			const ActionSet&	action_set()			const { return _action_set; }
-			const Action&		action(size_t i)		const { return _action_set[i]; }
-			size_t				action_num()			const { return _action_set.size(); }
-			AgentIndex			winner_index()			const { return _winner_index; }
-			uint32_t			visited_time()			const { return _visited_time; }
-			uint32_t			win_time()				const { return _win_time; }
-			uint8_t				next_action_index()		const { return _next_action_index; }
-			size_t				child_num()				const { return _child_nodes.size(); }
-			
+			const State&        state()               const { return _state; }
+			const NodePtrSet&   child_set()	          const { return _child_nodes; }
+			const MctsNode*     child_node(size_t i)  const { return _child_nodes[i]; }
+			const ActionSet&    action_set()          const { return _action_set; }
+			const Action&       action(size_t i)      const { return _action_set[i]; }
+			size_t              action_num()          const { return _action_set.size(); }
+			AgentIndex          winner_index()        const { return _winner_index; }
+			uint32_t            visited_time()        const { return _visited_time; }
+			uint32_t            win_time()            const { return _win_time; }
 
+			pointer             parent_node()         const { return _parent_node; }
+			pointer             fir_child_node()      const { return _fir_child_node; }
+			pointer				brother_node()        const { return _brother_node; }
+
+			bool                exist_parent_node()   const { return _parent_node == nullptr; }
+			bool                exist_child_node()    const { return _fir_child_node != nullptr; }
+			bool			    exist_brother_node()  const { return _brother_node != nullptr; }
+			
 		private:
 			//a value means no winner, which is differ from any other AgentIndex.
 			static const AgentIndex _no_winner_index = 0;
@@ -149,13 +158,17 @@ namespace gadt
 			//exist unactived action in the action set.
 			inline bool exist_unactivated_action() const
 			{
-				return _next_action_index < _action_set.size();
+				if (_action_set.size() == 0)
+					return false;
+				else if (_action_set.size() == child_num())
+					return false;
+				return true;
 			}
 
 			//get next action.
 			inline const Action& next_action()
 			{
-				return _action_set[_next_action_index];
+				return _action_set[child_num()];
 			}
 
 			//set the ptr of next child.
@@ -326,6 +339,23 @@ namespace gadt
 			inline bool is_end_state() const
 			{
 				return _winner_index != _no_winner_index;
+			}
+
+			//get child num
+			size_t child_num() const
+			{
+				size_t num = 0;
+				if (exist_child_node())
+				{
+					Node* node = fir_child_node();
+					num++;
+					while (node->exist_brother_node())
+					{
+						node = node->brother_node();
+						num++;
+					}
+				}
+				return num;
 			}
 
 			//get info of this node.
@@ -822,5 +852,10 @@ namespace gadt
 			}
 		};
 
+		template<typename State, typename Action, typename Result, bool _is_debug = false>
+		class LockFreeMonteCarloTreeSearch
+		{
+
+		};
 	}
 }
