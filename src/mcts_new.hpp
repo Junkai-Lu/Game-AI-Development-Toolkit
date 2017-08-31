@@ -115,7 +115,6 @@ namespace gadt
 			using reference     = Node&;
 			using Allocator		= gadt::stl::StackAllocator<Node, _is_debug>;			//Allocate 
 			using ActionSet		= std::vector<Action>;									//ActionSet is the set of Action.
-			using NodePtrSet	= std::vector<pointer>;									//ChildSet is the set of ptrs to child nodes.
 			using FuncPackage	= MctsFuncPackage<State, Action, Result, _is_debug>;	
 
 		private:
@@ -129,12 +128,8 @@ namespace gadt
 			pointer			_fir_child_node;	//pointer to left most child node.
 			pointer			_brother_node;		//pointer to breother node.
 
-			NodePtrSet		_child_nodes;		//the ptr of child nodes.
-
 		public:
 			const State&        state()               const { return _state; }
-			const NodePtrSet&   child_set()	          const { return _child_nodes; }
-			const MctsNode*     child_node(size_t i)  const { return _child_nodes[i]; }
 			const ActionSet&    action_set()          const { return _action_set; }
 			const Action&       action(size_t i)      const { return _action_set[i]; }
 			size_t              action_num()          const { return _action_set.size(); }
@@ -146,7 +141,7 @@ namespace gadt
 			pointer             fir_child_node()      const { return _fir_child_node; }
 			pointer				brother_node()        const { return _brother_node; }
 
-			bool                exist_parent_node()   const { return _parent_node == nullptr; }
+			bool                exist_parent_node()   const { return _parent_node != nullptr; }
 			bool                exist_child_node()    const { return _fir_child_node != nullptr; }
 			bool			    exist_brother_node()  const { return _brother_node != nullptr; }
 			
@@ -171,18 +166,6 @@ namespace gadt
 				return _action_set[child_num()];
 			}
 
-			//set the ptr of next child.
-			inline void set_next_child(Node* ptr)
-			{
-				_child_nodes[_next_action_index] = ptr;
-			}
-
-			//move the cursor to next action.
-			inline void to_next_action()
-			{
-				_next_action_index++;
-			}
-
 			//increase visited time.
 			inline void incr_visited_time()
 			{
@@ -199,38 +182,41 @@ namespace gadt
 			void FreeFromAllocator(Allocator& allocator)
 			{
 				//free all child node if possible.
-				for (auto p : _child_nodes)
+				if (brother_node() != nullptr)
 				{
-					if (p != nullptr)
-					{
-						p->FreeFromAllocator(allocator);
-					}
+					brother_node()->FreeFromAllocator(allocator);
+				}
+
+				if (fir_child_node() != nullptr)
+				{
+					fir_child_node()->FreeFromAllocator(allocator);
 				}
 
 				//free the node itself.
 				if (is_debug())
 				{
-					bool b = allocator.free(this);
+					bool b = allocator.destory(this);
 					GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, b == false, "MCTS105: free child node failed.");
 				}
 				else
 				{
-					allocator.free(this);
+					allocator.destory(this);
 				}
 			}
 
 		public:
-			MctsNode(const State& state, const FuncPackage& func) :
+			MctsNode(const State& state, pointer parent_node, const FuncPackage& func) :
 				_state(state),
 				_winner_index(func.DetemineWinner(state)),
 				_visited_time(1),
 				_win_time(0),
-				_next_action_index(0)
+				_parent_node(parent_node),
+				_fir_child_node(nullptr),
+				_brother_node(nullptr)
 			{
 				if (!is_end_state())
 				{
 					func.MakeAction(_state, _action_set);
-					_child_nodes.resize(_action_set.size(), nullptr);
 				}
 			}
 
@@ -248,91 +234,115 @@ namespace gadt
 			//4.the simulation result is back propagated through the selected nodes to update their statistics.
 			void BackPropagation(const Result& result, const FuncPackage& func)
 			{
+				//update node if allow.
 				if (func.AllowUpdateValue(_state, result))
 				{
 					incr_win_time();
 				}
+
+				//update parent node.
+				if (exist_parent_node())
+				{
+					parent_node()->BackPropagation(result, func);
+				}
 			}
 
 			//3.simulation is run from the new node according to the default policy to produce a result.
-			void SimulationProcess(Result& result, const FuncPackage& func)
+			Result SimulationProcess(const FuncPackage& func)
 			{
 				State state = _state;	//copy
 				ActionSet actions;
-				for (size_t i = 0;;i++)
+				for (size_t i = 0;; i++)
 				{
-					if (is_debug()){GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, i > _default_policy_warning_length, "MCTS103: out of default policy process max length.");}
+					GADT_CHECK_WARNING(is_debug(), i > _default_policy_warning_length, "MCTS103: out of default policy process max length.");
+
+					//detemine winner
 					AgentIndex winner = func.DetemineWinner(state);
+
+					//return result if exist.
 					if (winner != _no_winner_index)
 					{
-						result = func.StateToResult(state, winner);
-						break;
+						return func.StateToResult(state, winner);
 					}
+
+					//generate new actions.
 					actions.clear();
 					func.MakeAction(state, actions);
+
+					//choose action by default policy.
 					const Action& action = func.DefaultPolicy(actions);
+
+					//state update.
 					state = func.GetNewState(state, action);
 				}
-
-				BackPropagation(result, func);		//update the new value itself.
+				return func.StateToResult(_state, _no_winner_index);
 			}
 
 			//2.one child node would be added to expand the tree, acccording to the available actions.
-			void Expandsion(Result& result, Allocator& allocator ,const FuncPackage& func)
+			void Expandsion(Allocator& allocator ,const FuncPackage& func)
 			{
 				if (is_end_state())
 				{
-					result = func.StateToResult(_state, _winner_index);//return the result of this node.
-					return;
+					Result result = func.StateToResult(_state, _winner_index);//return the result of this node.
+					BackPropagation(result, func);
+					return; //back propagate from this node to root.
 				}
 				else
 				{
-					Node* new_node = allocator.construct(func.GetNewState(_state, next_action()),func);
-					set_next_child(new_node);
-					to_next_action();
-					new_node->SimulationProcess(result, func);
+					volatile const size_t new_child_index = child_num();
+					if (new_child_index < _action_set.size())
+					{
+						//create new node.
+						pointer new_node = allocator.construct(func.GetNewState(_state, _action_set[new_child_index]), this, func);
+						Result result = new_node->SimulationProcess(func);
+						new_node->_parent_node = this;
+
+						//link to father. return if link failed.
+						if (!link_as_child(new_child_index, new_node)) { return; }
+						new_node->BackPropagation(result, func);
+					}
+					return; //fialed to find the next expandable child node, return;
 				}
 			}
 
 			//1. select the most urgent expandable node,and get the result to update statistic.
-			void Selection(Result& result, Allocator& allocator,const FuncPackage& func)
+			void Selection(Allocator& allocator,const FuncPackage& func)
 			{
 				incr_visited_time();
 
 				if (is_end_state())
 				{
-					func.StateToResult(_state, result);
+					Result result = func.StateToResult(_state, _winner_index);
+					BackPropagation(result, func);
 				}
 				else
 				{
 					if (exist_unactivated_action())
 					{
-						Expandsion(result, allocator, func);
+						Expandsion(allocator, func);
 					}
 					else
 					{
-						if (is_debug()) { GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, _child_nodes.size() == 0, "MCTS106: empty action set during tree policy."); }
-						Node* max_ucb_child_node = _child_nodes[0];
+						GADT_CHECK_WARNING(is_debug(), _action_set.size() == 0, "MCTS106: empty action set during tree policy.");
+
+						pointer max_ucb_child_node = fir_child_node();
 						UcbValue max_ucb_value = 0;
-						for (size_t i = 0; i < _child_nodes.size(); i++)
+
+						pointer node = fir_child_node();
+						while(node != nullptr)
 						{
-							if (_child_nodes[i] != nullptr)
+							UcbValue child_node_ucb_value = func.TreePolicyValue(*this, *node);
+							if (child_node_ucb_value > max_ucb_value)
 							{
-								UcbValue child_node_ucb_value = func.TreePolicyValue(*this, *_child_nodes[i]);
-								if (child_node_ucb_value > max_ucb_value)
-								{
-									max_ucb_child_node = _child_nodes[i];
-									max_ucb_value = child_node_ucb_value;
-								}
+								max_ucb_child_node = node;
+								max_ucb_value = child_node_ucb_value;
 							}
+							node = node->brother_node();
 						}
-						if (is_debug()) { GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, max_ucb_child_node == nullptr, "MCTS108: best child node pointer is nullptr."); }
-						max_ucb_child_node->Selection(result, allocator, func);
+						GADT_CHECK_WARNING(is_debug(), max_ucb_child_node == nullptr, "MCTS108: best child node pointer is nullptr.");
+						max_ucb_child_node->Selection(allocator, func);
 					}
 				}
-
-				//backpropagation process for this node.update value;
-				BackPropagation(result, func);
 			}
 
 			//return true if the state is the terminal-state of the game.
@@ -356,6 +366,29 @@ namespace gadt
 					}
 				}
 				return num;
+			}
+
+			//get child node by index.
+			bool link_as_child(size_t index, pointer node)
+			{
+				if (index == 0)
+				{
+					_fir_child_node = node;
+				}
+				else
+				{
+					pointer* p = &_fir_child_node;
+					for (size_t i = 0; i < index; i++)
+					{
+						if ((*p) == nullptr)
+						{
+							return false;
+						}
+						p = &((*p)->_brother_node);
+					}
+					*p = node;
+				}
+				return true;
 			}
 
 			//get info of this node.
@@ -526,14 +559,12 @@ namespace gadt
 				visual_node.add_value(CHILD_NUM_NAME, search_node.child_num());
 				visual_node.add_value(IS_TERMIANL_NAME, search_node.is_end_state());
 				visual_node.add_value(STATE_NAME, _StateToStr(search_node.state()));
-				for (size_t i = 0;i<search_node.child_num();i++)
+				auto node_ptr = search_node.fir_child_node();
+				while(node_ptr != nullptr)
 				{
-					auto node_ptr = search_node.child_node(i);
-					if (node_ptr != nullptr)
-					{
-						visual_node.create_child();
-						convert_node(*search_node.child_node(i), *visual_node.last_child());
-					}
+					visual_node.create_child();
+					convert_node(*node_ptr, *visual_node.last_child());
+					node_ptr = node_ptr->brother_node();
 				}
 			}
 
@@ -578,7 +609,6 @@ namespace gadt
 			using ActionSet		= typename Node::ActionSet;								//set of Action
 
 		private:
-			using NodePtrSet    = typename Node::NodePtrSet;							//set of ptrs to child nodes.
 			using Allocator     = typename Node::Allocator;								//allocator of nodes
 			using LogController = log::SearchLogger<State, Action, Result>;				//log controller
 			using JsonConvert   = MctsJsonConvertor<State, Action, Result, _is_debug>;	//json tree
@@ -640,7 +670,7 @@ namespace gadt
 						  << "[MCTS] info = " << info() << std::endl;
 				}
 
-				Node* root_node = _allocator.construct(root_state, _func_package);
+				Node* root_node = _allocator.construct(root_state, nullptr, _func_package);
 				ActionSet root_actions = root_node->action_set();
 				timer::TimePoint start_tp;
 				size_t iteration_time = 0;
@@ -671,15 +701,11 @@ namespace gadt
 					}
 
 					//excute next.
-					Result new_result;
-					root_node->Selection(new_result, _allocator, _func_package);
+					root_node->Selection(_allocator, _func_package);
 				}
 
 				//return the best result
-				if (is_debug()) 
-				{
-					GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, root_actions.size() == 0, "MCTS101: root node do not exist any available action."); 
-				}
+				GADT_CHECK_WARNING(is_debug(), root_actions.size() == 0, "MCTS101: root node do not exist any available action.");
 
 				//output log if enabled.
 				if (log_enabled())
@@ -698,10 +724,10 @@ namespace gadt
 				//select best action.
 				UcbValue max_value = 0;
 				size_t max_value_node_index = 0;
+				Node* child_ptr = root_node->fir_child_node();
+				GADT_CHECK_WARNING(is_debug(), root_node->fir_child_node() == nullptr, "MCTS107: empty child node under root node.");
 				for (size_t i = 0; i < root_actions.size(); i++)
 				{
-					auto child_ptr = root_node->child_node(i);
-					if (is_debug()) { GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, root_node->child_node(0) == nullptr, "MCTS107: empty child node under root node."); }
 					if (_log_controller.log_enabled())
 					{
 						logger() << "action " << i << ": "<< _log_controller.action_to_str_func()(root_actions[i])<<", value: ";
@@ -720,6 +746,8 @@ namespace gadt
 					{
 						if (log_enabled()) { logger() << "[ deleted ]" << std::endl; }
 					}
+					child_ptr = child_ptr->brother_node();
+					if (child_ptr == nullptr) { break; }
 				}
 
 				if (log_enabled()) 

@@ -348,10 +348,10 @@ namespace gadt
 				tic_tac_toe::StateToResult,
 				tic_tac_toe::AllowUpdateValue
 			);
-			mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> node(state, func);
+			mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> node(state, nullptr, func);
 			gadt::stl::StackAllocator<mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>, true> alloc(100);
 
-			auto p = alloc.construct(state, func);
+			auto p = alloc.construct(state, nullptr, func);
 			GADT_ASSERT(node.action_num(), 9);
 			GADT_ASSERT(p->action_num(), 9);
 		}
