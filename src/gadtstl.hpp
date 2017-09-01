@@ -773,12 +773,12 @@ namespace gadt
 		class ActionPool
 		{
 		private:
-			using List = List<Action, _is_debug>;
-			using pointer = typename List::pointer;
-			using Allocator = typename List::Allocator;
+			using ActionList = List<Action, _is_debug>;
+			using pointer = typename ActionList::pointer;
+			using Allocator = typename ActionList::Allocator;
 
 		private:
-			List _action_list;
+			ActionList _action_list;
 
 		public:
 			

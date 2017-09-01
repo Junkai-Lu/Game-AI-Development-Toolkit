@@ -399,11 +399,11 @@ namespace gadt
 				ss << "{ visited:" << visited_time() << " win:" << win_time() <<" avg:" << avg << " child";
 				if (exist_unactivated_action())
 				{
-					ss << next_action_index() << "/" << action_set().size();
+					ss << child_num() << "/" << action_set().size();
 				}
 				else
 				{
-					ss << child_set().size() << "/" << child_set().size();
+					ss << action_set().size() << "/" << action_set().size();
 				}
 				ss << " }";
 				return ss.str();
