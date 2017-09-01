@@ -69,23 +69,39 @@ namespace gadt
 		*/
 		struct MctsSetting
 		{
-			double	timeout;			//set timeout (seconds).
-			size_t	max_iteration;		//set max iteration times.
-			bool	gc_enabled;			//allow garbage collection if the tree run out of memory.
+			double		timeout;					//set timeout (seconds).
+			size_t		max_iteration;				//set max iteration times.
+			size_t		thread_num;					//thread num.
+			bool		max_node_per_thread;		//pre-allocated memory for each thread.
+			AgentIndex	no_winner_index;			//agent index of no winner.
+			size_t		simulation_warning_length;	//if the simulation length out of this value, it would throw a warning if is debug.
 
 			//default setting constructor.
 			MctsSetting() :
 				timeout(30),
 				max_iteration(10000),
-				gc_enabled(false)
+				thread_num(1),
+				max_node_per_thread(10000),
+				no_winner_index(0),
+				simulation_warning_length(1000)
 			{
 			}
 
 			//custom setting constructor.
-			MctsSetting(double _timeout, size_t _max_iteration, bool _gc_enabled) :
+			MctsSetting(
+				double _timeout, 
+				size_t _max_iteration, 
+				size_t _thread_num,	
+				bool _max_node_per_thread,
+				AgentIndex _no_winner_index,
+				size_t _simulation_warning_length
+			) :
 				timeout(_timeout),
 				max_iteration(_max_iteration),
-				gc_enabled(_gc_enabled)
+				thread_num(_thread_num),
+				max_node_per_thread(_max_node_per_thread),
+				no_winner_index(_no_winner_index),
+				simulation_warning_length(_simulation_warning_length)
 			{
 			}
 		};
@@ -248,19 +264,19 @@ namespace gadt
 			}
 
 			//3.simulation is run from the new node according to the default policy to produce a result.
-			Result SimulationProcess(const FuncPackage& func)
+			Result SimulationProcess(const FuncPackage& func, const MctsSetting& setting)
 			{
 				State state = _state;	//copy
 				ActionSet actions;
 				for (size_t i = 0;; i++)
 				{
-					GADT_CHECK_WARNING(is_debug(), i > _default_policy_warning_length, "MCTS103: out of default policy process max length.");
+					GADT_CHECK_WARNING(is_debug(), i > setting.simulation_warning_length, "MCTS103: out of default policy process max length.");
 
 					//detemine winner
 					AgentIndex winner = func.DetemineWinner(state);
 
 					//return result if exist.
-					if (winner != _no_winner_index)
+					if (winner != setting.no_winner_index)
 					{
 						return func.StateToResult(state, winner);
 					}
@@ -279,7 +295,7 @@ namespace gadt
 			}
 
 			//2.one child node would be added to expand the tree, acccording to the available actions.
-			void Expandsion(Allocator& allocator ,const FuncPackage& func)
+			void Expandsion(Allocator& allocator ,const FuncPackage& func, const MctsSetting& setting)
 			{
 				if (is_end_state())
 				{
@@ -306,7 +322,7 @@ namespace gadt
 			}
 
 			//1. select the most urgent expandable node,and get the result to update statistic.
-			void Selection(Allocator& allocator,const FuncPackage& func)
+			void Selection(Allocator& allocator,const FuncPackage& func, const MctsSetting& setting)
 			{
 				incr_visited_time();
 
@@ -616,10 +632,8 @@ namespace gadt
 
 		private:
 			FuncPackage		_func_package;			//function package of the search.
-			MctsSetting		_setting;				//mcts setting.
+			MctsSetting		_setting;			//monte carlo tree search setting.
 			LogController	_log_controller;		//controller of the logs.
-			Allocator&		_allocator;				//the allocator for the search.
-			const bool		_private_allocator;		//use private allocator.
 
 		private:
 
@@ -755,10 +769,7 @@ namespace gadt
 					logger() << "[MCTS] best action index: "<< max_value_node_index << std::endl;
 				}
 
-				if (is_debug()) 
-				{
-					GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, root_actions.size() == 0, "MCTS102: best value for root node equal to 0."); 
-				}
+				GADT_CHECK_WARNING(is_debug(), root_actions.size() == 0, "MCTS102: best value for root node equal to 0.");
 
 				return root_actions[max_value_node_index];
 			}
@@ -770,8 +781,7 @@ namespace gadt
 				typename FuncPackage::MakeActionFunc		_MakeAction,
 				typename FuncPackage::DetemineWinnerFunc	_DetemineWinner,
 				typename FuncPackage::StateToResultFunc		_StateToResult,
-				typename FuncPackage::AllowUpdateValueFunc	_AllowUpdateValue,
-				size_t max_node
+				typename FuncPackage::AllowUpdateValueFunc	_AllowUpdateValue
 			):
 				_func_package(
 					_GetNewState,
@@ -780,45 +790,17 @@ namespace gadt
 					_StateToResult,
 					_AllowUpdateValue
 				),
-				_allocator(*(new Allocator(max_node))),
-				_private_allocator(true)
+				_setting(),
+				_log_controller()
 			{
 			}
 
-			//use public allocator.
-			MonteCarloTreeSearch(
-				typename FuncPackage::GetNewStateFunc		_GetNewState,
-				typename FuncPackage::MakeActionFunc		_MakeAction,
-				typename FuncPackage::DetemineWinnerFunc	_DetemineWinner,
-				typename FuncPackage::StateToResultFunc		_StateToResult,
-				typename FuncPackage::AllowUpdateValueFunc	_AllowUpdateValue,
-				Allocator allocator
-			):
-				_func_package(
-					_GetNewState,
-					_MakeAction,
-					_DetemineWinner,
-					_StateToResult,
-					_AllowUpdateValue
-				),
-				_allocator(allocator),
-				_private_allocator(false)
-			{
-			}
 
 			//use private allocator.
 			MonteCarloTreeSearch(FuncPackage function_package, size_t max_node) :
 				_func_package(function_package),
-				_allocator(*(new Allocator(max_node))),
-				_private_allocator(true)
-			{
-			}
-
-			//use public allocator.
-			MonteCarloTreeSearch(FuncPackage function_package, Allocator allocator) :
-				_func_package(function_package),
-				_allocator(allocator),
-				_private_allocator(false)
+				_setting(),
+				_log_controller()
 			{
 			}
 
@@ -831,15 +813,8 @@ namespace gadt
 				}
 			}
 
-			//do search with default setting.
-			Action DoMcts(const State root_state)
-			{
-				_setting = MctsSetting();
-				return ExcuteMCTS(root_state);
-			}
-
 			//do search with custom setting.
-			Action DoMcts(const State root_state, MctsSetting setting)
+			inline Action DoMcts(const State root_state, MctsSetting setting = MctsSetting())
 			{
 				_setting = setting;
 				return ExcuteMCTS(root_state);

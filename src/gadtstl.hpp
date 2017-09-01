@@ -166,6 +166,12 @@ namespace gadt
 
 	namespace stl
 	{
+		template<typename T, bool _is_debug>
+		class AllocatorBase
+		{
+
+		};
+
 		/*
 		* StackAllocator is a memory allocator, whose memory is preallocate at the time when the object is created.
 		* its memory is allocated by stack, all the element in it can be opearted.
