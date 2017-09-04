@@ -357,22 +357,25 @@ namespace gadt
 		}
 		void TestMctsSearch()
 		{
-			const size_t max_node = 1000;
-			const size_t max_iteration = 1000;
-			const double timeout = 100;
+			mcts_new::MctsSetting setting;
+			setting.thread_num = 2;
+			setting.max_node_per_thread = 10000;
+			setting.max_iteration_per_thread = 10000;
+			setting.timeout = 0;
+
 			mcts_new::MonteCarloTreeSearch<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mcts
 			(
 				tic_tac_toe::GetNewState,
 				tic_tac_toe::MakeAction,
 				tic_tac_toe::DetemineWinner,
 				tic_tac_toe::StateToResult,
-				tic_tac_toe::AllowUpdateValue,
-				max_node
+				tic_tac_toe::AllowUpdateValue
 			);
 			mcts.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr);
 			mcts.EnableJsonOutput();
+			mcts.EnableLog();
 			tic_tac_toe::State state;
-			tic_tac_toe::Action action = mcts.DoMcts(state, { timeout, max_iteration, false });
+			tic_tac_toe::Action action = mcts.DoMcts(state, setting);
 			GADT_ASSERT((action.x == action.y || (action.x == 0 && action.y == 0) || (action.x == 0 && action.y == 2)), true);
 		}
 		void TestVisualTree()
@@ -540,7 +543,7 @@ namespace gadt
 				tic_tac_toe::DetemineWinner, 
 				tic_tac_toe::EvalForParent
 				);
-			//minimax.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr);
+			minimax.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr);
 			//minimax.EnableJsonOutput();
 			//minimax.EnableLog();
 			tic_tac_toe::State state;
@@ -558,6 +561,7 @@ namespace gadt
 				GADT_ASSERT(pool[i], i);
 				GADT_ASSERT(pool.get_element(i), i);
 			}
+			//std::cout << pool.info();
 			GADT_ASSERT(pool.size(), ub);
 			GADT_ASSERT(pool.random() > 0, true);
 		}

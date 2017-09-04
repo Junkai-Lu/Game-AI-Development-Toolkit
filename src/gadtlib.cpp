@@ -248,11 +248,13 @@ namespace gadt
 			const size_t space_before_line_size = 4;
 			std::string space_before_line(space_before_line_size, ' ');
 			
+			os << std::endl;
+
 			//print indexs upper the table.
-			if (enable_index)
+			
+			if (enable_index )
 			{
-				os << space_before_line;
-				os << " ";
+				os << space_before_line << " ";
 				for (size_t column = 0; column < _column_size; column++)
 				{
 					std::string index = console::IntergerToString(column + 1);
@@ -261,9 +263,34 @@ namespace gadt
 				os << std::endl;
 			}
 
+			//print title
+			if (_enable_title)
+			{
+				size_t str_width = 1;
+				for (auto w : _column_width) { str_width += (w *2 + 1); }
+				str_width -= 2;
+				os << space_before_line << frame[0];
+				os << std::string(str_width, frame[1]);
+				os << frame[0] << std::endl;
+
+				os << space_before_line << frame[2];
+				if (_title_cell.str.length() >= str_width)
+				{
+					cell_cb(_title_cell, os, str_width);
+				}
+				else
+				{
+					size_t before_space = (str_width - _title_cell.str.length()) / 2;
+					size_t after_space = str_width - _title_cell.str.length() - before_space;
+					os << std::string(before_space, ' ');
+					cell_cb(_title_cell, os, str_width);
+					os << std::string(after_space, ' ');
+				}
+				os << frame[2] << std::endl;
+			}
+
 			//print upper line of the table.
-			if (enable_index) { os << space_before_line; }
-			os << frame[0];
+			os << space_before_line << frame[0];
 			for (size_t column = 0; column < _column_size; column++)
 			{
 				os << std::string(_column_width[column] * 2, frame[1]) << frame[0];
@@ -280,6 +307,10 @@ namespace gadt
 				{
 					std::string index = console::IntergerToString(row + 1);
 					os << ' ' << index << std::string(space_before_line_size - index.length() - 1, ' ');
+				}
+				else
+				{
+					os << space_before_line;
 				}
 				os << frame[2];
 				for (size_t column = 0; column < _column_size; column++)
@@ -299,12 +330,7 @@ namespace gadt
 				}
 
 				//print second line
-				if (enable_index)
-				{
-					os << space_before_line;
-				}
-				os << frame[0];
-				
+				os << space_before_line << frame[0];
 				for (size_t column = 0; column < _column_size; column++)
 				{
 					os << std::string(_column_width[column] * 2, frame[1]);

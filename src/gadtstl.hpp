@@ -822,16 +822,26 @@ namespace gadt
 		template<typename T>
 		struct RandomPoolElement
 		{
+			//left is close and right is open. 
 			const size_t weight;
-			const size_t lower_limit;
+			const size_t left;
+			const size_t right;
 			T data;
 
 			template<class... Types>
-			RandomPoolElement(size_t _weight, size_t _lower_limit, Types&&... args) :
+			RandomPoolElement(size_t _weight, size_t _left, size_t _right, Types&&... args) :
 				weight(_weight),
-				lower_limit(_lower_limit),
+				left(_left),
+				right(_right),
 				data(std::forward<Types>(args)...)
 			{
+			}
+
+			std::string range() const
+			{
+				std::stringstream ss;
+				ss << "[ " << left << " , " << right << " )";
+				return ss.str();
 			}
 		};
 
@@ -883,7 +893,7 @@ namespace gadt
 			//add new element by copy.
 			inline bool add(size_t weight, T data)
 			{
-				if (_ele_alloc.construct_next(weight, _accumulated_range, data))
+				if (_ele_alloc.construct_next(weight, _accumulated_range, _accumulated_range + weight, data))
 				{
 					_accumulated_range += weight;
 					return true;
@@ -895,7 +905,7 @@ namespace gadt
 			template<class... Types>
 			inline bool add(size_t weight, Types&&... args)
 			{
-				if(_ele_alloc.construct_next(weight, _accumulated_range, std::forward<Types>(args)...))
+				if (_ele_alloc.construct_next(weight, _accumulated_range, _accumulated_range + weight, std::forward<Types>(args)...))
 				{
 					_accumulated_range += weight;
 					return true;
@@ -936,7 +946,7 @@ namespace gadt
 				size_t rnd = rand() % _accumulated_range;
 				for (size_t i = 0; i < size(); i++)
 				{
-					if (_ele_alloc[i]->lower_limit >= rnd)
+					if (rnd >= _ele_alloc[i]->left && rnd < _ele_alloc[i]->right)
 					{
 						return _ele_alloc[i]->data;
 					}
@@ -951,10 +961,30 @@ namespace gadt
 				return _ele_alloc.size();
 			}
 
+			//get info of the random pool
+			std::string info() const
+			{
+				table::ConsoleTable tb(3, _ele_alloc.size()+1);
+				tb.set_cell_in_row(0, { {"index"},{"weight"},{"range"} });
+				tb.set_width({ 6,6,10 });
+				tb.enable_title({ "random pool" });
+				for (size_t i = 0; i < _ele_alloc.size(); i++)
+				{
+					tb.set_cell_in_row(i + 1, { 
+						{console::ToString(i)},
+						{console::ToString(get_weight(i))},
+						{_ele_alloc.element(i)->range()}
+					});
+				}
+				return tb.output_string();
+			}
+
 			const reference operator[](size_t index)
 			{
 				return get_element(index);
 			}
+
+			
 		};
 	}
 }

@@ -78,6 +78,19 @@ namespace gadt
 				no_winner_index(_no_winner_index)
 			{
 			}
+
+			std::string info() const
+			{
+				table::ConsoleTable tb(2, 5);
+				tb.set_width({ 12,6 });
+				tb.enable_title({ "MINIMAX SETTING" });
+				tb.set_cell_in_row(0, { { "timeout" },			{ console::ToString(timeout) } });
+				tb.set_cell_in_row(1, { { "max_depth" },		{ console::ToString(max_depth) } });
+				tb.set_cell_in_row(2, { { "ab_prune_enabled" },	{ console::ToString(ab_prune_enabled) } });
+				tb.set_cell_in_row(3, { { "no_winner_index" },	{ console::ToString(no_winner_index) } });
+				tb.set_cell_in_row(4, { { "original_eval" },	{ console::ToString(original_eval) } });
+				return tb.output_string();
+			}
 		};
 
 		/*
@@ -232,18 +245,6 @@ namespace gadt
 				return _is_debug;
 			}
 
-			//get info of this search.
-			std::string info() const
-			{
-				std::stringstream ss;
-				ss << std::boolalpha << "{" << std::endl
-					<< "    timeout: " << _setting.timeout << std::endl
-					<< "    max_depth: " << _setting.max_depth << std::endl
-					<< "    ab_prune_enabled: " << _setting.ab_prune_enabled << std::endl
-					<< "}" << std::endl;
-				return ss.str();
-			}
-
 			//get reference of log ostream
 			inline std::ostream& logger()
 			{
@@ -347,14 +348,13 @@ namespace gadt
 				Node root(state, _func, _setting);
 				VisualNodePtr root_visual_node = nullptr;
 
-				if (is_debug())
-				{
-					GADT_CHECK_WARNING(g_MINIMAX_ENABLE_WARNING, root.is_terminal_state(), "MM102: execute search for terminal state.");
-				}
+				GADT_CHECK_WARNING(is_debug(), root.is_terminal_state(), "MM102: execute search for terminal state.");
 
 				if (log_enabled())
 				{
-					logger() << ">> Minimax Search start" << std::endl;
+					logger() << "[ Minimax Search ]" << std::endl;
+					logger() << _setting.info();
+					logger() << std::endl << ">> Executing Minimax Search......" << std::endl;
 				}
 
 				if (json_output_enabled())
@@ -386,6 +386,7 @@ namespace gadt
 				if (log_enabled())
 				{
 					table::ConsoleTable tb(4, root.action_set().size() + 1);
+					tb.enable_title({ "MINIMAX RESULT" });
 					tb.set_cell_in_row(0, { {"Index" }, {"Action"},{"Eval"},{"Is Best"} });
 					tb.set_width({ 3,10,4,4 });
 					for (size_t i = 0; i < root.action_set().size(); i++)
@@ -394,7 +395,7 @@ namespace gadt
 							{ console::IntergerToString(i) },
 							{ _log_controller.action_to_str_func()(root.action_set()[i])},
 							{ console::DoubleToString(eval_set[i])},
-							{ i == best_action_index ? "Y ":"  "}
+							{ i == best_action_index ? "Yes ":"  "}
 						});
 					}
 					logger() << tb.output_string(true, false) << std::endl;

@@ -70,17 +70,17 @@ namespace gadt
 		struct MctsSetting
 		{
 			double		timeout;					//set timeout (seconds).
-			size_t		max_iteration;				//set max iteration times.
 			size_t		thread_num;					//thread num.
-			bool		max_node_per_thread;		//pre-allocated memory for each thread.
+			size_t		max_iteration_per_thread;	//set max iteration times.
+			size_t		max_node_per_thread;		//pre-allocated memory for each thread.
 			AgentIndex	no_winner_index;			//agent index of no winner.
 			size_t		simulation_warning_length;	//if the simulation length out of this value, it would throw a warning if is debug.
 
 			//default setting constructor.
 			MctsSetting() :
 				timeout(30),
-				max_iteration(10000),
 				thread_num(1),
+				max_iteration_per_thread(10000),
 				max_node_per_thread(10000),
 				no_winner_index(0),
 				simulation_warning_length(1000)
@@ -90,19 +90,34 @@ namespace gadt
 			//custom setting constructor.
 			MctsSetting(
 				double _timeout, 
-				size_t _max_iteration, 
 				size_t _thread_num,	
+				size_t _max_iteration_per_thread,
 				bool _max_node_per_thread,
-				AgentIndex _no_winner_index,
-				size_t _simulation_warning_length
+				AgentIndex _no_winner_index = 0,
+				size_t _simulation_warning_length = 1000
 			) :
 				timeout(_timeout),
-				max_iteration(_max_iteration),
 				thread_num(_thread_num),
+				max_iteration_per_thread(_max_iteration_per_thread),
 				max_node_per_thread(_max_node_per_thread),
 				no_winner_index(_no_winner_index),
 				simulation_warning_length(_simulation_warning_length)
 			{
+			}
+
+			//output print with str behind each line.
+			std::string info() const
+			{
+				table::ConsoleTable tb(2, 6);
+				tb.set_width({ 12,6 });
+				tb.enable_title({"MCTS SETTING"});
+				tb.set_cell_in_row(0, { { "timeout" },					{ console::ToString(timeout) } });
+				tb.set_cell_in_row(1, { { "thread_num" },				{ console::ToString(thread_num) } });
+				tb.set_cell_in_row(2, { { "max_iteration_per_thread" },	{ console::ToString(max_iteration_per_thread) } });
+				tb.set_cell_in_row(3, { { "max_node_per_thread" },		{ console::ToString(max_node_per_thread) } });
+				tb.set_cell_in_row(4, { { "no_winner_index" },			{ console::ToString(no_winner_index) } });
+				tb.set_cell_in_row(5, { { "simulation_warning_length" },{ console::ToString(simulation_warning_length) } });
+				return tb.output_string();
 			}
 		};
 
@@ -126,7 +141,7 @@ namespace gadt
 		class MctsNode
 		{
 		public:		
-			using Node = MctsNode<State, Action, Result, _is_debug>;					//MctsNode
+			using Node			= MctsNode<State, Action, Result, _is_debug>;					//MctsNode
 			using pointer       = Node*;
 			using reference     = Node&;
 			using Allocator		= gadt::stl::StackAllocator<Node, _is_debug>;			//Allocate 
@@ -310,7 +325,7 @@ namespace gadt
 					{
 						//create new node.
 						pointer new_node = allocator.construct(func.GetNewState(_state, _action_set[new_child_index]), this, func);
-						Result result = new_node->SimulationProcess(func);
+						Result result = new_node->SimulationProcess(func, setting);
 						new_node->_parent_node = this;
 
 						//link to father. return if link failed.
@@ -335,7 +350,7 @@ namespace gadt
 				{
 					if (exist_unactivated_action())
 					{
-						Expandsion(allocator, func);
+						Expandsion(allocator, func, setting);
 					}
 					else
 					{
@@ -356,7 +371,7 @@ namespace gadt
 							node = node->brother_node();
 						}
 						GADT_CHECK_WARNING(is_debug(), max_ucb_child_node == nullptr, "MCTS108: best child node pointer is nullptr.");
-						max_ucb_child_node->Selection(allocator, func);
+						max_ucb_child_node->Selection(allocator, func, setting);
 					}
 				}
 			}
@@ -643,20 +658,6 @@ namespace gadt
 				return _is_debug;
 			}
 
-			//get info of this search.
-			std::string info() const
-			{
-				std::stringstream ss;
-				ss << std::boolalpha << "{" << std::endl
-					<< "    allocator: " << _allocator.info() << std::endl
-					<< "    is_private_allocator: " << _private_allocator << std::endl
-					<< "    timeout: " << _setting.timeout << std::endl
-					<< "    max_iteration: " << _setting.max_iteration << std::endl
-					<< "    enable_gc: " << _setting.gc_enabled << std::endl
-					<< "}" << std::endl;
-				return ss.str();
-			}
-
 			//get reference of log ostream
 			inline std::ostream& logger()
 			{
@@ -678,95 +679,103 @@ namespace gadt
 			//excute iteration function.
 			Action ExcuteMCTS(State root_state)
 			{
+				//outputt log.
 				if (log_enabled())
 				{
-					logger() << "[MCTS] start excute monte carlo tree search..." << std::endl
-						  << "[MCTS] info = " << info() << std::endl;
+					logger() << "[ Monte Carlo Tree Search ]" << std::endl;
+					logger() << _setting.info();
+					logger() << std::endl << ">> Executing MCTS......" << std::endl;
 				}
 
-				Node* root_node = _allocator.construct(root_state, nullptr, _func_package);
-				ActionSet root_actions = root_node->action_set();
-				timer::TimePoint start_tp;
-				size_t iteration_time = 0;
-				for (iteration_time = 0; iteration_time < _setting.max_iteration; iteration_time++)
+				//initialized
+				Node root_node(root_state, nullptr, _func_package);
+				ActionSet root_actions = root_node.action_set();
+				
+
+				//thread content
+				std::vector<Allocator> allocators;
+				std::vector<std::thread> threads;
+
+				//enable multithread.
+				for (size_t thread_id = 0; thread_id < _setting.thread_num; thread_id++)
 				{
-					//stop search if timout.
-					if (start_tp.time_since_created() > _setting.timeout && is_debug() == false)
-					{
-						break;//timeout, stop search.
-					}
-
-					//excute garbage collection if need.
-					if (_allocator.is_full())
-					{
-						if (_setting.gc_enabled)
+					allocators.push_back(std::move(Allocator(_setting.max_node_per_thread)));
+					threads.push_back(std::thread([](Node* root_node, Allocator* allocator, FuncPackage func, MctsSetting setting)->void {
+						timer::TimePoint start_tp;
+						size_t iteration_time = 0;
+						for (iteration_time = 0; iteration_time < setting.max_iteration_per_thread; iteration_time++)
 						{
-							//do garbage collection.
-
-							if (_allocator.is_full())
+							//stop search if timout.
+							if (start_tp.time_since_created() > setting.timeout && setting.timeout != 0)
 							{
-								break;//stop search if gc failed.
+								break;//timeout, stop search.
 							}
-						}
-						else
-						{
-							break;//run out of memory, stop search.
-						}
-					}
 
-					//excute next.
-					root_node->Selection(_allocator, _func_package);
+							//excute garbage collection if need.
+							if (allocator->is_full())
+							{
+								break;//run out of memory, stop search.
+							}
+
+							//excute next.
+							root_node->Selection(*allocator, func, setting);
+						}
+					}, &root_node, &allocators[thread_id], _func_package, _setting));
+				}
+
+				for (size_t i = 0; i < threads.size(); i++)
+				{
+					threads[i].join();
 				}
 
 				//return the best result
 				GADT_CHECK_WARNING(is_debug(), root_actions.size() == 0, "MCTS101: root node do not exist any available action.");
 
-				//output log if enabled.
-				if (log_enabled())
-				{
-					logger() << "[MCTS] iteration finished." << std::endl
-						<< "[MCTS] actions = {" << std::endl;
-				}
-
 				//output Json if enabled.
 				if (json_output_enabled())
 				{
-					JsonConvert(root_node, &_log_controller.visual_tree(), _log_controller.state_to_str_func());
+					JsonConvert(&root_node, &_log_controller.visual_tree(), _log_controller.state_to_str_func());
 					_log_controller.OutputJson();
 				}
 
 				//select best action.
 				UcbValue max_value = 0;
 				size_t max_value_node_index = 0;
-				Node* child_ptr = root_node->fir_child_node();
-				GADT_CHECK_WARNING(is_debug(), root_node->fir_child_node() == nullptr, "MCTS107: empty child node under root node.");
+				Node* child_ptr = root_node.fir_child_node();
+				std::vector<UcbValue> child_value_set(root_node.action_set().size());
+
+				GADT_CHECK_WARNING(is_debug(), root_node.fir_child_node() == nullptr, "MCTS107: empty child node under root node.");
 				for (size_t i = 0; i < root_actions.size(); i++)
 				{
-					if (_log_controller.log_enabled())
-					{
-						logger() << "action " << i << ": "<< _log_controller.action_to_str_func()(root_actions[i])<<", value: ";
-					}
 					if (child_ptr != nullptr)
 					{
-						UcbValue child_value = _func_package.ValueForRootNode(*child_ptr);
-						if (child_value > max_value)
+						child_value_set[i] = _func_package.ValueForRootNode(*child_ptr);
+						if (child_value_set[i] > max_value)
 						{
-							max_value = child_value;
+							max_value = child_value_set[i];
 							max_value_node_index = i;
 						}
-						if (log_enabled()) { logger() << "[" << child_value << "]" << std::endl; }
-					}
-					else
-					{
-						if (log_enabled()) { logger() << "[ deleted ]" << std::endl; }
 					}
 					child_ptr = child_ptr->brother_node();
 					if (child_ptr == nullptr) { break; }
 				}
 
-				if (log_enabled()) 
+				if (log_enabled())
 				{
-					logger() << "[MCTS] best action index: "<< max_value_node_index << std::endl;
+					table::ConsoleTable tb(4, root_node.action_set().size() + 1);
+					tb.enable_title({ "MCTS RESULT" });
+					tb.set_cell_in_row(0, { { "Index" },{ "Action" },{ "Value" },{ "Is Best" } });
+					tb.set_width({ 3,10,4,4 });
+					for (size_t i = 0; i < root_node.action_set().size(); i++)
+					{
+						tb.set_cell_in_row(i + 1, {
+							{ console::ToString(i) },
+							{ _log_controller.action_to_str_func()(root_node.action_set()[i]) },
+							{ console::ToString(child_value_set[i]) },
+							{ i == max_value_node_index ? "Yes " : "  " }
+						});
+					}
+					logger() << tb.output_string(true, false) << std::endl;
 				}
 
 				GADT_CHECK_WARNING(is_debug(), root_actions.size() == 0, "MCTS102: best value for root node equal to 0.");
@@ -807,10 +816,6 @@ namespace gadt
 			//deconstructor function
 			~MonteCarloTreeSearch()
 			{
-				if (_private_allocator)
-				{
-					delete &_allocator;
-				}
 			}
 
 			//do search with custom setting.

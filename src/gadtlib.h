@@ -69,6 +69,7 @@
 #include <stack>
 #include <queue>
 #include <memory>
+#include <thread>
 #include <functional>
 #include <type_traits>
 
@@ -156,6 +157,21 @@ namespace gadt
 			std::ostringstream os;
 			if (os << d) return os.str();
 			return "invalid conversion";
+		}
+
+		//bool convert to string.
+		inline std::string ToString(bool data)
+		{
+			return data? "true":"false";
+		}
+
+		//convert to string.
+		template<typename T>
+		inline std::string ToString(T data)
+		{
+			std::stringstream ss;
+			ss << data;
+			return ss.str();
 		}
 
 		//colorful print.
@@ -434,14 +450,21 @@ namespace gadt
 			using CellOutputFunc = std::function<void(const TableCell&, std::ostream&, size_t)>;
 			using FrameOutputFunc = std::function<void(std::string str, std::ostream&)>;
 
+			//size
 			const size_t _column_size;
 			const size_t _row_size;
-
+			
+			//cells
 			CellSet				_cells;
 			std::vector<Column> _column;
 			std::vector<Row>	_row;
 			std::vector<size_t> _column_width;
 			
+			//title
+			bool _enable_title;
+			TableCell _title_cell;
+
+			//static member.
 			static const size_t _default_width;
 
 		private:
@@ -498,6 +521,17 @@ namespace gadt
 				_column_width[column] = width;
 			}
 
+			inline void enable_title(TableCell cell)
+			{
+				_enable_title = true;
+				_title_cell = cell;
+			}
+
+			inline void disable_title()
+			{
+				_enable_title = false;
+			}
+
 			void set_width(std::initializer_list<size_t> width_list);
 
 			void set_cell_in_row(size_t row, TableCell cell);
@@ -508,9 +542,9 @@ namespace gadt
 
 			void set_cell_in_column(size_t column, std::initializer_list<TableCell> cell_list);
 
-			std::string output_string(bool enable_frame = true, bool enable_index = true);
+			std::string output_string(bool enable_frame = true, bool enable_index = false);
 
-			void print(bool enable_frame = true, bool enable_index = true);
+			void print(bool enable_frame = true, bool enable_index = false);
 		};
 	}
 }
