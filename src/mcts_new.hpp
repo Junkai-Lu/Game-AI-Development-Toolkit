@@ -144,7 +144,7 @@ namespace gadt
 			using Node			= MctsNode<State, Action, Result, _is_debug>;					//MctsNode
 			using pointer       = Node*;
 			using reference     = Node&;
-			using Allocator		= gadt::stl::StackAllocator<Node, _is_debug>;			//Allocate 
+			using Allocator		= gadt::stl::LinearAllocator<Node, _is_debug>;			//Allocate 
 			using ActionSet		= std::vector<Action>;									//ActionSet is the set of Action.
 			using FuncPackage	= MctsFuncPackage<State, Action, Result, _is_debug>;	
 
@@ -184,9 +184,11 @@ namespace gadt
 			//exist unactived action in the action set.
 			inline bool exist_unactivated_action() const
 			{
-				if (_action_set.size() == 0)
+				size_t action_size = _action_set.size();
+				volatile size_t child_size = child_num();
+				if (action_size == 0)
 					return false;
-				else if (_action_set.size() == child_num())
+				else if (action_size == child_size)
 					return false;
 				return true;
 			}
@@ -440,6 +442,19 @@ namespace gadt
 				return ss.str();
 			}
 
+			//get the size of subtree whose root node is this.
+			size_t subtree_size() const
+			{
+				size_t count = 1;
+				pointer child = fir_child_node();
+				while (child != nullptr)
+				{
+					count += child->subtree_size();
+					child = child->brother_node();
+				}
+				return count;
+			}
+
 			//return the value of _is_debug.
 			constexpr inline bool is_debug() const
 			{
@@ -679,6 +694,8 @@ namespace gadt
 			//excute iteration function.
 			Action ExcuteMCTS(State root_state)
 			{
+				timer::TimePoint tp_mcts_start;
+
 				//outputt log.
 				if (log_enabled())
 				{
@@ -691,15 +708,15 @@ namespace gadt
 				Node root_node(root_state, nullptr, _func_package);
 				ActionSet root_actions = root_node.action_set();
 				
-
 				//thread content
-				std::vector<Allocator> allocators;
+				stl::LinearAllocator<Allocator, _is_debug> allocators(_setting.thread_num);
 				std::vector<std::thread> threads;
 
+				timer::TimePoint tp_thread_start;
 				//enable multithread.
 				for (size_t thread_id = 0; thread_id < _setting.thread_num; thread_id++)
 				{
-					allocators.push_back(std::move(Allocator(_setting.max_node_per_thread)));
+					Allocator* thread_allocator = allocators.construct(_setting.max_node_per_thread);
 					threads.push_back(std::thread([](Node* root_node, Allocator* allocator, FuncPackage func, MctsSetting setting)->void {
 						timer::TimePoint start_tp;
 						size_t iteration_time = 0;
@@ -720,9 +737,10 @@ namespace gadt
 							//excute next.
 							root_node->Selection(*allocator, func, setting);
 						}
-					}, &root_node, &allocators[thread_id], _func_package, _setting));
+					}, &root_node, thread_allocator, _func_package, _setting));
 				}
 
+				//join all threads.
 				for (size_t i = 0; i < threads.size(); i++)
 				{
 					threads[i].join();
@@ -739,48 +757,81 @@ namespace gadt
 				}
 
 				//select best action.
-				UcbValue max_value = 0;
-				size_t max_value_node_index = 0;
+				UcbValue best_value = 0;
+				size_t best_node_index = 0;
 				Node* child_ptr = root_node.fir_child_node();
-				std::vector<UcbValue> child_value_set(root_node.action_set().size());
+				std::vector<Node*> child_ptr_set(root_actions.size(), nullptr);
 
 				GADT_CHECK_WARNING(is_debug(), root_node.fir_child_node() == nullptr, "MCTS107: empty child node under root node.");
 				for (size_t i = 0; i < root_actions.size(); i++)
 				{
+					child_ptr_set[i] = child_ptr;
 					if (child_ptr != nullptr)
 					{
-						child_value_set[i] = _func_package.ValueForRootNode(*child_ptr);
-						if (child_value_set[i] > max_value)
+						UcbValue child_value = _func_package.ValueForRootNode(*child_ptr);
+						if (child_value > best_value)
 						{
-							max_value = child_value_set[i];
-							max_value_node_index = i;
+							best_value = child_value;
+							best_node_index = i;
 						}
+						child_ptr = child_ptr->brother_node();
 					}
-					child_ptr = child_ptr->brother_node();
-					if (child_ptr == nullptr) { break; }
+					else 
+					{ 
+						break; 
+					}
 				}
 
 				if (log_enabled())
 				{
-					table::ConsoleTable tb(4, root_node.action_set().size() + 1);
-					tb.enable_title({ "MCTS RESULT" });
-					tb.set_cell_in_row(0, { { "Index" },{ "Action" },{ "Value" },{ "Is Best" } });
-					tb.set_width({ 3,10,4,4 });
+					std::vector<size_t> tree_size_set(root_actions.size());
+					std::vector<size_t> visit_time_set(root_actions.size());
+					std::vector<size_t> win_time_set(root_actions.size());
+					size_t total_tree_size = 0;
+					size_t total_visit_time = 0;
+					size_t total_win_time = 0;
+					for (size_t i = 0; i < child_ptr_set.size(); i++)
+					{
+						tree_size_set[i] = child_ptr_set[i]->subtree_size();
+						visit_time_set[i] = child_ptr_set[i]->visited_time();
+						win_time_set[i] = child_ptr_set[i]->win_time();
+						total_tree_size += tree_size_set[i];
+						total_visit_time += visit_time_set[i];
+						total_win_time += win_time_set[i];
+					}
+
+					//MCTS RESULT
+					table::ConsoleTable tb(7, root_node.action_set().size() + 2);
+					tb.enable_title({ "MCTS RESULT: TIME = [ " + console::ToString(tp_mcts_start.time_since_created()) + "s ]" });
+					tb.set_cell_in_row(0, { { "Index" },{ "Action" },{ "Value" },{ "Visit" },{ "Win" },{ "Size" },{ "Best" } });
+					tb.set_width({ 3,10,4,4,4,4,2 });
 					for (size_t i = 0; i < root_node.action_set().size(); i++)
 					{
 						tb.set_cell_in_row(i + 1, {
 							{ console::ToString(i) },
 							{ _log_controller.action_to_str_func()(root_node.action_set()[i]) },
-							{ console::ToString(child_value_set[i]) },
-							{ i == max_value_node_index ? "Yes " : "  " }
+							{ console::ToString(_func_package.ValueForRootNode(*child_ptr_set[i])) },
+							{ console::ToString(visit_time_set[i])},
+							{ console::ToString(win_time_set[i]) },
+							{ console::ToString(tree_size_set[i]) },
+							{ i == best_node_index ? "Yes " : "  " }
 						});
 					}
+					tb.set_cell_in_row(root_node.action_set().size()+1, { 
+						{ "Total" },
+						{ "" },
+						{ "" },
+						{ console::ToString(total_visit_time) },
+						{ console::ToString(total_win_time) },
+						{ console::ToString(total_tree_size) },
+						{ console::ToString(best_node_index) } 
+					});
 					logger() << tb.output_string(true, false) << std::endl;
 				}
 
 				GADT_CHECK_WARNING(is_debug(), root_actions.size() == 0, "MCTS102: best value for root node equal to 0.");
 
-				return root_actions[max_value_node_index];
+				return root_actions[best_node_index];
 			}
 
 		public:
@@ -858,12 +909,6 @@ namespace gadt
 			{
 				_log_controller.DisableJsonOutput();
 			}
-		};
-
-		template<typename State, typename Action, typename Result, bool _is_debug = false>
-		class LockFreeMonteCarloTreeSearch
-		{
-
 		};
 	}
 }

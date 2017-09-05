@@ -75,7 +75,8 @@ namespace gadt
 				timeout(_timeout),
 				max_depth(_max_depth),
 				ab_prune_enabled(_ab_prune_enabled),
-				no_winner_index(_no_winner_index)
+				no_winner_index(_no_winner_index),
+				original_eval(_original_eval)
 			{
 			}
 
@@ -280,7 +281,6 @@ namespace gadt
 			//get the highest eval for parent of node.
 			EvalValue NegamaxEvalForParents(const Node& node, VisualNodePtr parent_visual_node, size_t& leaf_node_count)
 			{
-				
 				VisualNodePtr visual_node = nullptr;
 				const size_t original_leaf_node_count = leaf_node_count;
 
@@ -298,7 +298,7 @@ namespace gadt
 
 					if (json_output_enabled())
 					{
-						visual_node->add_value("eval", eval);
+						visual_node->add_value("eval for parent", eval);
 					}
 
 					return eval;
@@ -319,12 +319,13 @@ namespace gadt
 					if (child_value >= best_value) { best_value = child_value; }
 				}
 
+				EvalValue eval_for_parent = -best_value;
 				if (json_output_enabled())
 				{
 					visual_node->add_value("leaf node count", leaf_node_count - original_leaf_node_count);
-					visual_node->add_value("value for parent", -best_value);
+					visual_node->add_value("eval for parent", eval_for_parent);
 				}
-				return -best_value;
+				return eval_for_parent;
 			}
 
 		public:

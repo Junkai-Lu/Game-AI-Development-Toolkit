@@ -426,7 +426,7 @@ namespace gadt
 			//delete memory
 			inline void delete_memory()
 			{
-				//delete[] _fir_element;
+				while (destory_last() == true) {}
 				::free(_fir_element);
 				_fir_element = nullptr;
 				_length = 0;
@@ -457,7 +457,7 @@ namespace gadt
 				alloc_memory(_count);
 				for (size_t i = 0; i < _length; i++)
 				{
-					construct_next(*(target._fir_element + i));
+					construct(*(target._fir_element + i));
 				}
 			}
 
@@ -482,7 +482,7 @@ namespace gadt
 
 			//copy source object to a empty space and return the pointer, return nullptr if there are not available space.
 			template<class... Types>
-			pointer construct_next(Types&&... args)//T* constructor(const T& source)
+			pointer construct(Types&&... args)//T* constructor(const T& source)
 			{
 				if (is_full() == false)
 				{
@@ -893,7 +893,7 @@ namespace gadt
 			//add new element by copy.
 			inline bool add(size_t weight, T data)
 			{
-				if (_ele_alloc.construct_next(weight, _accumulated_range, _accumulated_range + weight, data))
+				if (_ele_alloc.construct(weight, _accumulated_range, _accumulated_range + weight, data))
 				{
 					_accumulated_range += weight;
 					return true;
@@ -905,7 +905,7 @@ namespace gadt
 			template<class... Types>
 			inline bool add(size_t weight, Types&&... args)
 			{
-				if (_ele_alloc.construct_next(weight, _accumulated_range, _accumulated_range + weight, std::forward<Types>(args)...))
+				if (_ele_alloc.construct(weight, _accumulated_range, _accumulated_range + weight, std::forward<Types>(args)...))
 				{
 					_accumulated_range += weight;
 					return true;

@@ -74,7 +74,7 @@ namespace gadt
 					}
 					if (state.dot[0][i] == state.dot[1][i] && state.dot[1][i] == state.dot[2][i] && state.dot[0][i] != EMPTY)
 					{
-						return state.dot[i][0];
+						return state.dot[0][i];
 					}
 				}
 				if (all_empty)
@@ -87,7 +87,7 @@ namespace gadt
 				}
 				if (state.dot[2][0] == state.dot[1][1] && state.dot[1][1] == state.dot[0][2] && state.dot[1][1] != EMPTY)
 				{
-					return state.dot[0][0];
+					return state.dot[2][0];
 				}
 				return EMPTY;
 			}
@@ -113,7 +113,19 @@ namespace gadt
 				{
 					for (size_t y = 0; y < 3; y++)
 					{
-						ss << state.dot[x][y];
+						switch (state.dot[x][y])
+						{
+						case BLACK:
+							ss << "O";
+							break;
+						case WHITE:
+							ss << "X";
+							break;
+						default:
+							ss << "_";
+							break;
+						}
+						//ss << state.dot[x][y];
 					}
 					ss << " ";
 				} 
@@ -137,11 +149,11 @@ namespace gadt
 
 			minimax::EvalValue EvalForParent(const State& state, const minimax::AgentIndex winner)
 			{
-				if (winner == 0)
+				if (winner == DRAW)
 				{
 					return 0;
 				}
-				return state.next_player == winner ? -1 : 1;
+				return state.next_player == winner ? -999 : 999;
 			}
 		}
 
@@ -358,8 +370,8 @@ namespace gadt
 		void TestMctsSearch()
 		{
 			mcts_new::MctsSetting setting;
-			setting.thread_num = 2;
-			setting.max_node_per_thread = 10000;
+			setting.thread_num = 1;
+			setting.max_node_per_thread = 1000000;
 			setting.max_iteration_per_thread = 10000;
 			setting.timeout = 0;
 
@@ -375,6 +387,11 @@ namespace gadt
 			mcts.EnableJsonOutput();
 			mcts.EnableLog();
 			tic_tac_toe::State state;
+			/*for (size_t i = 1; i <= 16; i++)
+			{
+				setting.thread_num = i;
+				tic_tac_toe::Action action = mcts.DoMcts(state, setting);
+			}*/
 			tic_tac_toe::Action action = mcts.DoMcts(state, setting);
 			GADT_ASSERT((action.x == action.y || (action.x == 0 && action.y == 0) || (action.x == 0 && action.y == 2)), true);
 		}
@@ -495,7 +512,7 @@ namespace gadt
 			TestAlloc alloc(ub);
 			for (size_t i = 0; i < ub / 2; i++)
 			{
-				TestClass* p = alloc.construct_next(i, i + i, i*i);
+				TestClass* p = alloc.construct(i, i + i, i*i);
 				GADT_ASSERT(p->a, i);
 				//GADT_ASSERT(p->num[0], i);
 				alloc.destory_last();
@@ -504,7 +521,7 @@ namespace gadt
 			GADT_ASSERT(alloc.remain_size(), alloc.total_size());
 			for (size_t i = 0; i < ub; i++)
 			{
-				TestClass* p = alloc.construct_next(i, i + i, i*i);
+				TestClass* p = alloc.construct(i, i + i, i*i);
 			}
 			GADT_ASSERT(alloc.is_full(), true);
 			alloc.flush();
@@ -544,9 +561,12 @@ namespace gadt
 				tic_tac_toe::EvalForParent
 				);
 			minimax.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr);
-			//minimax.EnableJsonOutput();
-			//minimax.EnableLog();
+			minimax.EnableJsonOutput();
+			minimax.EnableLog();
 			tic_tac_toe::State state;
+			//state.dot[0][2] = tic_tac_toe::BLACK;
+			//state.dot[0][0] = tic_tac_toe::BLACK;
+			//state.next_player = tic_tac_toe::WHITE;
 			tic_tac_toe::Action action = minimax.DoNegamax(state, { timeout, max_depth, false });
 			GADT_ASSERT((action.x == action.y || (action.x == 0 && action.y == 0) || (action.x == 0 && action.y == 2)), true);
 		}
