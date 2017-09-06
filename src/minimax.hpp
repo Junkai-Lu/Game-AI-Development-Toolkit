@@ -300,7 +300,6 @@ namespace gadt
 					{
 						visual_node->add_value("eval for parent", eval);
 					}
-
 					return eval;
 				}
 

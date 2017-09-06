@@ -370,7 +370,7 @@ namespace gadt
 		void TestMctsSearch()
 		{
 			mcts_new::MctsSetting setting;
-			setting.thread_num = 1;
+			setting.thread_num = 4;
 			setting.max_node_per_thread = 1000000;
 			setting.max_iteration_per_thread = 10000;
 			setting.timeout = 0;
@@ -384,8 +384,8 @@ namespace gadt
 				tic_tac_toe::AllowUpdateValue
 			);
 			mcts.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr);
-			mcts.EnableJsonOutput();
-			mcts.EnableLog();
+			//mcts.EnableJsonOutput();
+			//mcts.EnableLog();
 			tic_tac_toe::State state;
 			/*for (size_t i = 1; i <= 16; i++)
 			{
@@ -561,8 +561,8 @@ namespace gadt
 				tic_tac_toe::EvalForParent
 				);
 			minimax.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr);
-			minimax.EnableJsonOutput();
-			minimax.EnableLog();
+			//minimax.EnableJsonOutput();
+			//minimax.EnableLog();
 			tic_tac_toe::State state;
 			//state.dot[0][2] = tic_tac_toe::BLACK;
 			//state.dot[0][0] = tic_tac_toe::BLACK;
