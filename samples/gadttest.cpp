@@ -92,7 +92,7 @@ namespace gadt
 				return EMPTY;
 			}
 
-			Result StateToResult(const State& state, mcts_new::AgentIndex winner)
+			Result StateToResult(const State& state, AgentIndex winner)
 			{
 				return (Result)winner;
 			}
@@ -147,7 +147,7 @@ namespace gadt
 				return ss.str();
 			}
 
-			minimax::EvalValue EvalForParent(const State& state, const minimax::AgentIndex winner)
+			EvalValue EvalForParent(const State& state, const AgentIndex winner)
 			{
 				if (winner == DRAW)
 				{
@@ -353,15 +353,15 @@ namespace gadt
 		void TestMctsNode()
 		{
 			tic_tac_toe::State state;
-			mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>::FuncPackage func(
+			mcts::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>::FuncPackage func(
 				tic_tac_toe::GetNewState,
 				tic_tac_toe::MakeAction,
 				tic_tac_toe::DetemineWinner,
 				tic_tac_toe::StateToResult,
 				tic_tac_toe::AllowUpdateValue
 			);
-			mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> node(state, nullptr, func);
-			gadt::stl::StackAllocator<mcts_new::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>, true> alloc(100);
+			mcts::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> node(state, nullptr, func);
+			gadt::stl::StackAllocator<mcts::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>, true> alloc(100);
 
 			auto p = alloc.construct(state, nullptr, func);
 			GADT_ASSERT(node.action_num(), 9);
@@ -369,13 +369,13 @@ namespace gadt
 		}
 		void TestMctsSearch()
 		{
-			mcts_new::MctsSetting setting;
+			mcts::MctsSetting setting;
 			setting.thread_num = 4;
 			setting.max_node_per_thread = 1000000;
 			setting.max_iteration_per_thread = 10000;
 			setting.timeout = 0;
 
-			mcts_new::MonteCarloTreeSearch<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mcts
+			mcts::MonteCarloTreeSearch<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mcts
 			(
 				tic_tac_toe::GetNewState,
 				tic_tac_toe::MakeAction,
@@ -536,12 +536,12 @@ namespace gadt
 				{ "7","8","9" },
 				{ "10","11","12" }
 			});
-			table.set_width({ 3,3,3,3 });
+			table.set_width({ 4,4,4,4 });
 			GADT_ASSERT(table.get_row(0).size(), 3);
 			GADT_ASSERT(table.get_column(0).size(), 5);
 			GADT_ASSERT(table[0][1]->str, "2");
-			table.set_cell_in_row(0, { "hello", console::BLUE });
-			table.set_cell_in_column(1, { "world", console::RED });
+			table.set_cell_in_row(0, { "hello", console::BLUE, table::ALIGN_RIGHT });
+			table.set_cell_in_column(1, { "world", console::RED , table::ALIGN_MIDDLE});
 			GADT_ASSERT(table.cell(0, 0).str, "hello");
 			GADT_ASSERT(table.cell(2, 0).str, "hello");
 			GADT_ASSERT(table.cell(1, 2).str, "world");

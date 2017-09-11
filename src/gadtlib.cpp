@@ -290,13 +290,16 @@ namespace gadt
 			}
 
 			//print upper line of the table.
-			os << space_before_line << frame[0];
-			for (size_t column = 0; column < _column_size; column++)
+			if (enable_frame)
 			{
-				os << std::string(_column_width[column] * 2, frame[1]) << frame[0];
-				if (column == _column_size - 1) 
+				os << space_before_line << frame[0];
+				for (size_t column = 0; column < _column_size; column++)
 				{
-					os << std::endl; 
+					os << std::string(_column_width[column] * 2, frame[1]) << frame[0];
+					if (column == _column_size - 1)
+					{
+						os << std::endl;
+					}
 				}
 			}
 
@@ -317,10 +320,31 @@ namespace gadt
 				{
 					const size_t width = _column_width[column] * 2;
 					const TableCell& c = cell(column, row);
-					cell_cb(c, os, width);
 					if (c.str.length() < width)
 					{
-						os << std::string(width - c.str.length(), ' ');
+						size_t space_width = width - c.str.length();
+						if (c.align == ALIGN_LEFT)
+						{
+							cell_cb(c, os, width);
+							os << std::string(space_width, ' ');
+						}
+						else if (c.align == ALIGN_RIGHT)
+						{
+							os << std::string(space_width, ' ');
+							cell_cb(c, os, width);
+						}
+						else if (c.align == ALIGN_MIDDLE)
+						{
+							size_t left_width = space_width / 2;
+							size_t right_width = space_width - left_width;
+							os << std::string(left_width, ' ');
+							cell_cb(c, os, width);
+							os << std::string(right_width, ' ');
+						}
+					}
+					else
+					{
+						cell_cb(c, os, width);
 					}
 					if (column != _column_size - 1) { os << frame[2]; }
 					else 
@@ -330,14 +354,17 @@ namespace gadt
 				}
 
 				//print second line
-				os << space_before_line << frame[0];
-				for (size_t column = 0; column < _column_size; column++)
+				if (enable_frame)
 				{
-					os << std::string(_column_width[column] * 2, frame[1]);
-					os << frame[0];
-					if (column == _column_size - 1) 
+					os << space_before_line << frame[0];
+					for (size_t column = 0; column < _column_size; column++)
 					{
-						os << std::endl;
+						os << std::string(_column_width[column] * 2, frame[1]);
+						os << frame[0];
+						if (column == _column_size - 1)
+						{
+							os << std::endl;
+						}
 					}
 				}
 			}
@@ -348,7 +375,8 @@ namespace gadt
 			_column_size(column_size),
 			_row_size(row_size),
 			_cells(column_size, std::vector<TableCell>(row_size, TableCell())),
-			_column_width(column_size,_default_width)
+			_column_width(column_size,_default_width),
+			_enable_title(false)
 		{
 			init_cells();
 		}
@@ -357,7 +385,8 @@ namespace gadt
 			_column_size(column_size),
 			_row_size(row_size),
 			_cells(column_size, std::vector<TableCell>(row_size, TableCell())),
-			_column_width(column_size, _default_width)
+			_column_width(column_size, _default_width),
+			_enable_title(false)
 		{
 			init_cells();
 			size_t y = 0;
@@ -434,11 +463,11 @@ namespace gadt
 		//output string
 		std::string ConsoleTable::output_string(bool enable_frame, bool enable_index)
 		{
-			CellOutputFunc cell_cb = [](const TableCell& c, std::ostream& os, size_t width)->void {
+			CellOutputFunc cell_cb = [](const TableCell& c, std::ostream& os, size_t max_width)->void {
 				std::string str = c.str;
-				if (str.length() > width)
+				if (str.length() > max_width)
 				{
-					str = str.substr(0, width);
+					str = str.substr(0, max_width);
 				}
 				os << str;
 			};
@@ -450,15 +479,11 @@ namespace gadt
 		//print 
 		void ConsoleTable::print(bool enable_frame, bool enable_index)
 		{
-			CellOutputFunc callback = [](const TableCell& c, std::ostream& os, size_t width)->void {
+			CellOutputFunc callback = [](const TableCell& c, std::ostream& os, size_t max_width)->void {
 				std::string str = c.str;
-				if (str.length() > width)
+				if (str.length() > max_width)
 				{
-					str = str.substr(0, width);
-				}
-				else
-				{
-					//str = str + std::string(width - str.length(), ' ');
+					str = str.substr(0, max_width);
 				}
 				console::Cprintf(str, c.color);
 			};

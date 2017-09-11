@@ -10,7 +10,7 @@
 整个库大致可以被划分为以下几种模块：
 
 - **基础数据结构**，如*位棋盘*(bitboard)等
-- **常用AI算法**，如MCTS，Minimax等
+- **常用AI算法模板**，如MCTS，Minimax等
 - **调试工具**，如搜索树的可视化等
 - **开发工具**，如shell工具等
 - **一些其他基础工具**。
@@ -24,14 +24,14 @@
 3. 对游戏AI抱有兴趣的学生以及爱好者
 
 ---------------------------------
-算法部分
+算法模板
 ---------------------------------
 
 **Paradoxes**希望可以提供一个简单的，易编写的游戏AI算法标准库。通过简单的定义游戏逻辑，就可以调用某种算法来获得一个可用的游戏AI。并且预留自定义的接口，令使用者可以在标准算法的基础上快速的进行改进。这个特性主要是针对游戏AI的研究人员的，使得研究人员可以避免在各类常用算法的工程实现上消耗过多的时间，而集中精力于改善算法本身。而对于游戏AI领域的工程师而言，**Paradoxes**提供了工程级别的代码实现，可以针对需求直接进行修改。
 
 一个简单的Monte Carlo Tree Search的调用代码示例如下。
 
-    mcts_new::MonteCarloTreeSearch<State,Action,Result> mcts(...);
+    mcts::MonteCarloTreeSearch<State,Action,Result> mcts(...);
     Action action = mcts.DoMcts(state);
 
 与其类似的，一个Minimax Search的代码示例如下：
@@ -53,7 +53,7 @@
 
 一个开启调试的示例如下：
 
-    mcts_new::MonteCarloTreeSearch<State,Action,Result> mcts(...);
+    mcts::MonteCarloTreeSearch<State,Action,Result> mcts(...);
     mcts.InitLog(...);
     mcts.EnableLog();
     mcts.EnableJsonOutput();

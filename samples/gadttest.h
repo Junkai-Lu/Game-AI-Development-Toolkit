@@ -21,7 +21,7 @@
 
 #include "../src/gadtlib.h"
 #include "../src/bitboard.hpp"
-#include "../src/mcts_new.hpp"
+#include "../src/mcts.hpp"
 #include "../src/minimax.hpp"
 #include "../src/visual_tree.h"
 
@@ -35,7 +35,7 @@ namespace gadt
 	{
 		namespace tic_tac_toe
 		{
-			enum Player :mcts_new::AgentIndex
+			enum Player :AgentIndex
 			{
 				BLACK = -1,
 				WHITE = 1,
@@ -76,7 +76,7 @@ namespace gadt
 			State GetNewState(const State& state, const Action& action);
 			void MakeAction(const State& state, ActionSet& as);
 			Player DetemineWinner(const State& state);
-			Result StateToResult(const State& state, mcts_new::AgentIndex winner);
+			Result StateToResult(const State& state, AgentIndex winner);
 			bool AllowUpdateValue(const State& state, Result winner);
 		}
 

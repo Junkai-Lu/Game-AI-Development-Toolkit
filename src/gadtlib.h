@@ -77,6 +77,10 @@
 
 namespace gadt
 {
+	using AgentIndex = int8_t;//AgentIndex is the index of each player, default is int8_t. 0 is the default no-winner index.
+	using UcbValue = double;
+	using EvalValue = double;
+
 	namespace console
 	{
 		//console color type
@@ -407,33 +411,52 @@ namespace gadt
 		//enable warning in table.
 		constexpr const bool g_TABLE_ENABLE_WARNING = true;
 
+		enum AlignType : int8_t
+		{
+			ALIGN_LEFT = 0,
+			ALIGN_MIDDLE = 1,
+			ALIGN_RIGHT = 2
+		};
+
 		//basic cell of table.
 		struct TableCell
 		{
 			std::string				str;
 			console::ConsoleColor	color;
+			AlignType				align;
 
 			TableCell() :
 				str(),
-				color(console::DEFAULT)
+				color(console::DEFAULT),
+				align(ALIGN_LEFT)
 			{
 			}
 
 			TableCell(std::string _str) :
 				str(_str),
-				color(console::DEFAULT)
-			{
-			}
-
-			TableCell(console::ConsoleColor _color) :
-				str(),
-				color(_color)
+				color(console::DEFAULT),
+				align(ALIGN_LEFT)
 			{
 			}
 
 			TableCell(std::string _str,console::ConsoleColor _color) :
 				str(_str),
-				color(_color)
+				color(_color),
+				align(ALIGN_LEFT)
+			{
+			}
+
+			TableCell(std::string _str, AlignType _align) :
+				str(),
+				color(console::DEFAULT),
+				align(_align)
+			{
+			}
+
+			TableCell(std::string _str, console::ConsoleColor _color, AlignType _align) :
+				str(_str),
+				color(_color),
+				align(_align)
 			{
 			}
 		};

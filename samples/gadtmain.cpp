@@ -38,7 +38,7 @@
 #include "../src/bitboard.hpp"		//bit board data struct
 #include "../src/mcts.hpp"			//monte carlo tree search for games.
 #include "../src/minimax.hpp"		//minimax,and alphabeta for games.
-#include "../src/mcts_new.hpp"		////monte carlo tree search for games, new version.
+#include "../src/mcts.hpp"		////monte carlo tree search for games, new version.
 
 #include "gadttest.h"				//a simple unittest
 

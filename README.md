@@ -1,6 +1,6 @@
-# Paradoxes # 游戏AI开发工具包 
+# Paradoxes # Game AI Development Toolkit 
 ---------------------------------
-介绍
+Introduction
 ---------------------------------
 **Paradoxes**是一个跨平台的游戏AI开发工具包，包括了游戏AI开发的各类开发，调试工具。使用*C++11*标准编写。
 
@@ -24,14 +24,14 @@
 3. 对游戏AI抱有兴趣的学生以及爱好者
 
 ---------------------------------
-算法部分
+Alogorithm Template
 ---------------------------------
 
 **Paradoxes**希望可以提供一个简单的，易编写的游戏AI算法标准库。通过简单的定义游戏逻辑，就可以调用某种算法来获得一个可用的游戏AI。并且预留自定义的接口，令使用者可以在标准算法的基础上快速的进行改进。这个特性主要是针对游戏AI的研究人员的，使得研究人员可以避免在各类常用算法的工程实现上消耗过多的时间，而集中精力于改善算法本身。而对于游戏AI领域的工程师而言，**Paradoxes**提供了工程级别的代码实现，可以针对需求直接进行修改。
 
 一个简单的Monte Carlo Tree Search的调用代码示例如下。
 
-    mcts_new::MonteCarloTreeSearch<State,Action,Result> mcts(...);
+    mcts::MonteCarloTreeSearch<State,Action,Result> mcts(...);
     Action action = mcts.DoMcts(state);
 
 与其类似的，一个Minimax Search的代码示例如下：
@@ -44,7 +44,7 @@
 更多的细节，请参照详细文档。
 
 ----------------------------------
-调试工具
+Debug Tools
 ----------------------------------
 
 **Paradoxes**中提供了多种的调试工具，主要针对但不仅限于对搜索算法的调试。例如树可视化工具允许在生成搜索树的同时，将搜索树生成为一颗完整的JSON树，并输出到指定文件中。用户可以使用第三方的可视化工具来浏览搜索树中的数据，同时也可以在执行搜索算法时插入自定义的数据来加快调试速度。
@@ -53,7 +53,7 @@
 
 一个开启调试的示例如下：
 
-    mcts_new::MonteCarloTreeSearch<State,Action,Result> mcts(...);
+    mcts::MonteCarloTreeSearch<State,Action,Result> mcts(...);
     mcts.InitLog(...);
     mcts.EnableLog();
     mcts.EnableJsonOutput();
@@ -64,7 +64,7 @@
 更多关于调试工具的细节，请参照详细文档。
 
 ----------------------------------
-文档
+Documents
 ----------------------------------
 Paradoxes在接下来将提供完整的文档支持。在当前，请参阅各个文件中的注释进行使用。
 如果发现BUG或者存在任何疑问，欢迎在Issue中报告或者电子邮件联系本人。

@@ -37,10 +37,6 @@ namespace gadt
 		//allow check warning if it is true.
 		constexpr const bool g_MINIMAX_ENABLE_WARNING = true;
 
-		//AgentIndex is the index of each player, default is int8_t. 0 is the default no-winner index.
-		using AgentIndex = int8_t;
-		using EvalValue = double;
-
 		/*
 		* MinimaxSetting is the setting of MCTS.
 		*
