@@ -38,7 +38,7 @@ namespace gadt
 
 			//json output control
 			bool			_enable_json_output;
-			std::string		_json_output_path;
+			std::string		_json_output_folder;
 			VisualTree		_visual_tree;
 
 		public:
@@ -50,7 +50,7 @@ namespace gadt
 				_enable_log(false),
 				_log_ostream(&std::cout),
 				_enable_json_output(false),
-				_json_output_path(),
+				_json_output_folder(),
 				_visual_tree()
 			{
 			}
@@ -86,9 +86,9 @@ namespace gadt
 			}
 
 			//get json output path
-			inline std::string json_output_path() const
+			inline std::string json_output_folder() const
 			{
-				return _json_output_path;
+				return _json_output_folder;
 			}
 
 			//get ref of visual tree.
@@ -142,10 +142,10 @@ namespace gadt
 			}
 
 			//enable json output
-			inline void EnableJsonOutput(std::string json_output_path)
+			inline void EnableJsonOutput(std::string json_output_folder)
 			{
 				_enable_json_output = true;
-				_json_output_path = json_output_path;
+				_json_output_folder = json_output_folder;
 			}
 
 			//disable json output.
@@ -157,7 +157,15 @@ namespace gadt
 			//output json to path.
 			inline void OutputJson() const
 			{
-				std::ofstream ofs(_json_output_path);
+				std::string path = "./" + _json_output_folder;
+				if (!file::DirExist(path))
+				{
+					file::MakeDir(path);
+				}
+				path += "/";
+				path += timer::TimeString();
+				path += ".json";
+				std::ofstream ofs(path);
 				_visual_tree.output_json(ofs);
 			}
 
@@ -166,11 +174,6 @@ namespace gadt
 
 	namespace stl
 	{
-		template<typename T, bool _is_debug>
-		class AllocatorBase
-		{
-
-		};
 
 		/*
 		* StackAllocator is a memory allocator, whose memory is preallocate at the time when the object is created.

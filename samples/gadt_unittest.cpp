@@ -23,7 +23,7 @@
 * THE SOFTWARE.
 */
 
-#include "gadttest.h"
+#include "gadt_unittest.h"
 
 using std::cout;
 using std::endl;
@@ -34,6 +34,12 @@ namespace gadt
 	{
 		namespace tic_tac_toe
 		{
+			void UpdateState(State& state, const Action& action)
+			{
+				state.dot[action.x][action.y] = action.player;
+				state.next_player = action.player == WHITE ? BLACK : WHITE;
+			}
+
 			State GetNewState(const State& state, const Action& action)
 			{
 				State temp = state;
@@ -354,16 +360,16 @@ namespace gadt
 		{
 			tic_tac_toe::State state;
 			mcts::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>::FuncPackage func(
-				tic_tac_toe::GetNewState,
+				tic_tac_toe::UpdateState,
 				tic_tac_toe::MakeAction,
 				tic_tac_toe::DetemineWinner,
 				tic_tac_toe::StateToResult,
 				tic_tac_toe::AllowUpdateValue
 			);
-			mcts::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> node(state, nullptr, func);
+			mcts::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> node(state, nullptr, func, mcts::MctsSetting());
 			gadt::stl::StackAllocator<mcts::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>, true> alloc(100);
 
-			auto p = alloc.construct(state, nullptr, func);
+			auto p = alloc.construct(state, nullptr, func, mcts::MctsSetting());
 			GADT_ASSERT(node.action_num(), 9);
 			GADT_ASSERT(p->action_num(), 9);
 		}
@@ -371,13 +377,13 @@ namespace gadt
 		{
 			mcts::MctsSetting setting;
 			setting.thread_num = 4;
-			setting.max_node_per_thread = 1000000;
+			setting.max_node_per_thread = 10000;
 			setting.max_iteration_per_thread = 10000;
 			setting.timeout = 0;
 
 			mcts::MonteCarloTreeSearch<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mcts
 			(
-				tic_tac_toe::GetNewState,
+				tic_tac_toe::UpdateState,
 				tic_tac_toe::MakeAction,
 				tic_tac_toe::DetemineWinner,
 				tic_tac_toe::StateToResult,

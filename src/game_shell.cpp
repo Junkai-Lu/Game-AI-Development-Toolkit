@@ -24,7 +24,7 @@
 * THE SOFTWARE.
 */
 
-#include "gameshell.h"
+#include "game_shell.h"
 
 namespace gadt
 {

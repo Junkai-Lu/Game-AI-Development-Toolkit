@@ -29,26 +29,18 @@
 
 #include "gadtlib.h"
 #include "visual_tree.h"
-#include "gadtstl.hpp"
-#include "monte_carlo.hpp"
+#include "gadt_stl.hpp"
+#include "gadt_define.hpp"
 
 #pragma once
 
 namespace gadt
 {
+	//monte carlo tree search.
 	namespace mcts
 	{
 		//allow check warning if it is true.
 		constexpr const bool g_MCTS_NEW_ENABLE_WARNING = true;
-
-		//the method for parallel mcts
-		enum MctsParalleMethod: uint8_t
-		{
-			NO_PARALLELIZATION = 0,
-			LEAF_PARALLELIZATION = 1,
-			ROOT_PARALLELIZATION = 2,
-			TREE_PARALLELIZATION = 3
-		};
 
 		namespace policy
 		{
@@ -59,71 +51,25 @@ namespace gadt
 		}
 
 		/*
-		* MonteCarloSetting is the setting of Monte Carlo.
-		*
-		* MonteCarloSetting() would use default setting.
-		* MonteCarloSetting(params) would generate custom setting.
-		*/
-		struct MonteCarloSetting
-		{
-			double		timeout;					//set timeout (seconds).
-			size_t		thread_num;					//thread num.
-			AgentIndex	no_winner_index;			//agent index of no winner.
-			size_t		simulation_warning_length;	//if the simulation length out of this value, it would throw a warning if is debug.
-
-													//default setting constructor.
-			MonteCarloSetting() :
-				timeout(30),
-				thread_num(1),
-				no_winner_index(0),
-				simulation_warning_length(1000)
-			{
-			}
-
-			//custom setting constructor.
-			MonteCarloSetting(
-				double _timeout,
-				size_t _thread_num,
-				AgentIndex _no_winner_index = 0,
-				size_t _simulation_warning_length = 1000
-			) :
-				timeout(_timeout),
-				thread_num(_thread_num),
-				no_winner_index(_no_winner_index),
-				simulation_warning_length(_simulation_warning_length)
-			{
-			}
-
-			//output print with str behind each line.
-			std::string info() const
-			{
-				table::ConsoleTable tb(2, 6);
-				tb.set_width({ 12,6 });
-				tb.enable_title({ "MONTE CARLO SETTING" });
-				tb.set_cell_in_row(0, { { "timeout" },{ console::ToString(timeout) } });
-				tb.set_cell_in_row(1, { { "thread_num" },{ console::ToString(thread_num) } });
-				tb.set_cell_in_row(4, { { "no_winner_index" },{ console::ToString(no_winner_index) } });
-				tb.set_cell_in_row(5, { { "simulation_warning_length" },{ console::ToString(simulation_warning_length) } });
-				return tb.output_string();
-			}
-		};
-
-		/*
 		* MctsSetting is the setting of MCTS.
 		*
 		* MctsSetting() would use default setting.
 		* MctsSetting(params) would generate custom setting.
 		*/
-		struct MctsSetting: public MonteCarloSetting
+		struct MctsSetting final: public GameAlgorithmSettingBase
 		{
-			size_t		max_iteration_per_thread;	//set max iteration times.
-			size_t		max_node_per_thread;		//pre-allocated memory for each thread.
+			size_t thread_num;
+			size_t max_iteration_per_thread;	//set max iteration times.
+			size_t max_node_per_thread;			//pre-allocated memory for each thread.
+			size_t simulation_warning_length;
 
 			//default setting constructor.
 			MctsSetting() :
-				MonteCarloSetting(30, 1, 0, 1000),
+				GameAlgorithmSettingBase(),
+				thread_num(1),
 				max_iteration_per_thread(10000),
-				max_node_per_thread(10000)
+				max_node_per_thread(10000),
+				simulation_warning_length(1000)
 			{
 			}
 
@@ -132,18 +78,20 @@ namespace gadt
 				double _timeout, 
 				size_t _thread_num,	
 				size_t _max_iteration_per_thread,
-				bool _max_node_per_thread,
+				size_t _max_node_per_thread,
 				AgentIndex _no_winner_index = 0,
 				size_t _simulation_warning_length = 1000
 			) :
-				MonteCarloSetting(_timeout,_thread_num,_no_winner_index, _simulation_warning_length),
+				GameAlgorithmSettingBase(_timeout,_no_winner_index),
+				thread_num(_thread_num),
 				max_iteration_per_thread(_max_iteration_per_thread),
-				max_node_per_thread(_max_node_per_thread)
+				max_node_per_thread(_max_node_per_thread),
+				simulation_warning_length(_simulation_warning_length)
 			{
 			}
 
 			//output print with str behind each line.
-			std::string info() const
+			std::string info() const override
 			{
 				table::ConsoleTable tb(2, 6);
 				tb.set_width({ 12,6 });
@@ -156,12 +104,6 @@ namespace gadt
 				tb.set_cell_in_row(5, { { "simulation_warning_length" },{ console::ToString(simulation_warning_length) } });
 				return tb.output_string();
 			}
-		};
-
-		template<typename State, typename Action, typename Result, bool _is_debug>
-		struct MonteCarloFuncPackage
-		{
-
 		};
 
 		/*
@@ -220,9 +162,6 @@ namespace gadt
 			bool			    exist_brother_node()  const { return _brother_node != nullptr; }
 			
 		private:
-			//a value means no winner, which is differ from any other AgentIndex.
-			static const AgentIndex _no_winner_index = 0;
-			static const size_t		_default_policy_warning_length = 1000;
 
 			//exist unactived action in the action set.
 			inline bool exist_unactivated_action() const
@@ -281,7 +220,7 @@ namespace gadt
 			}
 
 		public:
-			MctsNode(const State& state, pointer parent_node, const FuncPackage& func) :
+			MctsNode(const State& state, pointer parent_node, const FuncPackage& func, const MctsSetting& setting) :
 				_state(state),
 				_winner_index(func.DetemineWinner(state)),
 				_visited_time(1),
@@ -290,7 +229,7 @@ namespace gadt
 				_fir_child_node(nullptr),
 				_brother_node(nullptr)
 			{
-				if (!is_end_state())
+				if (!is_end_state(setting))
 				{
 					func.MakeAction(_state, _action_set);
 				}
@@ -349,15 +288,15 @@ namespace gadt
 					const Action& action = func.DefaultPolicy(actions);
 
 					//state update.
-					state = func.GetNewState(state, action);
+					func.UpdateState(state, action);
 				}
-				return func.StateToResult(_state, _no_winner_index);
+				return func.StateToResult(_state, setting.no_winner_index);
 			}
 
 			//2.one child node would be added to expand the tree, acccording to the available actions.
 			void Expandsion(Allocator& allocator ,const FuncPackage& func, const MctsSetting& setting)
 			{
-				if (is_end_state())
+				if (is_end_state(setting))
 				{
 					Result result = func.StateToResult(_state, _winner_index);//return the result of this node.
 					BackPropagation(result, func);
@@ -369,7 +308,9 @@ namespace gadt
 					if (new_child_index < _action_set.size())
 					{
 						//create new node.
-						pointer new_node = allocator.construct(func.GetNewState(_state, _action_set[new_child_index]), this, func);
+						State new_state = _state;
+						func.UpdateState(new_state, _action_set[new_child_index]);
+						pointer new_node = allocator.construct(new_state, this, func, setting);
 						Result result = new_node->SimulationProcess(func, setting);
 						new_node->_parent_node = this;
 
@@ -386,7 +327,7 @@ namespace gadt
 			{
 				incr_visited_time();
 
-				if (is_end_state())
+				if (is_end_state(setting))
 				{
 					Result result = func.StateToResult(_state, _winner_index);
 					BackPropagation(result, func);
@@ -422,9 +363,9 @@ namespace gadt
 			}
 
 			//return true if the state is the terminal-state of the game.
-			inline bool is_end_state() const
+			inline bool is_end_state(const MctsSetting& setting) const
 			{
-				return _winner_index != _no_winner_index;
+				return _winner_index != setting.no_winner_index;
 			}
 
 			//get child num
@@ -507,29 +448,25 @@ namespace gadt
 
 		//function package
 		template<typename State, typename Action, typename Result, bool _is_debug>
-		struct MctsFuncPackage
+		struct MctsFuncPackage final : public GameAlgorithmFuncPackageBase<State, Action, _is_debug>
 		{
 		private:
 			using Node = MctsNode<State, Action, Result, _is_debug>;
-			using ActionSet = std::vector<Action>;
 
 		public:
-			using GetNewStateFunc		= std::function<State(const State&, const Action&)>;
-			using MakeActionFunc		= std::function<void(const State&, ActionSet&)>;
-			using DetemineWinnerFunc	= std::function<AgentIndex(const State&)>;
 			using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;
 			using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;
 			using TreePolicyValueFunc	= std::function<UcbValue(const Node&, const Node&)>;
-			using DefaultPolicyFunc		= std::function<const Action&(const ActionSet&)>;
+			using DefaultPolicyFunc		= std::function<const Action&(const typename ActionList&)>;
 			using AllowExtendFunc		= std::function<bool(const Node&)>;
 			using AllowExcuteGcFunc		= std::function<bool(const Node&)>;
 			using ValueForRootNodeFunc	= std::function<UcbValue(const Node&)>;
 
 		public:
 			//necessary functions.
-			const GetNewStateFunc		GetNewState;		//get a new state from previous state and action.
-			const MakeActionFunc		MakeAction;			//the function which create action set by the state.
-			const DetemineWinnerFunc	DetemineWinner;		//return no_winner_index if a state is not terminal state.
+			//const GetNewStateFunc		GetNewState;		//get a new state from previous state and action.
+			//const MakeActionFunc		MakeAction;			//the function which create action set by the state.
+			//const DetemineWinnerFunc	DetemineWinner;		//return no_winner_index if a state is not terminal state.
 			const StateToResultFunc		StateToResult;		//get a result from state and winner.
 			const AllowUpdateValueFunc	AllowUpdateValue;	//update values in the node by the result.
 
@@ -541,8 +478,8 @@ namespace gadt
 			ValueForRootNodeFunc		ValueForRootNode;	//select best action of root node after iterations finished.
 
 		public:
-			MctsFuncPackage(
-				GetNewStateFunc			_GetNewState,
+			explicit MctsFuncPackage(
+				UpdateStateFunc			_UpdateState,
 				MakeActionFunc			_MakeAction,
 				DetemineWinnerFunc		_DetemineWinner,
 				StateToResultFunc		_StateToResult,
@@ -553,9 +490,7 @@ namespace gadt
 				AllowExcuteGcFunc		_AllowExcuteGc,
 				ValueForRootNodeFunc	_ValueForRootNode
 			) :
-				GetNewState(_GetNewState),
-				MakeAction(_MakeAction),
-				DetemineWinner(_DetemineWinner),
+				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetemineWinner),
 				StateToResult(_StateToResult),
 				AllowUpdateValue(_AllowUpdateValue),
 				TreePolicyValue(_TreePolicyValue),
@@ -566,23 +501,21 @@ namespace gadt
 			{
 			}
 
-			MctsFuncPackage(
-				GetNewStateFunc			_GetNewState,
+			explicit MctsFuncPackage(
+				UpdateStateFunc			_UpdateState,
 				MakeActionFunc			_MakeAction,
 				DetemineWinnerFunc		_DetemineWinner,
 				StateToResultFunc		_StateToResult,
 				AllowUpdateValueFunc	_AllowUpdateValue
 			) :
-				GetNewState(_GetNewState),
-				MakeAction(_MakeAction),
-				DetemineWinner(_DetemineWinner),
+				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetemineWinner),
 				StateToResult(_StateToResult),
 				AllowUpdateValue(_AllowUpdateValue),
 				TreePolicyValue([](const Node& parent, const Node& child)->UcbValue {
 					UcbValue avg = static_cast<UcbValue>(child.win_time()) / static_cast<UcbValue>(child.visited_time());
 					return policy::UCB1(avg, static_cast<UcbValue>(parent.visited_time()), static_cast<UcbValue>(child.visited_time()));
 				}),
-				DefaultPolicy([](const ActionSet& actions)->const Action&{
+				DefaultPolicy([](const ActionList& actions)->const Action&{
 					if (_is_debug)
 					{
 						GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, actions.size() == 0, "MCTS104: empty action set during default policy.");
@@ -646,7 +579,7 @@ namespace gadt
 				visual_node.add_value(VISITED_TIME_NAME, search_node.visited_time());
 				visual_node.add_value(WIN_TIME_NAME, search_node.win_time());
 				visual_node.add_value(CHILD_NUM_NAME, search_node.child_num());
-				visual_node.add_value(IS_TERMIANL_NAME, search_node.is_end_state());
+				//visual_node.add_value(IS_TERMIANL_NAME, search_node.is_end_state());
 				visual_node.add_value(STATE_NAME, _StateToStr(search_node.state()));
 				auto node_ptr = search_node.fir_child_node();
 				while(node_ptr != nullptr)
@@ -748,7 +681,7 @@ namespace gadt
 				}
 
 				//initialized
-				Node root_node(root_state, nullptr, _func_package);
+				Node root_node(root_state, nullptr, _func_package, _setting);
 				ActionSet root_actions = root_node.action_set();
 				
 				//thread content
@@ -880,14 +813,14 @@ namespace gadt
 		public:
 			//use private allocator.
 			MonteCarloTreeSearch(
-				typename FuncPackage::GetNewStateFunc		_GetNewState,
+				typename FuncPackage::UpdateStateFunc		_UpdateState,
 				typename FuncPackage::MakeActionFunc		_MakeAction,
 				typename FuncPackage::DetemineWinnerFunc	_DetemineWinner,
 				typename FuncPackage::StateToResultFunc		_StateToResult,
 				typename FuncPackage::AllowUpdateValueFunc	_AllowUpdateValue
 			):
 				_func_package(
-					_GetNewState,
+					_UpdateState,
 					_MakeAction,
 					_DetemineWinner,
 					_StateToResult,
@@ -955,6 +888,7 @@ namespace gadt
 		};
 	}
 
+	//old-code of the monte carlo tree search. it may be deleted someday.
 	namespace mcts_old
 	{
 		//allow check warning if it is true.
