@@ -44,9 +44,11 @@ namespace gadt
 
 		namespace policy
 		{
-			inline UcbValue UCB1(UcbValue average_reward, UcbValue overall_time, UcbValue played_time, UcbValue c = 1)
+			inline UcbValue UCB1(UcbValue average_reward, UcbValue overall_time, UcbValue played_time, UcbValue c = 1.41421)
 			{
-				return average_reward + c * static_cast<UcbValue>(sqrt(2 * log10(overall_time) / played_time));
+				UcbValue ln = log10(overall_time);
+				UcbValue exploration = sqrt( ln/ played_time);
+				return average_reward + c * exploration;
 			}
 		}
 
@@ -125,20 +127,20 @@ namespace gadt
 		template<typename State, typename Action, typename Result, bool _is_debug>
 		class MctsNode
 		{
-		public:		
-			using Node			= MctsNode<State, Action, Result, _is_debug>;					//MctsNode
-			using pointer       = Node*;
-			using reference     = Node&;
+		public:
+			using Node			= MctsNode<State, Action, Result, _is_debug>;			//MctsNode
+			using pointer       = Node*;												//pointer of MctsNode
+			using reference     = Node&;												//reference of MctsNode
 			using Allocator		= gadt::stl::LinearAllocator<Node, _is_debug>;			//Allocate 
-			using ActionSet		= std::vector<Action>;									//ActionSet is the set of Action.
-			using FuncPackage	= MctsFuncPackage<State, Action, Result, _is_debug>;	
+			using FuncPackage	= MctsFuncPackage<State, Action, Result, _is_debug>;	//function package
+			using ActionList	= typename FuncPackage::ActionList;						//ActionList is the list of available actions.
 
 		private:
 			State			_state;				//state of this node.
 			AgentIndex		_winner_index;		//the winner index of the state.
 			uint32_t		_visited_time;		//how many times that this node had been visited.
 			uint32_t		_win_time;			//win time accmulated by the simulation.
-			ActionSet		_action_set;		//action set of this node.
+			ActionList		_action_list;		//action set of this node.
 			
 			pointer			_parent_node;		//pointer to parent node
 			pointer			_fir_child_node;	//pointer to left most child node.
@@ -146,9 +148,9 @@ namespace gadt
 
 		public:
 			const State&        state()               const { return _state; }
-			const ActionSet&    action_set()          const { return _action_set; }
-			const Action&       action(size_t i)      const { return _action_set[i]; }
-			size_t              action_num()          const { return _action_set.size(); }
+			const ActionList&   action_list()         const { return _action_list; }
+			const Action&       action(size_t i)      const { return _action_list[i]; }
+			size_t              action_num()          const { return _action_list.size(); }
 			AgentIndex          winner_index()        const { return _winner_index; }
 			uint32_t            visited_time()        const { return _visited_time; }
 			uint32_t            win_time()            const { return _win_time; }
@@ -166,7 +168,7 @@ namespace gadt
 			//exist unactived action in the action set.
 			inline bool exist_unactivated_action() const
 			{
-				size_t action_size = _action_set.size();
+				size_t action_size = _action_list.size();
 				volatile size_t child_size = child_num();
 				if (action_size == 0)
 					return false;
@@ -178,7 +180,7 @@ namespace gadt
 			//get next action.
 			inline const Action& next_action()
 			{
-				return _action_set[child_num()];
+				return _action_list[child_num()];
 			}
 
 			//increase visited time.
@@ -231,7 +233,7 @@ namespace gadt
 			{
 				if (!is_end_state(setting))
 				{
-					func.MakeAction(_state, _action_set);
+					func.MakeAction(_state, _action_list);
 				}
 			}
 
@@ -263,10 +265,10 @@ namespace gadt
 			}
 
 			//3.simulation is run from the new node according to the default policy to produce a result.
-			Result SimulationProcess(const FuncPackage& func, const MctsSetting& setting)
+			Result Simulation(const FuncPackage& func, const MctsSetting& setting)
 			{
 				State state = _state;	//copy
-				ActionSet actions;
+				ActionList actions;
 				for (size_t i = 0;; i++)
 				{
 					GADT_CHECK_WARNING(is_debug(), i > setting.simulation_warning_length, "MCTS103: out of default policy process max length.");
@@ -305,13 +307,13 @@ namespace gadt
 				else
 				{
 					volatile const size_t new_child_index = child_num();
-					if (new_child_index < _action_set.size())
+					if (new_child_index < _action_list.size())
 					{
 						//create new node.
 						State new_state = _state;
-						func.UpdateState(new_state, _action_set[new_child_index]);
+						func.UpdateState(new_state, _action_list[new_child_index]);
 						pointer new_node = allocator.construct(new_state, this, func, setting);
-						Result result = new_node->SimulationProcess(func, setting);
+						Result result = new_node->Simulation(func, setting);
 						new_node->_parent_node = this;
 
 						//link to father. return if link failed.
@@ -340,7 +342,7 @@ namespace gadt
 					}
 					else
 					{
-						GADT_CHECK_WARNING(is_debug(), _action_set.size() == 0, "MCTS106: empty action set during tree policy.");
+						GADT_CHECK_WARNING(is_debug(), _action_list.size() == 0, "MCTS106: empty action set during tree policy.");
 
 						pointer max_ucb_child_node = fir_child_node();
 						UcbValue max_ucb_value = 0;
@@ -416,11 +418,11 @@ namespace gadt
 				ss << "{ visited:" << visited_time() << " win:" << win_time() <<" avg:" << avg << " child";
 				if (exist_unactivated_action())
 				{
-					ss << child_num() << "/" << action_set().size();
+					ss << child_num() << "/" << action_list().size();
 				}
 				else
 				{
-					ss << action_set().size() << "/" << action_set().size();
+					ss << action_list().size() << "/" << action_list().size();
 				}
 				ss << " }";
 				return ss.str();
@@ -459,14 +461,10 @@ namespace gadt
 			using TreePolicyValueFunc	= std::function<UcbValue(const Node&, const Node&)>;
 			using DefaultPolicyFunc		= std::function<const Action&(const typename ActionList&)>;
 			using AllowExtendFunc		= std::function<bool(const Node&)>;
-			using AllowExcuteGcFunc		= std::function<bool(const Node&)>;
 			using ValueForRootNodeFunc	= std::function<UcbValue(const Node&)>;
 
 		public:
 			//necessary functions.
-			//const GetNewStateFunc		GetNewState;		//get a new state from previous state and action.
-			//const MakeActionFunc		MakeAction;			//the function which create action set by the state.
-			//const DetemineWinnerFunc	DetemineWinner;		//return no_winner_index if a state is not terminal state.
 			const StateToResultFunc		StateToResult;		//get a result from state and winner.
 			const AllowUpdateValueFunc	AllowUpdateValue;	//update values in the node by the result.
 
@@ -474,7 +472,6 @@ namespace gadt
 			TreePolicyValueFunc			TreePolicyValue;	//value of child node in selection process. the highest would be seleced.
 			DefaultPolicyFunc			DefaultPolicy;		//the default policy to select action.
 			AllowExtendFunc				AllowExtend;		//allow node to extend child node.
-			AllowExcuteGcFunc			AllowExcuteGc;		//the condition to excute gc in a node.
 			ValueForRootNodeFunc		ValueForRootNode;	//select best action of root node after iterations finished.
 
 		public:
@@ -487,7 +484,6 @@ namespace gadt
 				TreePolicyValueFunc		_TreePolicyValue,
 				DefaultPolicyFunc		_DefaultPolicy,
 				AllowExtendFunc			_AllowExtend,
-				AllowExcuteGcFunc		_AllowExcuteGc,
 				ValueForRootNodeFunc	_ValueForRootNode
 			) :
 				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetemineWinner),
@@ -496,7 +492,6 @@ namespace gadt
 				TreePolicyValue(_TreePolicyValue),
 				DefaultPolicy(_DefaultPolicy),
 				AllowExtend(_AllowExtend),
-				AllowExcuteGc(_AllowExcuteGc),
 				ValueForRootNode(_ValueForRootNode)
 			{
 			}
@@ -525,13 +520,6 @@ namespace gadt
 				AllowExtend([](const Node& node)->bool {
 					return true;
 				}),
-				AllowExcuteGc([](const Node& node)->bool {
-					if (node.visited_time() < 10)
-					{
-						return true;
-					}
-					return false;
-				}),
 				ValueForRootNode([](const Node& node)->UcbValue {
 					return static_cast<UcbValue>(node.visited_time());
 				})
@@ -549,7 +537,7 @@ namespace gadt
 		template<typename State, typename Action, typename Result, bool _is_debug>
 		class MctsJsonConvertor
 		{
-		public:
+		private:
 			using SearchNode     = MctsNode<State, Action, Result, _is_debug>;
 			using VisualTree     = visual_tree::VisualTree;
 			using VisualNode	 = visual_tree::VisualNode;
@@ -624,48 +612,23 @@ namespace gadt
 		* [_is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
 		*/
 		template<typename State, typename Action, typename Result, bool _is_debug = false>
-		class MonteCarloTreeSearch
+		class MonteCarloTreeSearch final : public GameAlgorithmBase<State,Action,Result,_is_debug>
 		{
 		public:
 			using Node			= MctsNode<State, Action, Result, _is_debug>;			//searcg node.	
-			using ActionSet		= typename Node::ActionSet;								//set of Action
-
+			
 		private:
 			using Allocator     = typename Node::Allocator;								//allocator of nodes
 			using LogController = log::SearchLogger<State, Action, Result>;				//log controller
 			using JsonConvert   = MctsJsonConvertor<State, Action, Result, _is_debug>;	//json tree
 			using FuncPackage   = MctsFuncPackage<State, Action, Result, _is_debug>;	//function package.
+			using ActionList	= typename FuncPackage::ActionList;						//set of Action
 
 		private:
 			FuncPackage		_func_package;			//function package of the search.
-			MctsSetting		_setting;			//monte carlo tree search setting.
-			LogController	_log_controller;		//controller of the logs.
+			MctsSetting		_setting;				//monte carlo tree search setting.
 
 		private:
-
-			//return true if is debug.
-			constexpr bool is_debug() const
-			{
-				return _is_debug;
-			}
-
-			//get reference of log ostream
-			inline std::ostream& logger()
-			{
-				return _log_controller.log_ostream();
-			}
-
-			//return true if log enabled.
-			inline bool log_enabled() const
-			{
-				return _log_controller.log_enabled();
-			}
-
-			//return true if json output enabled.
-			inline bool json_output_enabled() const
-			{
-				return _log_controller.json_output_enabled();
-			}
 
 			//excute iteration function.
 			Action ExcuteMCTS(State root_state)
@@ -682,7 +645,7 @@ namespace gadt
 
 				//initialized
 				Node root_node(root_state, nullptr, _func_package, _setting);
-				ActionSet root_actions = root_node.action_set();
+				ActionList root_actions = root_node.action_list();
 				
 				//thread content
 				stl::LinearAllocator<Allocator, _is_debug> allocators(_setting.thread_num);
@@ -777,15 +740,15 @@ namespace gadt
 					}
 
 					//MCTS RESULT
-					table::ConsoleTable tb(7, root_node.action_set().size() + 2);
+					table::ConsoleTable tb(7, root_node.action_list().size() + 2);
 					tb.enable_title({ "MCTS RESULT: TIME = [ " + console::ToString(tp_mcts_start.time_since_created()) + "s ]" });
 					tb.set_cell_in_row(0, { { "Index" },{ "Action" },{ "Value" },{ "Visit" },{ "Win" },{ "Size" },{ "Best" } });
 					tb.set_width({ 3,10,4,4,4,4,2 });
-					for (size_t i = 0; i < root_node.action_set().size(); i++)
+					for (size_t i = 0; i < root_node.action_list().size(); i++)
 					{
 						tb.set_cell_in_row(i + 1, {
 							{ console::ToString(i) },
-							{ _log_controller.action_to_str_func()(root_node.action_set()[i]) },
+							{ _log_controller.action_to_str_func()(root_node.action_list()[i]) },
 							{ console::ToString(_func_package.ValueForRootNode(*child_ptr_set[i])) },
 							{ console::ToString(visit_time_set[i])},
 							{ console::ToString(win_time_set[i]) },
@@ -793,7 +756,7 @@ namespace gadt
 							{ i == best_node_index ? "Yes " : "  " }
 						});
 					}
-					tb.set_cell_in_row(root_node.action_set().size()+1, { 
+					tb.set_cell_in_row(root_node.action_list().size()+1, { 
 						{ "Total" },
 						{ "" },
 						{ "" },
@@ -819,24 +782,18 @@ namespace gadt
 				typename FuncPackage::StateToResultFunc		_StateToResult,
 				typename FuncPackage::AllowUpdateValueFunc	_AllowUpdateValue
 			):
-				_func_package(
-					_UpdateState,
-					_MakeAction,
-					_DetemineWinner,
-					_StateToResult,
-					_AllowUpdateValue
-				),
-				_setting(),
-				_log_controller()
+				GameAlgorithmBase<State, Action, Result, _is_debug>("MCTS"),
+				_func_package( _UpdateState, _MakeAction, _DetemineWinner, _StateToResult, _AllowUpdateValue),
+				_setting()
 			{
 			}
 
 
 			//use private allocator.
 			MonteCarloTreeSearch(FuncPackage function_package, size_t max_node) :
+				GameAlgorithmBase<State, Action, Result, _is_debug>("MCTS"),
 				_func_package(function_package),
-				_setting(),
-				_log_controller()
+				_setting()
 			{
 			}
 
@@ -850,40 +807,6 @@ namespace gadt
 			{
 				_setting = setting;
 				return ExcuteMCTS(root_state);
-			}
-
-			//enable log output to ostream.
-			inline void InitLog(
-				typename LogController::StateToStrFunc     _state_to_str,
-				typename LogController::ActionToStrFunc    _action_to_str,
-				typename LogController::ResultToStrFunc    _result_to_str
-			)
-			{
-				_log_controller.Init(_state_to_str, _action_to_str, _result_to_str);
-			}
-
-			//enable log by ostream.
-			inline void EnableLog(std::ostream& os = std::cout)
-			{
-				_log_controller.EnableLog(os);
-			}
-
-			//disable log.
-			inline void DisableLog()
-			{
-				_log_controller.DisableLog();
-			}
-
-			//enable json output
-			inline void EnableJsonOutput(std::string output_path = "./MctsOutput.json")
-			{
-				_log_controller.EnableJsonOutput(output_path);
-			}
-
-			//disable json output.
-			inline void DisableJsonOutput()
-			{
-				_log_controller.DisableJsonOutput();
 			}
 		};
 	}

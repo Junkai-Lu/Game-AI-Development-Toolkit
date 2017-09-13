@@ -39,6 +39,7 @@ namespace gadt
 		struct MonteCarloSetting final: public GameAlgorithmSettingBase
 		{
 			size_t		thread_num;					//thread num.
+			size_t		simulation_times;			//simulation_time;
 			size_t		simulation_warning_length;	//if the simulation length out of this value, it would throw a warning if is debug.
 
 			//default setting constructor.
@@ -91,6 +92,9 @@ namespace gadt
 		template<typename State, typename Action, bool _is_debug>
 		struct MonteCarloFuncPackage final : public GameAlgorithmFuncPackageBase<State, Action, _is_debug>
 		{
+			using AllowUpdateValueFunc = std::function<bool(const State&, AgentIndex)>;
+			
+
 			MonteCarloFuncPackage(
 				UpdateStateFunc			_UpdateState,
 				MakeActionFunc			_MakeAction,
@@ -106,15 +110,16 @@ namespace gadt
 		{
 		public:
 			using FuncPackage = MonteCarloFuncPackage<State, Action, _is_debug>;
+			using ActionList = typename FuncPackage::ActionList;
 
 		private:
 			FuncPackage _func_package;
 			MonteCarloSetting _setting;
 
 		private:
-			AgentIndex SimulationProcess() const
+			AgentIndex Simulation(const State original_state) const
 			{
-				State state = _state;	//copy
+				State state = original_state;	//copy
 				ActionList actions;
 				for (size_t i = 0;; i++)
 				{
@@ -137,17 +142,18 @@ namespace gadt
 					const Action& action = _func_package.DefaultPolicy(actions);
 
 					//state update.
-					_func_package.UpdateState(state, action);
+					_func_package.UpdateState(sim_state, action);
 				}
 				return _setting.no_winner_index;
 			}
 
-			/*Action ParallelSimulation() const
+			Action ParallelSimulation() const
 			{
-				using CountList = std::vector<size_t>;
-				std::vector<CountList> count_lists;
+				stl::LinearAllocator<std::vector<size_t>> count_lists(_setting.thread_num);
 				std::vector<std::thread> threads;
-			}*/
+
+				
+			}
 
 		public:
 

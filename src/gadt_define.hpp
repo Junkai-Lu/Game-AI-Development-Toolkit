@@ -63,7 +63,6 @@ namespace gadt
 		}
 	};
 
-
 	template<typename State, typename Action, typename Result, bool _is_debug>
 	class GameAlgorithmBase
 	{
@@ -110,9 +109,20 @@ namespace gadt
 
 	public:
 	
+		//set algorithm name.
 		inline void SetName(std::string name)
 		{
 			_algorithm_name = name;
+		}
+
+		//enable log output to ostream.
+		inline void InitLog(
+			typename LogController::StateToStrFunc     _state_to_str,
+			typename LogController::ActionToStrFunc    _action_to_str,
+			typename LogController::ResultToStrFunc    _result_to_str = [](const Result&)->std::string {return ""; }
+		)
+		{
+			_log_controller.Init(_state_to_str, _action_to_str, _result_to_str);
 		}
 
 		//enable log by ostream.
@@ -138,6 +148,7 @@ namespace gadt
 		{
 			_log_controller.DisableJsonOutput();
 		}
+
 	};
 	
 }

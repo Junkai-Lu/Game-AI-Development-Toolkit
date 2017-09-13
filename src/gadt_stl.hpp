@@ -119,7 +119,7 @@ namespace gadt
 			void Init(
 				StateToStrFunc state_to_str_func,
 				ActionToStrFunc action_to_str_func,
-				ResultToStrFunc result_to_str_func = [](const Result&)->std::string {return ""; }
+				ResultToStrFunc result_to_str_func
 			)
 			{
 				_initialized = true;

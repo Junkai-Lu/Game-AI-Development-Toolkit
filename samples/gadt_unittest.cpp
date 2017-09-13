@@ -40,14 +40,6 @@ namespace gadt
 				state.next_player = action.player == WHITE ? BLACK : WHITE;
 			}
 
-			State GetNewState(const State& state, const Action& action)
-			{
-				State temp = state;
-				temp.dot[action.x][action.y] = action.player;
-				temp.next_player = action.player == WHITE ? BLACK : WHITE;
-				return temp;
-			}
-
 			void MakeAction(const State& state, ActionSet& as)
 			{
 				for (size_t x = 0; x < 3; x++)
@@ -64,14 +56,14 @@ namespace gadt
 
 			Player DetemineWinner(const State& state)
 			{
-				bool all_empty = true;
+				bool all_filled = true;
 				for (size_t i = 0; i < 3; i++)
 				{
 					for (size_t y = 0; y < 3; y++)
 					{
 						if (state.dot[i][y] == EMPTY)
 						{
-							all_empty = false;
+							all_filled = false;
 						}
 					}
 					if (state.dot[i][0] == state.dot[i][1] && state.dot[i][1] == state.dot[i][2] && state.dot[i][0] != EMPTY)
@@ -83,10 +75,6 @@ namespace gadt
 						return state.dot[0][i];
 					}
 				}
-				if (all_empty)
-				{
-					return DRAW;
-				}
 				if (state.dot[0][0] == state.dot[1][1] && state.dot[1][1] == state.dot[2][2] && state.dot[1][1] != EMPTY)
 				{
 					return state.dot[0][0];
@@ -94,6 +82,10 @@ namespace gadt
 				if (state.dot[2][0] == state.dot[1][1] && state.dot[1][1] == state.dot[0][2] && state.dot[1][1] != EMPTY)
 				{
 					return state.dot[2][0];
+				}
+				if (all_filled)
+				{
+					return DRAW;
 				}
 				return EMPTY;
 			}
@@ -105,7 +97,11 @@ namespace gadt
 
 			bool AllowUpdateValue(const State& state, Result winner)
 			{
-				if (state.next_player != winner)
+				if (state.next_player == BLACK && winner == WHITE)
+				{
+					return true;
+				}
+				if (state.next_player == WHITE && winner == BLACK)
 				{
 					return true;
 				}
@@ -359,7 +355,7 @@ namespace gadt
 		void TestMctsNode()
 		{
 			tic_tac_toe::State state;
-			mcts::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>::FuncPackage func(
+			mcts::MctsFuncPackage<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> func(
 				tic_tac_toe::UpdateState,
 				tic_tac_toe::MakeAction,
 				tic_tac_toe::DetemineWinner,
@@ -391,15 +387,16 @@ namespace gadt
 			);
 			mcts.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr);
 			//mcts.EnableJsonOutput();
-			//mcts.EnableLog();
+			mcts.EnableLog();
 			tic_tac_toe::State state;
+			state.dot[0][0] = tic_tac_toe::WHITE;
 			/*for (size_t i = 1; i <= 16; i++)
 			{
 				setting.thread_num = i;
 				tic_tac_toe::Action action = mcts.DoMcts(state, setting);
 			}*/
 			tic_tac_toe::Action action = mcts.DoMcts(state, setting);
-			GADT_ASSERT((action.x == action.y || (action.x == 0 && action.y == 0) || (action.x == 0 && action.y == 2)), true);
+			GADT_ASSERT((action.x == 1 && action.y == 1), true);
 		}
 		void TestVisualTree()
 		{
@@ -561,20 +558,18 @@ namespace gadt
 			const bool enable_ab = false;
 			
 			minimax::MinimaxSearch<tic_tac_toe::State, tic_tac_toe::Action, true> minimax(
-				tic_tac_toe::GetNewState,
+				tic_tac_toe::UpdateState,
 				tic_tac_toe::MakeAction,
 				tic_tac_toe::DetemineWinner, 
 				tic_tac_toe::EvalForParent
 				);
 			minimax.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr);
 			//minimax.EnableJsonOutput();
-			//minimax.EnableLog();
+			minimax.EnableLog();
 			tic_tac_toe::State state;
-			//state.dot[0][2] = tic_tac_toe::BLACK;
-			//state.dot[0][0] = tic_tac_toe::BLACK;
-			//state.next_player = tic_tac_toe::WHITE;
+			state.dot[0][0] = tic_tac_toe::WHITE;
 			tic_tac_toe::Action action = minimax.DoNegamax(state, { timeout, max_depth, false });
-			GADT_ASSERT((action.x == action.y || (action.x == 0 && action.y == 0) || (action.x == 0 && action.y == 2)), true);
+			GADT_ASSERT((action.x == 1 && action.y == 1), true);
 		}
 		void TestRandomPool()
 		{
