@@ -285,6 +285,7 @@ namespace gadt
 					//generate new actions.
 					actions.clear();
 					func.MakeAction(state, actions);
+					GADT_CHECK_WARNING(is_debug(), actions.size() == 0, "empty action list.");
 
 					//choose action by default policy.
 					const Action& action = func.DefaultPolicy(actions);
@@ -448,7 +449,11 @@ namespace gadt
 			}
 		};
 
-		//function package
+		/*
+		* MctsFuncPackage include all necessary functions for MCTS.
+		*
+		* use MctsFuncPackage(...) to construct a new function package.
+		*/
 		template<typename State, typename Action, typename Result, bool _is_debug>
 		struct MctsFuncPackage final : public GameAlgorithmFuncPackageBase<State, Action, _is_debug>
 		{

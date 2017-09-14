@@ -20,10 +20,11 @@
 */
 
 #include "../src/gadtlib.h"
-#include "../src/bitboard.hpp"
-#include "../src/mcts.hpp"
-#include "../src/minimax.hpp"
 #include "../src/visual_tree.h"
+#include "../src/bitboard.hpp"
+#include "../src/monte_carlo.hpp"
+#include "../src/minimax.hpp"
+#include "../src/mcts.hpp"
 
 #pragma once
 

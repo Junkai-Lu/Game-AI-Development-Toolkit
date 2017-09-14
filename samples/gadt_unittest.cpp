@@ -586,6 +586,25 @@ namespace gadt
 			GADT_ASSERT(pool.size(), ub);
 			GADT_ASSERT(pool.random() > 0, true);
 		}
+		void TestMonteCarlo()
+		{
+			monte_carlo::MonteCarloSetting setting;
+			monte_carlo::MonteCarloSimulation<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mc(
+				tic_tac_toe::UpdateState,
+				tic_tac_toe::MakeAction,
+				tic_tac_toe::DetemineWinner,
+				tic_tac_toe::StateToResult,
+				tic_tac_toe::AllowUpdateValue
+			);
+			setting.thread_num = 4;
+			setting.simulation_times = 10000;
+			setting.timeout = 0;
+
+			tic_tac_toe::State state;
+			state.dot[0][0] = tic_tac_toe::WHITE;
+			tic_tac_toe::Action action = mc.DoMonteCarlo(state, setting);
+			GADT_ASSERT((action.x == 1 && action.y == 1), true);
+		}
 
 		const std::vector<FuncPair> func_list = {
 			{ "bitboard"		,TestBitBoard		},
@@ -599,7 +618,8 @@ namespace gadt
 			{ "stl::list"		,TestStlList		},
 			{ "table"			,TestTable			},
 			{ "random_pool"		,TestRandomPool		},
-			{ "minimax"			,TestMinimax		}
+			{ "minimax"			,TestMinimax		},
+			{ "monte_carlo"		,TestMonteCarlo     }
 		};
 		void RunTest(FuncPair func_pair)
 		{

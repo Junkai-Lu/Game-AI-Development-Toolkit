@@ -89,35 +89,47 @@ namespace gadt
 		*
 		* more details, see document.
 		*/
-		template<typename State, typename Action, bool _is_debug>
+		template<typename State, typename Action,typename Result, bool _is_debug>
 		struct MonteCarloFuncPackage final : public GameAlgorithmFuncPackageBase<State, Action, _is_debug>
 		{
-			using AllowUpdateValueFunc = std::function<bool(const State&, AgentIndex)>;
-			
+		public:
+			using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;
+			using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;
+			//using PolicyValueFunc		= std::function<UcbValue(const Node&, const Node&)>;
 
+		public:
+			const StateToResultFunc		StateToResult;		//get a result from state and winner.
+			const AllowUpdateValueFunc	AllowUpdateValue;	//update values in the node by the result.
+
+		public:
 			MonteCarloFuncPackage(
 				UpdateStateFunc			_UpdateState,
 				MakeActionFunc			_MakeAction,
-				DetemineWinnerFunc		_DetemineWinner
-			) :GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetemineWinner)
+				DetemineWinnerFunc		_DetemineWinner,
+				StateToResultFunc		_StateToResult,
+				AllowUpdateValueFunc	_AllowUpdateValue
+			) :
+				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetemineWinner),
+				StateToResult(_StateToResult),
+				AllowUpdateValue(_AllowUpdateValue)
 			{
 			}
 		};
 
-
-		template<typename State, typename Action, bool _is_debug>
-		class MonteCarloSimulation final :public GameAlgorithmBase<State,Action,int,_is_debug>
+		template<typename State, typename Action, typename Result, bool _is_debug>
+		class MonteCarloSimulation final :public GameAlgorithmBase<State, Action, Result, _is_debug>
 		{
 		public:
-			using FuncPackage = MonteCarloFuncPackage<State, Action, _is_debug>;
+			using FuncPackage = MonteCarloFuncPackage<State, Action, Result, _is_debug>;
 			using ActionList = typename FuncPackage::ActionList;
+			using CountList = std::vector<size_t>;
 
 		private:
 			FuncPackage _func_package;
 			MonteCarloSetting _setting;
 
 		private:
-			AgentIndex Simulation(const State original_state) const
+			Result Simulation(const State& original_state) const
 			{
 				State state = original_state;	//copy
 				ActionList actions;
@@ -131,32 +143,115 @@ namespace gadt
 					//return result if exist.
 					if (winner != _setting.no_winner_index)
 					{
-						return winner;
+						return _func_package.StateToResult(state, winner);
 					}
 
 					//generate new actions.
 					actions.clear();
 					_func_package.MakeAction(state, actions);
+					GADT_CHECK_WARNING(is_debug(), actions.size() == 0, "empty action list.");
 
 					//choose action by default policy.
 					const Action& action = _func_package.DefaultPolicy(actions);
 
 					//state update.
-					_func_package.UpdateState(sim_state, action);
+					_func_package.UpdateState(state, action);
 				}
-				return _setting.no_winner_index;
+				return _func_package.StateToResult(state, _setting.no_winner_index);
 			}
 
-			Action ParallelSimulation() const
+			Action ParallelSimulation(const State& state) const
 			{
-				stl::LinearAllocator<std::vector<size_t>> count_lists(_setting.thread_num);
-				std::vector<std::thread> threads;
+				//get available actions
+				ActionList action_list;
+				_func_package.MakeAction(state, action_list);
 
-				
+				//get child state
+				std::vector<State> child_states;
+				for (const Action& act : action_list)
+				{
+					child_states.push_back(state);
+					_func_package.UpdateState(child_states.back(), act);
+				}
+				size_t sim_time_each_action = 1 + _setting.simulation_times / child_states.size();
+
+				//create threads.
+				std::vector<CountList> count_lists(_setting.thread_num, CountList(child_states.size(), 0));
+				std::vector<std::thread> threads;
+				for (size_t thread_id = 0; thread_id < _setting.thread_num; thread_id++)
+				{
+					threads.push_back(std::thread([&](size_t id)->void {
+						CountList& count_list = count_lists[id];
+						for (size_t i = 0; i < child_states.size(); i++)
+						{
+							State& child_state = child_states[i];
+							for (size_t n = 0; n < sim_time_each_action; n++)
+							{
+								Result result = Simulation(child_state);
+								if (_func_package.AllowUpdateValue(state, result))
+								{
+									count_list[i] ++;
+								}
+							}
+						}
+					}, thread_id));
+				}
+				//join all threads.
+				for (size_t i = 0; i < threads.size(); i++)
+				{
+					threads[i].join();
+				}
+
+				//accumulate all the count list
+				CountList total(child_states.size(), 0);
+				for (auto count_list : count_lists)
+				{
+					for (size_t i = 0; i < child_states.size(); i++)
+					{
+						total[i] += count_list[i];
+					}
+				}
+
+				//find best action
+				size_t best_action_index = 0;
+				size_t best_score = total[0];
+				for (size_t i = 1; i < total.size(); i++)
+				{
+					if (total[i] > best_score)
+					{
+						best_score = total[i];
+						best_action_index = i;
+					}
+				}
+				return action_list[best_action_index];
 			}
 
 		public:
 
+			MonteCarloSimulation(
+				typename FuncPackage::UpdateStateFunc		_UpdateState,
+				typename FuncPackage::MakeActionFunc		_MakeAction,
+				typename FuncPackage::DetemineWinnerFunc	_DetemineWinner,
+				typename FuncPackage::StateToResultFunc		_StateToResult,
+				typename FuncPackage::AllowUpdateValueFunc	_AllowUpdateValue
+			):
+				GameAlgorithmBase<State, Action, Result, _is_debug>("Monte Carlo"),
+				_func_package(_UpdateState, _MakeAction, _DetemineWinner, _StateToResult, _AllowUpdateValue),
+				_setting()
+			{
+			}
+
+			MonteCarloSimulation(const FuncPackage& func_package) :
+				_func_package(func_package),
+				_setting()
+			{
+			}
+
+			Action DoMonteCarlo(const State state, MonteCarloSetting setting)
+			{
+				_setting = setting;
+				return ParallelSimulation(state);
+			}
 		};
 	}
 }
