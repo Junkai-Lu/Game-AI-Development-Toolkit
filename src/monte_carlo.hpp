@@ -82,10 +82,45 @@ namespace gadt
 		*
 		* the only constructor is MonteCarloSetting(params), which include 4 parameters:
 		*
-		* 1. GetNewStateFunc    = std::function<State(const State&, const Action&)>;
-		* 2. MakeActionFunc     = std::function<void(const State&, ActionSet&)>;
-		* 3. DetemineWinnerFunc = std::function<AgentIndex(const State&)>;
-		* 4. StateToResultFunc  = std::function<Result(const State&, AgentIndex)>;
+		* 1. GetNewStateFunc      = std::function<State(const State&, const Action&)>;
+		* 2. MakeActionFunc       = std::function<void(const State&, ActionSet&)>;
+		* 3. DetemineWinnerFunc   = std::function<AgentIndex(const State&)>;
+		* 4. StateToResultFunc    = std::function<Result(const State&, AgentIndex)>;
+		* 5. AllowUpdateValueFunc = std::function<bool(const State&, const Result&)>;
+		*
+		* more details, see document.
+		*/
+		template<typename State, typename Action, typename Result, bool _is_debug>
+		struct MonteCarloFuncPackage;
+
+		template<typename State, bool _is_debug>
+		class MonteCarloNode
+		{
+		private:
+			const State		_state;				//state of this node.
+			AgentIndex		_winner_index;		//the winner index of the state.
+			uint32_t		_visited_time;		//how many times that this node had been visited.
+			uint32_t		_win_time;			//win time accmulated by the simulation.
+
+		public:
+			const State&        state()               const { return _state; }
+			AgentIndex          winner_index()        const { return _winner_index; }
+			uint32_t            visited_time()        const { return _visited_time; }
+			uint32_t            win_time()            const { return _win_time; }
+
+			MonteCarloNode(const State& state, )
+		};
+
+		/*
+		* MonteCarloFuncPackage include necessary function to execute monte-carlo simulation.
+		*
+		* the only constructor is MonteCarloSetting(params), which include 4 parameters:
+		*
+		* 1. GetNewStateFunc      = std::function<State(const State&, const Action&)>;
+		* 2. MakeActionFunc       = std::function<void(const State&, ActionSet&)>;
+		* 3. DetemineWinnerFunc   = std::function<AgentIndex(const State&)>;
+		* 4. StateToResultFunc    = std::function<Result(const State&, AgentIndex)>;
+		* 5. AllowUpdateValueFunc = std::function<bool(const State&, const Result&)>;
 		*
 		* more details, see document.
 		*/
@@ -95,7 +130,8 @@ namespace gadt
 		public:
 			using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;
 			using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;
-			//using PolicyValueFunc		= std::function<UcbValue(const Node&, const Node&)>;
+			using PolicyValueFunc		= std::function<UcbValue(const Node&, const Node&)>;
+			using DefaultPolicy			= std::function<>
 
 		public:
 			const StateToResultFunc		StateToResult;		//get a result from state and winner.
