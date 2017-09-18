@@ -39,19 +39,6 @@ namespace gadt
 	//monte carlo tree search.
 	namespace mcts
 	{
-		//allow check warning if it is true.
-		constexpr const bool g_MCTS_NEW_ENABLE_WARNING = true;
-
-		namespace policy
-		{
-			inline UcbValue UCB1(UcbValue average_reward, UcbValue overall_time, UcbValue played_time, UcbValue c = 1.41421)
-			{
-				UcbValue ln = log10(overall_time);
-				UcbValue exploration = sqrt( ln/ played_time);
-				return average_reward + c * exploration;
-			}
-		}
-
 		/*
 		* MctsSetting is the setting of MCTS.
 		*
@@ -210,15 +197,8 @@ namespace gadt
 				}
 
 				//free the node itself.
-				if (is_debug())
-				{
-					bool b = allocator.destory(this);
-					GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, b == false, "MCTS105: free child node failed.");
-				}
-				else
-				{
-					allocator.destory(this);
-				}
+				bool b = allocator.destory(this);
+				GADT_CHECK_WARNING(is_debug(), b == false, "MCTS105: free child node failed.");
 			}
 
 		public:
@@ -516,10 +496,7 @@ namespace gadt
 					return policy::UCB1(avg, static_cast<UcbValue>(parent.visited_time()), static_cast<UcbValue>(child.visited_time()));
 				}),
 				DefaultPolicy([](const ActionList& actions)->const Action&{
-					if (_is_debug)
-					{
-						GADT_CHECK_WARNING(g_MCTS_NEW_ENABLE_WARNING, actions.size() == 0, "MCTS104: empty action set during default policy.");
-					}
+					GADT_CHECK_WARNING(is_debug(), actions.size() == 0, "MCTS104: empty action set during default policy.");
 					return actions[rand() % actions.size()];
 				}),
 				AllowExtend([](const Node& node)->bool {

@@ -242,7 +242,7 @@ namespace gadt
 			}
 		}
 
-		void ConsoleTable::basic_output(std::ostream & os, CellOutputFunc cell_cb, bool enable_frame, bool enable_index)
+		void ConsoleTable::basic_output(std::ostream & os, CellOutputFunc CellCallback, bool enable_frame, bool enable_index)
 		{
 			std::string frame = enable_frame ? "+-|" : "   ";
 			const size_t space_before_line_size = 4;
@@ -274,18 +274,7 @@ namespace gadt
 				os << frame[0] << std::endl;
 
 				os << space_before_line << frame[2];
-				if (_title_cell.str.length() >= str_width)
-				{
-					cell_cb(_title_cell, os, str_width);
-				}
-				else
-				{
-					size_t before_space = (str_width - _title_cell.str.length()) / 2;
-					size_t after_space = str_width - _title_cell.str.length() - before_space;
-					os << std::string(before_space, ' ');
-					cell_cb(_title_cell, os, str_width);
-					os << std::string(after_space, ' ');
-				}
+				CellCallback(_title_cell, str_width, os);
 				os << frame[2] << std::endl;
 			}
 
@@ -320,32 +309,7 @@ namespace gadt
 				{
 					const size_t width = _column_width[column] * 2;
 					const TableCell& c = cell(column, row);
-					if (c.str.length() < width)
-					{
-						size_t space_width = width - c.str.length();
-						if (c.align == ALIGN_LEFT)
-						{
-							cell_cb(c, os, width);
-							os << std::string(space_width, ' ');
-						}
-						else if (c.align == ALIGN_RIGHT)
-						{
-							os << std::string(space_width, ' ');
-							cell_cb(c, os, width);
-						}
-						else if (c.align == ALIGN_MIDDLE)
-						{
-							size_t left_width = space_width / 2;
-							size_t right_width = space_width - left_width;
-							os << std::string(left_width, ' ');
-							cell_cb(c, os, width);
-							os << std::string(right_width, ' ');
-						}
-					}
-					else
-					{
-						cell_cb(c, os, width);
-					}
+					CellCallback(c, width, os);
 					if (column != _column_size - 1) { os << frame[2]; }
 					else 
 					{
@@ -463,13 +427,8 @@ namespace gadt
 		//output string
 		std::string ConsoleTable::output_string(bool enable_frame, bool enable_index)
 		{
-			CellOutputFunc cell_cb = [](const TableCell& c, std::ostream& os, size_t max_width)->void {
-				std::string str = c.str;
-				if (str.length() > max_width)
-				{
-					str = str.substr(0, max_width);
-				}
-				os << str;
+			CellOutputFunc cell_cb = [](const TableCell& c, size_t max_width, std::ostream& os )->void {
+				os << c.GetString(max_width);
 			};
 			std::stringstream ss;
 			basic_output(ss, cell_cb, enable_frame, enable_index);
@@ -479,13 +438,8 @@ namespace gadt
 		//print 
 		void ConsoleTable::print(bool enable_frame, bool enable_index)
 		{
-			CellOutputFunc callback = [](const TableCell& c, std::ostream& os, size_t max_width)->void {
-				std::string str = c.str;
-				if (str.length() > max_width)
-				{
-					str = str.substr(0, max_width);
-				}
-				console::Cprintf(str, c.color);
+			CellOutputFunc callback = [](const TableCell& c, size_t max_width, std::ostream& os)->void {
+				console::Cprintf(c.GetString(max_width), c.color);
 			};
 			basic_output(std::cout, callback, enable_frame, enable_index);
 		}

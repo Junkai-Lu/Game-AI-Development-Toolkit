@@ -93,9 +93,12 @@ namespace gadt
 		template<typename State, typename Action, typename Result, bool _is_debug>
 		struct MonteCarloFuncPackage;
 
-		template<typename State, bool _is_debug>
+		template<typename State, typename Action, typename Result, bool _is_debug>
 		class MonteCarloNode
 		{
+		private:
+			using FuncPackage = MonteCarloFuncPackage<State, Action, Result, _is_debug>;
+
 		private:
 			const State		_state;				//state of this node.
 			AgentIndex		_winner_index;		//the winner index of the state.
@@ -108,13 +111,31 @@ namespace gadt
 			uint32_t            visited_time()        const { return _visited_time; }
 			uint32_t            win_time()            const { return _win_time; }
 
-			MonteCarloNode(const State& state, )
+			//increase visited time.
+			inline void incr_visited_time()
+			{
+				_visited_time++;
+			}
+
+			//increase win time.
+			inline void incr_win_time()
+			{
+				_win_time++;
+			}
+
+			MonteCarloNode(const State& state, const FuncPackage& func_package):
+				_state(state),
+				_winner_index(func_package.DetemineWinner(_state)),
+				_visited_time(0),
+				_win_time(0)
+			{
+			}
 		};
 
 		/*
 		* MonteCarloFuncPackage include necessary function to execute monte-carlo simulation.
 		*
-		* the only constructor is MonteCarloSetting(params), which include 4 parameters:
+		* the only constructor is MonteCarloSetting(params), which include 5 parameters:
 		*
 		* 1. GetNewStateFunc      = std::function<State(const State&, const Action&)>;
 		* 2. MakeActionFunc       = std::function<void(const State&, ActionSet&)>;
@@ -127,15 +148,22 @@ namespace gadt
 		template<typename State, typename Action,typename Result, bool _is_debug>
 		struct MonteCarloFuncPackage final : public GameAlgorithmFuncPackageBase<State, Action, _is_debug>
 		{
+		private:
+			using Node = MonteCarloNode<State, _is_debug>;
+
 		public:
 			using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;
 			using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;
-			using PolicyValueFunc		= std::function<UcbValue(const Node&, const Node&)>;
-			using DefaultPolicy			= std::function<>
+			using ActionPolicyFunc		= std::function<UcbValue(const &, const Node&)>;
+			using DefaultPolicyFunc		= std::function<const Action&(const typename ActionList&)>;
+			using ValueForRootNodeFunc	= std::function<UcbValue(const Node&)>;
 
 		public:
 			const StateToResultFunc		StateToResult;		//get a result from state and winner.
 			const AllowUpdateValueFunc	AllowUpdateValue;	//update values in the node by the result.
+			ActionPolicyFunc			ActionPolicy;		//action policy is used for root node to select next action for simulation.
+			DefaultPolicyFunc			DefaultPolicy;		//the default policy to select action in simulation.
+			ValueForRootNodeFunc		ValueForRootNode;	//select best action of root node after iterations finished.
 
 		public:
 			MonteCarloFuncPackage(
@@ -147,17 +175,32 @@ namespace gadt
 			) :
 				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetemineWinner),
 				StateToResult(_StateToResult),
-				AllowUpdateValue(_AllowUpdateValue)
+				AllowUpdateValue(_AllowUpdateValue),
+				ActionPolicy([](const Node& parent, const Node& child)->UcbValue {
+					UcbValue avg = static_cast<UcbValue>(child.win_time()) / static_cast<UcbValue>(child.visited_time());
+					return policy::UCB1(avg, static_cast<UcbValue>(parent.visited_time()), static_cast<UcbValue>(child.visited_time()));
+				}),
+				DefaultPolicy([](const ActionList& actions)->const Action&{
+					GADT_CHECK_WARNING(is_debug(), actions.size() == 0, "MCTS104: empty action set during default policy.");
+					return actions[rand() % actions.size()];
+				}),
+				ValueForRootNode([](const Node& node)->UcbValue {
+					return static_cast<UcbValue>(node.visited_time());
+				})
 			{
 			}
+
+
 		};
 
 		template<typename State, typename Action, typename Result, bool _is_debug>
 		class MonteCarloSimulation final :public GameAlgorithmBase<State, Action, Result, _is_debug>
 		{
 		public:
+			using Node = MonteCarloNode<State, Action, Result, _is_debug>;
 			using FuncPackage = MonteCarloFuncPackage<State, Action, Result, _is_debug>;
 			using ActionList = typename FuncPackage::ActionList;
+			using NodeList = std::vector<Node>;
 			using CountList = std::vector<size_t>;
 
 		private:
@@ -165,6 +208,8 @@ namespace gadt
 			MonteCarloSetting _setting;
 
 		private:
+			
+			//simulation.
 			Result Simulation(const State& original_state) const
 			{
 				State state = original_state;	//copy
@@ -196,41 +241,75 @@ namespace gadt
 				return _func_package.StateToResult(state, _setting.no_winner_index);
 			}
 
-			Action ParallelSimulation(const State& state) const
+			//execute simulation.
+			void ExecuteSimulation(const Node& parent, Node& child)
+			{
+				Result result = Simulation(child.state());
+				child.incr_visited_time();
+				if (_func_package.AllowUpdateValue(parent, result))
+				{
+					child.incr_win_time();
+				}
+			}
+
+			//select best child by action policy.
+			void Selection(const Node& parent, NodeList& child_nodes)
+			{
+				size_t best_index = 0;
+				UcbValue best_value = _func_package.ActionPolicy(parent, child_nodes[0]);
+				for (size_t i = 1; i < child_nodes.size(); i++)
+				{
+					UcbValue value = _func_package.ActionPolicy(parent, child_nodes[i]);
+					if (value > best_value)
+					{
+						best_value = value;
+						best_index = i;
+					}
+				}
+
+				//execute simulation in best child
+				ExecuteSimulation(parent, child_nodes[best_index]);
+			}
+
+			//execute simulatio for all child nodes.
+			void ExecuteAllChild(const Node& parent, NodeList& child_nodes)
+			{
+				for (Node& child : child_nodes)
+				{
+					ExecuteSimulation(parent, child);
+				}
+			}
+
+			Action ExecuteMonteCarlo(const State& state, bool enable_action_policy ) const
 			{
 				//get available actions
 				ActionList action_list;
 				_func_package.MakeAction(state, action_list);
 
-				//get child state
-				std::vector<State> child_states;
+				//get child nodes
+				std::vector<Node> child_nodes;
 				for (const Action& act : action_list)
 				{
-					child_states.push_back(state);
-					_func_package.UpdateState(child_states.back(), act);
+					State temp = state;
+					_func_package.UpdateState(temp, act);
+					child_nodes.push_back(Node(temp, _func_package));
 				}
-				size_t sim_time_each_action = 1 + _setting.simulation_times / child_states.size();
+				size_t sim_time = 1 + _setting.simulation_times / child_states.size();
 
 				//create threads.
-				std::vector<CountList> count_lists(_setting.thread_num, CountList(child_states.size(), 0));
 				std::vector<std::thread> threads;
 				for (size_t thread_id = 0; thread_id < _setting.thread_num; thread_id++)
 				{
-					threads.push_back(std::thread([&](size_t id)->void {
-						CountList& count_list = count_lists[id];
-						for (size_t i = 0; i < child_states.size(); i++)
-						{
-							State& child_state = child_states[i];
-							for (size_t n = 0; n < sim_time_each_action; n++)
-							{
-								Result result = Simulation(child_state);
-								if (_func_package.AllowUpdateValue(state, result))
-								{
-									count_list[i] ++;
-								}
-							}
-						}
-					}, thread_id));
+					if (enable_action_policy)
+					{
+						threads.push_back(std::thread([&]()->void {
+
+						}));
+					}
+					else
+					{
+						//TODO
+					}
 				}
 				//join all threads.
 				for (size_t i = 0; i < threads.size(); i++)
@@ -261,6 +340,8 @@ namespace gadt
 				}
 				return action_list[best_action_index];
 			}
+
+			
 
 		public:
 

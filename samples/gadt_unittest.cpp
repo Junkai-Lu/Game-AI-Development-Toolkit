@@ -548,8 +548,8 @@ namespace gadt
 			GADT_ASSERT(table.cell(0, 0).str, "hello");
 			GADT_ASSERT(table.cell(2, 0).str, "hello");
 			GADT_ASSERT(table.cell(1, 2).str, "world");
-			//table.print();
-			//std::cout << table.output_string();
+			table.print();
+			std::cout << table.output_string();
 		}
 		void TestMinimax()
 		{

@@ -459,6 +459,39 @@ namespace gadt
 				align(_align)
 			{
 			}
+
+			//get string.
+			std::string GetString(size_t max_length) const
+			{
+				std::string temp;
+				if (str.length() < max_length)
+				{
+					size_t space_width = max_length - str.length();
+					if (align == ALIGN_LEFT)
+					{
+						temp += str;
+						temp += std::string(space_width, ' ');
+					}
+					else if (align == ALIGN_RIGHT)
+					{
+						temp += std::string(space_width, ' ');
+						temp += str;
+					}
+					else if (align == ALIGN_MIDDLE)
+					{
+						size_t left_width = space_width / 2;
+						size_t right_width = space_width - left_width;
+						temp += std::string(left_width, ' ');
+						temp += str;
+						temp += std::string(right_width, ' ');
+					}
+				}
+				else
+				{
+					temp = str.substr(0, max_length);
+				}
+				return temp;
+			}
 		};
 
 		//console table
@@ -470,7 +503,7 @@ namespace gadt
 			using CellSet = std::vector<std::vector<TableCell>>;
 			using Column = std::vector<TableCell*>;
 			using Row = std::vector<TableCell*>;	
-			using CellOutputFunc = std::function<void(const TableCell&, std::ostream&, size_t)>;
+			using CellOutputFunc = std::function<void(const TableCell&, size_t, std::ostream&)>;
 			using FrameOutputFunc = std::function<void(std::string str, std::ostream&)>;
 
 			//size

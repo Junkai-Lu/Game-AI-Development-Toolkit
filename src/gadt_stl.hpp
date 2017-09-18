@@ -990,4 +990,14 @@ namespace gadt
 			
 		};
 	}
+
+	namespace policy
+	{
+		inline UcbValue UCB1(UcbValue average_reward, UcbValue overall_time, UcbValue played_time, UcbValue c = 1.41421)
+		{
+			UcbValue ln = log10(overall_time);
+			UcbValue exploration = sqrt(ln / played_time);
+			return average_reward + c * exploration;
+		}
+	}
 }
