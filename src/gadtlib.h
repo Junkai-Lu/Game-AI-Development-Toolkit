@@ -603,4 +603,39 @@ namespace gadt
 			void print(bool enable_frame = true, bool enable_index = false);
 		};
 	}
+
+	namespace func
+	{
+		template<typename T>
+		size_t GetMaxElement(const std::vector<T>& vec)
+		{
+			size_t best_index = 0;
+			const T* best_ele = &vec[0];
+			for (size_t i = 1; i < vec.size(); i++)
+			{
+				if (vec[i] > *best_ele)
+				{
+					best_ele = &vec[i];
+					best_index = i;
+				}
+			}
+			return best_index;
+		}
+
+		template<typename T>
+		size_t GetMaxElement(const std::vector<T>& vec, std::function<bool(const T&, const T&)> more_than)
+		{
+			size_t best_index = 0;
+			T* best_ele = &vec[0];
+			for (size_t i = 1; i < vec.size(); i++)
+			{
+				if (more_than(vec[i], *best_ele))
+				{
+					best_ele = &vec[i];
+					best_index = i;
+				}
+			}
+			return best_index;
+		}
+	}
 }

@@ -446,7 +446,7 @@ namespace gadt
 			using TreePolicyValueFunc	= std::function<UcbValue(const Node&, const Node&)>;
 			using DefaultPolicyFunc		= std::function<const Action&(const typename ActionList&)>;
 			using AllowExtendFunc		= std::function<bool(const Node&)>;
-			using ValueForRootNodeFunc	= std::function<UcbValue(const Node&)>;
+			using ValueForRootNodeFunc	= std::function<UcbValue(const Node&, const Node&)>;
 
 		public:
 			//necessary functions.
@@ -496,14 +496,14 @@ namespace gadt
 					return policy::UCB1(avg, static_cast<UcbValue>(parent.visited_time()), static_cast<UcbValue>(child.visited_time()));
 				}),
 				DefaultPolicy([](const ActionList& actions)->const Action&{
-					GADT_CHECK_WARNING(is_debug(), actions.size() == 0, "MCTS104: empty action set during default policy.");
+					GADT_CHECK_WARNING(_is_debug, actions.size() == 0, "MCTS104: empty action set during default policy.");
 					return actions[rand() % actions.size()];
 				}),
 				AllowExtend([](const Node& node)->bool {
 					return true;
 				}),
-				ValueForRootNode([](const Node& node)->UcbValue {
-					return static_cast<UcbValue>(node.visited_time());
+				ValueForRootNode([](const Node& parent, const Node& child)->UcbValue {
+					return static_cast<UcbValue>(child.visited_time());
 				})
 			{
 			}
@@ -678,30 +678,17 @@ namespace gadt
 				}
 
 				//select best action.
-				UcbValue best_value = 0;
-				size_t best_node_index = 0;
-				Node* child_ptr = root_node.fir_child_node();
-				std::vector<Node*> child_ptr_set(root_actions.size(), nullptr);
-
 				GADT_CHECK_WARNING(is_debug(), root_node.fir_child_node() == nullptr, "MCTS107: empty child node under root node.");
-				for (size_t i = 0; i < root_actions.size(); i++)
+				Node* child_ptr = root_node.fir_child_node();
+				std::vector<Node*> child_ptr_set;
+				std::vector<UcbValue> child_value_set;
+				while(child_ptr != nullptr)
 				{
-					child_ptr_set[i] = child_ptr;
-					if (child_ptr != nullptr)
-					{
-						UcbValue child_value = _func_package.ValueForRootNode(*child_ptr);
-						if (child_value > best_value)
-						{
-							best_value = child_value;
-							best_node_index = i;
-						}
-						child_ptr = child_ptr->brother_node();
-					}
-					else 
-					{ 
-						break; 
-					}
+					child_ptr_set.push_back(child_ptr);
+					child_value_set.push_back(_func_package.ValueForRootNode(root_node, *child_ptr));
+					child_ptr = child_ptr->brother_node();
 				}
+				size_t best_node_index = func::GetMaxElement(child_value_set);
 
 				if (log_enabled())
 				{
@@ -731,7 +718,7 @@ namespace gadt
 						tb.set_cell_in_row(i + 1, {
 							{ console::ToString(i) },
 							{ _log_controller.action_to_str_func()(root_node.action_list()[i]) },
-							{ console::ToString(_func_package.ValueForRootNode(*child_ptr_set[i])) },
+							{ console::ToString(child_value_set[i]) },
 							{ console::ToString(visit_time_set[i])},
 							{ console::ToString(win_time_set[i]) },
 							{ console::ToString(tree_size_set[i]) },

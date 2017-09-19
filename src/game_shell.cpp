@@ -50,11 +50,11 @@ namespace gadt
 			std::string GetCommandTypeSymbol(size_t i)
 			{
 				static const char* type_symbol[g_COMMAND_TYPE_NUMBER] = {
-					"[XX]",
-					"[YX]",
-					"[XY]",
-					"[YY]",
-					"[ P]"
+					"[F]",
+					"[F]",
+					"[F]",
+					"[F]",
+					"[P]"
 				};
 				return std::string(type_symbol[i]);
 			}

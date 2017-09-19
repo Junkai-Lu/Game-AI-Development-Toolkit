@@ -39,13 +39,16 @@ namespace gadt
 		struct MonteCarloSetting final: public GameAlgorithmSettingBase
 		{
 			size_t		thread_num;					//thread num.
+			bool		enable_action_policy;		//enable action policy(like Flat-UCB )
 			size_t		simulation_times;			//simulation_time;
 			size_t		simulation_warning_length;	//if the simulation length out of this value, it would throw a warning if is debug.
+			
 
 			//default setting constructor.
 			MonteCarloSetting() :
 				GameAlgorithmSettingBase(30,0),
 				thread_num(1),
+				enable_action_policy(true),
 				simulation_warning_length(1000)
 			{
 			}
@@ -54,11 +57,13 @@ namespace gadt
 			MonteCarloSetting(
 				double _timeout,
 				size_t _thread_num,
+				size_t _enable_action_policy,
 				AgentIndex _no_winner_index = 0,
 				size_t _simulation_warning_length = 1000
 			) :
 				GameAlgorithmSettingBase(_timeout, no_winner_index),
 				thread_num(_thread_num),
+				enable_action_policy(_enable_action_policy),
 				simulation_warning_length(_simulation_warning_length)
 			{
 			}
@@ -66,13 +71,15 @@ namespace gadt
 			//output print with str behind each line.
 			std::string info() const override
 			{
-				table::ConsoleTable tb(2, 6);
+				size_t index = 0;
+				table::ConsoleTable tb(2, 5);
 				tb.set_width({ 12,6 });
 				tb.enable_title({ "MONTE CARLO SETTING" });
-				tb.set_cell_in_row(0, { { "timeout" },{ console::ToString(timeout) } });
-				tb.set_cell_in_row(1, { { "thread_num" },{ console::ToString(thread_num) } });
-				tb.set_cell_in_row(4, { { "no_winner_index" },{ console::ToString(no_winner_index) } });
-				tb.set_cell_in_row(5, { { "simulation_warning_length" },{ console::ToString(simulation_warning_length) } });
+				tb.set_cell_in_row(index++, { { "timeout" },{ console::ToString(timeout) } });
+				tb.set_cell_in_row(index++, { { "thread_num" },{ console::ToString(thread_num) } });
+				tb.set_cell_in_row(index++, { { "enable_action_policy" },{ console::ToString(enable_action_policy) } });
+				tb.set_cell_in_row(index++, { { "no_winner_index" },{ console::ToString(no_winner_index) } });
+				tb.set_cell_in_row(index++, { { "simulation_warning_length" },{ console::ToString(simulation_warning_length) } });
 				return tb.output_string();
 			}
 		};
@@ -93,6 +100,14 @@ namespace gadt
 		template<typename State, typename Action, typename Result, bool _is_debug>
 		struct MonteCarloFuncPackage;
 
+		/*
+		* MonteCarloNode is the node of Monte Carlo.
+		*
+		* MonteCarloSetting() would use default setting.
+		* MonteCarloSetting(params) would generate custom setting.
+		*
+		* more details, see document.
+		*/
 		template<typename State, typename Action, typename Result, bool _is_debug>
 		class MonteCarloNode
 		{
@@ -120,13 +135,21 @@ namespace gadt
 			//increase win time.
 			inline void incr_win_time()
 			{
-				_win_time++;
+				volatile uint32_t temp = _win_time + 1;
+				_win_time = temp;
 			}
 
+			//return true if the state is the terminal-state of the game.
+			inline bool is_end_state(const MonteCarloSetting& setting) const
+			{
+				return _winner_index != setting.no_winner_index;
+			}
+
+			//constructor
 			MonteCarloNode(const State& state, const FuncPackage& func_package):
 				_state(state),
 				_winner_index(func_package.DetemineWinner(_state)),
-				_visited_time(0),
+				_visited_time(1),
 				_win_time(0)
 			{
 			}
@@ -149,14 +172,14 @@ namespace gadt
 		struct MonteCarloFuncPackage final : public GameAlgorithmFuncPackageBase<State, Action, _is_debug>
 		{
 		private:
-			using Node = MonteCarloNode<State, _is_debug>;
+			using Node = MonteCarloNode<State, Action, Result, _is_debug>;
 
 		public:
 			using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;
 			using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;
-			using ActionPolicyFunc		= std::function<UcbValue(const &, const Node&)>;
+			using ActionPolicyFunc		= std::function<UcbValue(const Node&, const Node&)>;
 			using DefaultPolicyFunc		= std::function<const Action&(const typename ActionList&)>;
-			using ValueForRootNodeFunc	= std::function<UcbValue(const Node&)>;
+			using ValueForRootNodeFunc	= std::function<UcbValue(const Node&, const Node&)>;
 
 		public:
 			const StateToResultFunc		StateToResult;		//get a result from state and winner.
@@ -181,11 +204,12 @@ namespace gadt
 					return policy::UCB1(avg, static_cast<UcbValue>(parent.visited_time()), static_cast<UcbValue>(child.visited_time()));
 				}),
 				DefaultPolicy([](const ActionList& actions)->const Action&{
-					GADT_CHECK_WARNING(is_debug(), actions.size() == 0, "MCTS104: empty action set during default policy.");
+					GADT_CHECK_WARNING(_is_debug, actions.size() == 0, "MCTS104: empty action set during default policy.");
 					return actions[rand() % actions.size()];
 				}),
-				ValueForRootNode([](const Node& node)->UcbValue {
-					return static_cast<UcbValue>(node.visited_time());
+				ValueForRootNode([](const Node& parent, const Node& child)->UcbValue {
+					UcbValue avg = static_cast<UcbValue>(child.win_time()) / static_cast<UcbValue>(child.visited_time());
+					return policy::UCB1(avg, static_cast<UcbValue>(parent.visited_time()), static_cast<UcbValue>(child.visited_time()));
 				})
 			{
 			}
@@ -242,18 +266,22 @@ namespace gadt
 			}
 
 			//execute simulation.
-			void ExecuteSimulation(const Node& parent, Node& child)
+			void ExecuteSimulation(Node& parent, Node& child) const
 			{
-				Result result = Simulation(child.state());
+				Result result = child.is_end_state(_setting)
+					? _func_package.StateToResult(child.state(),child.winner_index())
+					: Simulation(child.state());
 				child.incr_visited_time();
-				if (_func_package.AllowUpdateValue(parent, result))
+				parent.incr_visited_time();
+				if (_func_package.AllowUpdateValue(parent.state(), result))
 				{
 					child.incr_win_time();
+					parent.incr_win_time();
 				}
 			}
 
 			//select best child by action policy.
-			void Selection(const Node& parent, NodeList& child_nodes)
+			void Selection(Node& parent, NodeList& child_nodes) const
 			{
 				size_t best_index = 0;
 				UcbValue best_value = _func_package.ActionPolicy(parent, child_nodes[0]);
@@ -272,7 +300,7 @@ namespace gadt
 			}
 
 			//execute simulatio for all child nodes.
-			void ExecuteAllChild(const Node& parent, NodeList& child_nodes)
+			void ExecuteAllChild(Node& parent, NodeList& child_nodes) const
 			{
 				for (Node& child : child_nodes)
 				{
@@ -280,21 +308,35 @@ namespace gadt
 				}
 			}
 
+			//execute monte carlo.
 			Action ExecuteMonteCarlo(const State& state, bool enable_action_policy ) const
 			{
 				//get available actions
+				Node root(state, _func_package);
 				ActionList action_list;
+				NodeList child_nodes;
+				timer::TimePoint tp_mc_start;
+
+				//outputt log.
+				if (log_enabled())
+				{
+					logger() << "[ Monte Carlo Simulation ]" << std::endl;
+					logger() << _setting.info();
+					logger() << std::endl << ">> Executing Monte Carlo Simulation......" << std::endl;
+				}
+
+				//make actions
 				_func_package.MakeAction(state, action_list);
+				GADT_CHECK_WARNING(is_debug(), action_list.empty(), "empty action list for root node");
 
 				//get child nodes
-				std::vector<Node> child_nodes;
 				for (const Action& act : action_list)
 				{
 					State temp = state;
 					_func_package.UpdateState(temp, act);
 					child_nodes.push_back(Node(temp, _func_package));
 				}
-				size_t sim_time = 1 + _setting.simulation_times / child_states.size();
+				size_t sim_time = enable_action_policy? 1 + _setting.simulation_times: 1 + (_setting.simulation_times / child_nodes.size());
 
 				//create threads.
 				std::vector<std::thread> threads;
@@ -303,12 +345,22 @@ namespace gadt
 					if (enable_action_policy)
 					{
 						threads.push_back(std::thread([&]()->void {
-
+							for (size_t i = 0; i < sim_time; i++)
+							{
+								if (timeout(tp_mc_start, _setting)) { return; }
+								Selection(root, child_nodes);
+							}
 						}));
 					}
 					else
 					{
-						//TODO
+						threads.push_back(std::thread([&]()->void {
+							for (size_t i = 0; i < sim_time; i++)
+							{
+								if (timeout(tp_mc_start, _setting)) { return; }
+								ExecuteAllChild(root, child_nodes);
+							}
+						}));
 					}
 				}
 				//join all threads.
@@ -318,30 +370,45 @@ namespace gadt
 				}
 
 				//accumulate all the count list
-				CountList total(child_states.size(), 0);
-				for (auto count_list : count_lists)
+				std::vector<UcbValue> child_value_set(child_nodes.size(), 0);
+				for (size_t i = 0; i < child_nodes.size(); i++)
 				{
-					for (size_t i = 0; i < child_states.size(); i++)
+					child_value_set[i] = _func_package.ValueForRootNode(root, child_nodes[i]);
+				}
+				size_t best_node_index = func::GetMaxElement<UcbValue>(child_value_set);
+				
+				//output log.
+				if (log_enabled())
+				{
+					//MCTS RESULT
+					table::ConsoleTable tb(6, child_nodes.size() + 2);
+					tb.enable_title({ "MONTE CARLO SIMULATION RESULT: TIME = [ " + console::ToString(tp_mc_start.time_since_created()) + "s ]" });
+					tb.set_cell_in_row(0, { { "Index" },{ "Action" },{ "Value" },{ "Visit" },{ "Win" },{ "Best" } });
+					tb.set_width({ 3,10,4,4,4,2 });
+					for (size_t i = 0; i < child_nodes.size(); i++)
 					{
-						total[i] += count_list[i];
+						tb.set_cell_in_row(i + 1, {
+							{ console::ToString(i) },
+							{ _log_controller.action_to_str_func()(action_list[i]) },
+							{ console::ToString(child_value_set[i]) },
+							{ console::ToString(child_nodes[i].visited_time()) },
+							{ console::ToString(child_nodes[i].win_time()) },
+							{ i == best_node_index ? "Yes " : "  " }
+						});
 					}
+					tb.set_cell_in_row(child_nodes.size() + 1, {
+						{ "Total" },
+						{ "" },
+						{ "" },
+						{ console::ToString(root.visited_time()) },
+						{ console::ToString(root.win_time()) },
+						{ console::ToString(best_node_index) }
+					});
+					logger() << tb.output_string(true, false) << std::endl;
 				}
 
-				//find best action
-				size_t best_action_index = 0;
-				size_t best_score = total[0];
-				for (size_t i = 1; i < total.size(); i++)
-				{
-					if (total[i] > best_score)
-					{
-						best_score = total[i];
-						best_action_index = i;
-					}
-				}
-				return action_list[best_action_index];
+				return action_list[best_node_index];
 			}
-
-			
 
 		public:
 
@@ -367,7 +434,7 @@ namespace gadt
 			Action DoMonteCarlo(const State state, MonteCarloSetting setting)
 			{
 				_setting = setting;
-				return ParallelSimulation(state);
+				return ExecuteMonteCarlo(state, setting.enable_action_policy);
 			}
 		};
 	}

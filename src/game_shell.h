@@ -433,7 +433,10 @@ namespace gadt
 				//print command list
 				void PrintCommandList(std::string param) const override
 				{
-					
+					constexpr size_t SYMBOL_WIDTH = 2;
+					constexpr size_t NAME_WIDTH = (define::g_MAX_COMMAND_LENGTH + 1) / 2;
+					constexpr size_t DESC_WIDTH = (define::g_MAX_COMMAND_LENGTH + 1);
+
 					std::cout << std::endl;
 					if (param == "-t")
 					{
@@ -443,16 +446,22 @@ namespace gadt
 							if (_cmd_name_list[i].size() > 0)
 							{
 								std::cout << ">> ";
-								console::Cprintf("[" + define::GetCommandTypeName(i) + "]\n", console::YELLOW);
-								for (std::string name : _cmd_name_list[i])
+								console::Cprintf("[" + define::GetCommandTypeName(i) + "]", console::YELLOW);
+								std::cout << std::endl;
+								table::ConsoleTable tb(3, _cmd_name_list[i].size());
+								tb.set_width({ SYMBOL_WIDTH,NAME_WIDTH,DESC_WIDTH });
+								for (size_t n = 0; n < _cmd_name_list[i].size(); n++)
 								{
-									//const std::string& name = pair.first;
+									std::string name = _cmd_name_list[i].at(n);
+									std::string type = define::GetCommandTypeSymbol(i);
 									std::string desc = _command_list.at(name)->desc();
-									std::cout << "   '";
-									console::Cprintf(name, console::RED);
-									std::cout << "'" << std::string(define::g_MAX_COMMAND_LENGTH, ' ').substr(0, define::g_MAX_COMMAND_LENGTH - name.length())
-										<< desc << std::endl;
+									tb.set_cell_in_row(n,{
+										{ type,console::GRAY },
+										{ name,console::RED },
+										{ desc,console::WHITE }
+									});
 								}
+								tb.print(false, false);
 								std::cout << std::endl;
 							}
 						}
@@ -460,20 +469,24 @@ namespace gadt
 					else//-n
 					{
 						std::cout << ">> ";
-						console::Cprintf("[ COMMANDS ]\n", console::YELLOW);
-						for (const auto& pair : _command_list)
+						console::Cprintf("[ COMMANDS ]", console::YELLOW);
+						std::cout << std::endl;
+						table::ConsoleTable tb(3, _command_list.size());
+						tb.set_width({ SYMBOL_WIDTH,NAME_WIDTH,DESC_WIDTH });
+						size_t n = 0;
+						for (const auto& pair: _command_list)
 						{
-							//const std::string& name = pair.first;
-							auto name = pair.first;
-							auto desc = pair.second.get()->desc();
-							auto type = pair.second.get()->type();
-							//std::cout << "  ";
-							//console::Cprintf(define::GetCommandTypeSymbol(type), console::GRAY);
-							std::cout << "   '";
-							console::Cprintf(name, console::RED);
-							std::cout << "'" << std::string(define::g_MAX_COMMAND_LENGTH, ' ').substr(0, define::g_MAX_COMMAND_LENGTH - name.length())
-								<< desc << std::endl;
+							std::string name = pair.first;
+							std::string desc = pair.second.get()->desc();
+							std::string type = define::GetCommandTypeSymbol(pair.second.get()->type());
+							tb.set_cell_in_row(n, {
+								{ type,console::GRAY },
+								{ name,console::RED },
+								{ desc,console::WHITE }
+							});
+							n++;
 						}
+						tb.print(false, false);
 						std::cout << std::endl;
 					}
 				}

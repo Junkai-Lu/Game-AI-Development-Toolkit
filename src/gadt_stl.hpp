@@ -98,19 +98,19 @@ namespace gadt
 			}
 
 			//get state to string function.
-			inline StateToStrFunc state_to_str_func()
+			inline StateToStrFunc state_to_str_func() const
 			{
 				return _state_to_str_func;
 			}
 
 			//get action to string function.
-			inline ActionToStrFunc action_to_str_func()
+			inline ActionToStrFunc action_to_str_func() const
 			{
 				return _action_to_str_func;
 			}
 
 			//get result to string function.
-			inline ResultToStrFunc result_to_str_func()
+			inline ResultToStrFunc result_to_str_func() const
 			{
 				return _result_to_str_func;
 			}

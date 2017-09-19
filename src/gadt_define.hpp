@@ -61,6 +61,12 @@ namespace gadt
 			DetemineWinner(_DetemineWinner)
 		{
 		}
+
+		//return the value of _is_debug.
+		constexpr inline bool is_debug() const
+		{
+			return _is_debug;
+		}
 	};
 
 	template<typename State, typename Action, typename Result, bool _is_debug>
@@ -84,7 +90,7 @@ namespace gadt
 		}
 
 		//get reference of log ostream
-		inline std::ostream& logger()
+		inline std::ostream& logger() const
 		{
 			return _log_controller.log_ostream();
 		}
@@ -99,6 +105,12 @@ namespace gadt
 		inline bool json_output_enabled() const
 		{
 			return _log_controller.json_output_enabled();
+		}
+
+		//return true if timeout.
+		inline bool timeout(const timer::TimePoint tp, const GameAlgorithmSettingBase& setting) const
+		{
+			return tp.time_since_created() > setting.timeout && setting.timeout > 0;
 		}
 
 		//return the value of _is_debug.
