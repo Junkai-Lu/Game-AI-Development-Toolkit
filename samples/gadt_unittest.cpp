@@ -604,7 +604,7 @@ namespace gadt
 			tic_tac_toe::State state;
 			state.dot[0][0] = tic_tac_toe::WHITE;
 			mc.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr);
-			//mc.EnableLog();
+			mc.EnableLog();
 			tic_tac_toe::Action action = mc.DoMonteCarlo(state, setting);
 			//GADT_ASSERT((action.x == 1 && action.y == 1), true);
 		}
