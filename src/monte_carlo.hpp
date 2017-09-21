@@ -168,17 +168,21 @@ namespace gadt
 		*
 		* more details, see document.
 		*/
-		template<typename State, typename Action,typename Result, bool _is_debug>
+		template<typename State, typename Action, typename Result, bool _is_debug>
 		struct MonteCarloFuncPackage final : public GameAlgorithmFuncPackageBase<State, Action, _is_debug>
 		{
-		private:
-			using Node = MonteCarloNode<State, Action, Result, _is_debug>;
-
 		public:
+#ifdef __GADT_GNUC
+			using ActionList;
+			using UpdateStateFunc;
+			using MakeActionFunc;
+			using DetemineWinnerFunc;
+#endif
+			using Node					= MonteCarloNode<State, Action, Result, _is_debug>;
 			using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;
 			using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;
 			using ActionPolicyFunc		= std::function<UcbValue(const Node&, const Node&)>;
-			using DefaultPolicyFunc		= std::function<const Action&(const typename ActionList&)>;
+			using DefaultPolicyFunc		= std::function<const Action&(const ActionList)>;
 			using ValueForRootNodeFunc	= std::function<UcbValue(const Node&, const Node&)>;
 
 		public:
@@ -205,7 +209,8 @@ namespace gadt
 				}),
 				DefaultPolicy([](const ActionList& actions)->const Action&{
 					GADT_CHECK_WARNING(_is_debug, actions.size() == 0, "MCTS104: empty action set during default policy.");
-					return actions[rand() % actions.size()];
+					volatile size_t rnd = rand() % actions.size();
+					return actions[rnd];
 				}),
 				ValueForRootNode([](const Node& parent, const Node& child)->UcbValue {
 					UcbValue avg = static_cast<UcbValue>(child.win_time()) / static_cast<UcbValue>(child.visited_time());
@@ -257,7 +262,7 @@ namespace gadt
 					GADT_CHECK_WARNING(is_debug(), actions.size() == 0, "empty action list.");
 
 					//choose action by default policy.
-					const Action& action = _func_package.DefaultPolicy(actions);
+					Action action = _func_package.DefaultPolicy(actions);
 
 					//state update.
 					_func_package.UpdateState(state, action);
@@ -347,7 +352,7 @@ namespace gadt
 						threads.push_back(std::thread([&]()->void {
 							for (size_t i = 0; i < sim_time; i++)
 							{
-								if (timeout(tp_mc_start, _setting)) { return; }
+								if (this->timeout(tp_mc_start, _setting)) { return; }
 								Selection(root, child_nodes);
 							}
 						}));
@@ -357,7 +362,7 @@ namespace gadt
 						threads.push_back(std::thread([&]()->void {
 							for (size_t i = 0; i < sim_time; i++)
 							{
-								if (timeout(tp_mc_start, _setting)) { return; }
+								if (this->timeout(tp_mc_start, _setting)) { return; }
 								ExecuteAllChild(root, child_nodes);
 							}
 						}));

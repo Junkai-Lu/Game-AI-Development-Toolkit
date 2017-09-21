@@ -437,14 +437,18 @@ namespace gadt
 		template<typename State, typename Action, typename Result, bool _is_debug>
 		struct MctsFuncPackage final : public GameAlgorithmFuncPackageBase<State, Action, _is_debug>
 		{
-		private:
-			using Node = MctsNode<State, Action, Result, _is_debug>;
-
 		public:
+#ifdef __GADT_GNUC
+			using ActionList;
+			using UpdateStateFunc;
+			using MakeActionFunc;
+			using DetemineWinnerFunc;
+#endif
+			using Node					= MctsNode<State, Action, Result, _is_debug>;
 			using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;
 			using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;
 			using TreePolicyValueFunc	= std::function<UcbValue(const Node&, const Node&)>;
-			using DefaultPolicyFunc		= std::function<const Action&(const typename ActionList&)>;
+			using DefaultPolicyFunc		= std::function<const Action&(const ActionList&)>;
 			using AllowExtendFunc		= std::function<bool(const Node&)>;
 			using ValueForRootNodeFunc	= std::function<UcbValue(const Node&, const Node&)>;
 

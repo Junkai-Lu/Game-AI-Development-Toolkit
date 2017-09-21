@@ -41,16 +41,18 @@ namespace gadt
 	template<typename State, typename Action, bool _is_debug>
 	struct GameAlgorithmFuncPackageBase
 	{
-
+	public:
 		using ActionList			= std::vector<Action>;
 		using UpdateStateFunc		= std::function<void(State&, const Action&)>;
 		using MakeActionFunc		= std::function<void(const State&, ActionList&)>;
 		using DetemineWinnerFunc	= std::function<AgentIndex(const State&)>;
 
+	public:
 		const UpdateStateFunc		UpdateState;		//get a new state from previous state and action.
 		const MakeActionFunc		MakeAction;			//the function which create action set by the state.
 		const DetemineWinnerFunc	DetemineWinner;		//return no_winner_index if a state is not terminal state.
 
+	public:
 		explicit GameAlgorithmFuncPackageBase(
 			UpdateStateFunc			_UpdateState,
 			MakeActionFunc			_MakeAction,
@@ -63,7 +65,7 @@ namespace gadt
 		}
 
 		//return the value of _is_debug.
-		constexpr inline bool is_debug() const
+		inline bool is_debug() const
 		{
 			return _is_debug;
 		}
@@ -114,7 +116,7 @@ namespace gadt
 		}
 
 		//return the value of _is_debug.
-		constexpr inline bool is_debug() const
+		inline bool is_debug() const
 		{
 			return _is_debug;
 		}
@@ -150,9 +152,10 @@ namespace gadt
 		}
 
 		//enable json output
-		inline void EnableJsonOutput(std::string output_folder = _algorithm_name)
+		inline void EnableJsonOutput(std::string output_folder = "")
 		{
-			_log_controller.EnableJsonOutput(output_path);
+			if (output_folder == "") { output_folder = _algorithm_name; }
+			_log_controller.EnableJsonOutput(output_folder);
 		}
 
 		//disable json output.

@@ -50,7 +50,7 @@ namespace gadt
 				_enable_log(false),
 				_log_ostream(&std::cout),
 				_enable_json_output(false),
-				_json_output_folder(),
+				_json_output_folder("JsonOutput"),
 				_visual_tree()
 			{
 			}
@@ -68,7 +68,7 @@ namespace gadt
 				_enable_log(false),
 				_log_ostream(std::cout),
 				_enable_json_output(false),
-				_json_output_path(),
+				_json_output_folder("JsonOutput"),
 				_visual_tree()
 			{
 			}

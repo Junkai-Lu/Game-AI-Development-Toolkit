@@ -92,6 +92,12 @@ namespace gadt
 		struct MinimaxFuncPackage final: public GameAlgorithmFuncPackageBase<State, Action, _is_debug>
 		{
 		public:
+#ifdef __GADT_GNUC
+			using ActionList;
+			using UpdateStateFunc;
+			using MakeActionFunc;
+			using DetemineWinnerFunc;
+#endif
 			using EvalForParentFunc = std::function<EvalValue(const State&, const AgentIndex)>;
 
 		public:
