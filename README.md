@@ -1,73 +1,80 @@
-# Paradoxes # Game AI Development Toolkit 
+# Paradoxes, A Game AI Development Toolkit 
 ---------------------------------
-Introduction
+What is Paradoxes?
 ---------------------------------
-**Paradoxes**是一个跨平台的游戏AI开发工具包，包括了游戏AI开发的各类开发，调试工具。使用*C++11*标准编写。
+Paradoxes is a tiny, cross-platform library for game AI development, which is wrote by C++11. As the name “Game AI Development Toolkit”, it offers a series tools for Game AI development under C++11. 
 
+I have implement AI for many games, most of them are board game. When I try to implement an AI for a new game, I need to rewrite the algorithms like minimax or MCTS for the new game. The first and main aim of Paradoxes is to offer templates of some frequently-used algorithms in Game AI, like traditional minimax search and Monte Carlo tree search. We use a State-Action-Result model in Paradoxes, and most game can be defined by this model.
 
-在**Paradoxes**中我们提供了各类常用的AI算法的模板。它可以让使用者非常简单地调用与测试某种AI算法在某一个游戏下的表现。例如Monte Carlo Tree Search，Minimax Search等。同时我们也提供了一些额外的功能，例如游戏AI中一些基础的数据结构，常用算法等。
+This may sounds like General Game Playing (GGP) but there is great difference. GGP focus on the problem that how to play various game by one algorithm, what they mainly concerned about is the average performance in various games but not in one particular game. In Paradoxes, we offers various algorithm templates for users to choose. We do not decide which one is better, the user of Paradoxes can define a game then run different algorithm on it to decide which algorithm is suit of their requirement. All the algorithms template in Paradoxes also offers interfaces that allow user to modify the algorithm quickly, to make the algorithm running more fast or efficient in particular game.
 
-整个库大致可以被划分为以下几种模块：
+Except the algorithm templates, Paradoxes also include a series development tool for game AI like bitboard template, visual search tree and other powerful tools. More details, see documents.
 
-- **基础数据结构**，如*位棋盘*(bitboard)等
-- **常用AI算法**，如MCTS，Minimax等
-- **调试工具**，如搜索树的可视化等
-- **开发工具**，如shell工具等
-- **一些其他基础工具**。
-- **单元测试**。
-- **示例代码**
-
-**Paradoxes**开发的目的，是希望提供一个强大的，可移植的游戏AI开发工具包，来加强游戏AI的开发与研究效率。并同时提供一套可以参考的游戏AI开发与研究流程以及与相关的工具包。这可以有效提高游戏AI的生产与研究效率，并且降低学习的门槛。因此，我们认为以下**三种用户群体**适合使用：
-
-1. 游戏AI领域的研究人员
-2. 游戏AI相关的工程师
-3. 对游戏AI抱有兴趣的学生以及爱好者
 
 ---------------------------------
-Alogorithm Template
+Where can I use Paradoxes?
 ---------------------------------
 
-**Paradoxes**希望可以提供一个简单的，易编写的游戏AI算法标准库。通过简单的定义游戏逻辑，就可以调用某种算法来获得一个可用的游戏AI。并且预留自定义的接口，令使用者可以在标准算法的基础上快速的进行改进。这个特性主要是针对游戏AI的研究人员的，使得研究人员可以避免在各类常用算法的工程实现上消耗过多的时间，而集中精力于改善算法本身。而对于游戏AI领域的工程师而言，**Paradoxes**提供了工程级别的代码实现，可以针对需求直接进行修改。
+When you develop an AI for a game by using common game AI algorithms.
 
-一个简单的Monte Carlo Tree Search的调用代码示例如下。
+Most games can be defined as the form of State-Action-Result. Users are able to use common game AI algorithms framework like Minimax, Monte Carlo simulation and Monte Carlo tree search after basic definition of game logic. If debug model are enable explicitly, Paradoxes would do some basic check to make sure the definition of the game logic is correct while those algorithms are running. Paradoxes would output the search tree as a JSON file after the search finished if the user enable the JsonOutput option explicitly. Some third-party tools can be used to analysis the JSON file of search tree, or use the analysis tool that is contained in Paradoxes.
 
-    mcts::MonteCarloTreeSearch<State,Action,Result> mcts(...);
-    Action action = mcts.DoMcts(state);
+----------------------------------
+Why Paradoxes? 
+----------------------------------
 
-与其类似的，一个Minimax Search的代码示例如下：
+Paradoxes is a tiny cross-platform with no dependency, which is written in C++11 like most state-of-the-art game AI in board game. Before Paradoxes, a library offers similar tools for game AI development is not available. The aim of Paradoxes is hope to offer an agile development method for game AI by using some common algorithm frameworks, guarantee the efficiency of codes and reserve enough interfaces that allow users to modify the algorithms frameworks quickly for particular game.
 
-    minimax::MinimaxSearch<State,Action> minimax(...);
-    Action action = minimax.DoNegamax(state);
+Except the algorithms frameworks, Paradoxes also offer a series of tools to enhance the efficiency of game AI development. For the engineers of game AI, they do not need to implement same algorithms for different games again and again, and it would be easier for them to explore which algorithm is more suitable for the problem they faced by running various algorithm frameworks with same definition of game logic. For the researcher of game AI, Paradoxes offers industry-level algorithm implement with flexible interfaces that allow them to modify those standard algorithms quickly to test their new idea about the variant of algorithms.
 
-在**Paradoxes**中，我们将一个游戏抽象为State,Action,Result等几个抽象部分，通过定义几个部分之间的逻辑关系，来实现一个完整的游戏。几乎所有游戏都可以被如此抽象，并且通过Paradoxes调用各类AI算法。
+----------------------------------
+Example
+----------------------------------
+**Monte Carlo simulation**
 
-更多的细节，请参照详细文档。
+    MonteCarloSimulation<State, Action, Result, true> mc(...);
+	MonteCarloSetting setting(...);
+	Action action = mc.DoMonteCarlo(state, setting);
+
+**Minimax search**
+
+	MinimaxSearch<State, Action, true> minimax(...);
+	MinimaxSetting setting(...);
+	Action action = minimax.DoNegamax(state, setting);
+
+**Monte Carlo tree search**
+
+	MonteCarloTreeSearch<State, Action, Result, true> mcts(...);
+	MctsSetting setting(...);
+	Action action = mcts.DoMcts(state, setting);
+
+there is a simple example about tic-tac-toe, see *gadt_unittest.h*.
 
 ----------------------------------
 Debug Tools
 ----------------------------------
+Except the algorithms, Paradoxes also offer some debug tools. If you enable the debug model explicitly, a search report would be output after each search finished. a example to enable search log as following:
 
-**Paradoxes**中提供了多种的调试工具，主要针对但不仅限于对搜索算法的调试。例如树可视化工具允许在生成搜索树的同时，将搜索树生成为一颗完整的JSON树，并输出到指定文件中。用户可以使用第三方的可视化工具来浏览搜索树中的数据，同时也可以在执行搜索算法时插入自定义的数据来加快调试速度。
-
-所有的调试工具都是隐性关闭的。在没有被开启之前，对于运算速度本身几乎没有影响。
-
-一个开启调试的示例如下：
-
-    mcts::MonteCarloTreeSearch<State,Action,Result> mcts(...);
+	MonteCarloTreeSearch<State,Action,Result> mcts(...);
     mcts.InitLog(...);
     mcts.EnableLog();
     mcts.EnableJsonOutput();
-    Action action = mcts.DoMcts(state);
+    Action action = mcts.DoMcts(state, MctsSetting());
 
-在Log以及JsonOutput被显式开启之后，算法在运行的同时也会输出日志，并且将最终生成的搜索树以Json的形式保存在文件中。
+If the log was enabled, the log woule be output to a ostream like std::cout, if the JSON output was enabled, a JSON file which contain complete information of the search tree would be output.
 
-更多关于调试工具的细节，请参照详细文档。
+----------------------------------
+Other Tools
+----------------------------------
+Paradoxes include a tiny unix-style shell, whihc allow users to execute functions by commands. For game AI developer, they can use the shell to create a work environment quickly. More details, please see document.
+
+Other tools in Paradoxes include a template of BitBoard, which is powerful for the development of some board game like chess or checker. The list of all tools included in Paradoes, see the documents.
 
 ----------------------------------
 Documents
 ----------------------------------
-Paradoxes在接下来将提供完整的文档支持。在当前，请参阅各个文件中的注释进行使用。
-如果发现BUG或者存在任何疑问，欢迎在Issue中报告或者电子邮件联系本人。
+Paradoxes would offer full documents support in next time.
+If there is any bug or question about Paradoxes, please contact me with email or report issue.
 
 
 
