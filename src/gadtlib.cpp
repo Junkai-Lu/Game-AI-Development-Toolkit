@@ -1,8 +1,3 @@
-/*
-* gadt lib include some basic function of Game Ai Development Toolkit.
-*
-*/
-
 /* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -1,14 +1,3 @@
-/*
-* bitboard include BitBoard64,BitBoard128, BitPoker and BitMahjong.
-*
-* BitBoard is a bit array whose max size is 64 and the size can not be change.
-* BitPoker is an unsigned int array whose max size is 16, the value of each one is limit between 0 and 15.
-* BitMahjong is an unsigned int vector whose max size is 42, each value is limit between 0 and 7.
-*
-* in poker games, we have cards with 15 different numbers(assume black joker and red joker is different),and the cards can be saved by bitpokers.
-* in mahjong games. there are <40 kinds of tile and each one is less than 8 in game, so we design a vector by using two 64-bit uint to save these info.
-*/
-
 /* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy

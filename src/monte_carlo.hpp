@@ -173,16 +173,17 @@ namespace gadt
 		{
 		public:
 #ifdef __GADT_GNUC
-			using ActionList;
-			using UpdateStateFunc;
-			using MakeActionFunc;
-			using DetemineWinnerFunc;
+			using ActionList = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::ActionList;
+			using UpdateStateFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::UpdateStateFunc;
+			using MakeActionFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::MakeActionFunc;
+			using DetemineWinnerFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetemineWinnerFunc;
+			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::is_debug;
 #endif
 			using Node					= MonteCarloNode<State, Action, Result, _is_debug>;
 			using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;
 			using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;
 			using ActionPolicyFunc		= std::function<UcbValue(const Node&, const Node&)>;
-			using DefaultPolicyFunc		= std::function<const Action&(const ActionList)>;
+			using DefaultPolicyFunc		= std::function<const Action&(const ActionList&)>;
 			using ValueForRootNodeFunc	= std::function<UcbValue(const Node&, const Node&)>;
 
 		public:
@@ -209,8 +210,7 @@ namespace gadt
 				}),
 				DefaultPolicy([](const ActionList& actions)->const Action&{
 					GADT_CHECK_WARNING(_is_debug, actions.size() == 0, "MCTS104: empty action set during default policy.");
-					volatile size_t rnd = rand() % actions.size();
-					return actions[rnd];
+					return actions[rand() % actions.size()];
 				}),
 				ValueForRootNode([](const Node& parent, const Node& child)->UcbValue {
 					UcbValue avg = static_cast<UcbValue>(child.win_time()) / static_cast<UcbValue>(child.visited_time());
@@ -225,6 +225,24 @@ namespace gadt
 		template<typename State, typename Action, typename Result, bool _is_debug>
 		class MonteCarloSimulation final :public GameAlgorithmBase<State, Action, Result, _is_debug>
 		{
+#ifdef __GADT_GNUC
+		private:
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::_algorithm_name;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::_log_controller;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::logger;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::log_enabled;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::json_output_enabled;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::timeout;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::is_debug;
+
+		public:
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::SetName;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::InitLog;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::EnableLog;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::DisableLog;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::EnableJsonOutput;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::DisableJsonOutput;
+#endif
 		public:
 			using Node = MonteCarloNode<State, Action, Result, _is_debug>;
 			using FuncPackage = MonteCarloFuncPackage<State, Action, Result, _is_debug>;
@@ -314,7 +332,7 @@ namespace gadt
 			}
 
 			//execute monte carlo.
-			Action ExecuteMonteCarlo(const State& state, bool enable_action_policy ) const
+			Action ExecuteMonteCarlo(const State& state) const
 			{
 				//get available actions
 				Node root(state, _func_package);
@@ -341,32 +359,32 @@ namespace gadt
 					_func_package.UpdateState(temp, act);
 					child_nodes.push_back(Node(temp, _func_package));
 				}
-				size_t sim_time = enable_action_policy? 1 + _setting.simulation_times: 1 + (_setting.simulation_times / child_nodes.size());
+				
 
 				//create threads.
 				std::vector<std::thread> threads;
 				for (size_t thread_id = 0; thread_id < _setting.thread_num; thread_id++)
 				{
-					if (enable_action_policy)
-					{
-						threads.push_back(std::thread([&]()->void {
+					threads.push_back(std::thread([&]()->void {
+						if (_setting.enable_action_policy)
+						{
+							size_t sim_time = 1 + _setting.simulation_times;
 							for (size_t i = 0; i < sim_time; i++)
 							{
 								if (this->timeout(tp_mc_start, _setting)) { return; }
 								Selection(root, child_nodes);
 							}
-						}));
-					}
-					else
-					{
-						threads.push_back(std::thread([&]()->void {
+						}
+						else
+						{
+							size_t sim_time = 1 + (_setting.simulation_times / child_nodes.size());
 							for (size_t i = 0; i < sim_time; i++)
 							{
 								if (this->timeout(tp_mc_start, _setting)) { return; }
 								ExecuteAllChild(root, child_nodes);
 							}
-						}));
-					}
+						}
+					}));
 				}
 				//join all threads.
 				for (size_t i = 0; i < threads.size(); i++)
@@ -394,7 +412,7 @@ namespace gadt
 					{
 						tb.set_cell_in_row(i + 1, {
 							{ console::ToString(i) },
-							{ _log_controller.action_to_str_func()(action_list[i]) },
+							{ this->_log_controller.action_to_str_func()(action_list[i]) },
 							{ console::ToString(child_value_set[i]) },
 							{ console::ToString(child_nodes[i].visited_time()) },
 							{ console::ToString(child_nodes[i].win_time()) },
@@ -439,7 +457,7 @@ namespace gadt
 			Action DoMonteCarlo(const State state, MonteCarloSetting setting)
 			{
 				_setting = setting;
-				return ExecuteMonteCarlo(state, setting.enable_action_policy);
+				return ExecuteMonteCarlo(state);
 			}
 		};
 	}

@@ -1,7 +1,3 @@
-/*
-* This file include the unit test for Paradoxes.
-*/
-
 /* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -613,12 +609,12 @@ namespace gadt
 			{ "bitboard"		,TestBitBoard		},
 			{ "file"			,TestFileLib		},
 			{ "index"			,TestIndex			},
-			{ "mcts::node"		,TestMctsNode		},
-			{ "mcts::search"	,TestMctsSearch		},
+			{ "mcts_node"		,TestMctsNode		},
+			{ "mcts"			,TestMctsSearch		},
 			{ "visual_tree"		,TestVisualTree		},
-			{ "stl::alloc"		,TestStlAllocator	},
-			{ "stl::linear"		,TestStlLinearAlloc },
-			{ "stl::list"		,TestStlList		},
+			{ "allocator"		,TestStlAllocator	},
+			{ "linear_alloc"	,TestStlLinearAlloc },
+			{ "list"			,TestStlList		},
 			{ "table"			,TestTable			},
 			{ "random_pool"		,TestRandomPool		},
 			{ "minimax"			,TestMinimax		},

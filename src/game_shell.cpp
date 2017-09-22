@@ -1,8 +1,3 @@
-/*
-* game shell is used for game AI developing and this shell is consist of the concept we called 'pages',
-* each page is an single set of command and include data that binded to each page by use template.
-*/
-
 /* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -1,9 +1,3 @@
-/*
-* General Minimax algorithm lib.
-*
-* this lib is available for perfect information sequential games.
-*/
-
 /* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -93,10 +87,11 @@ namespace gadt
 		{
 		public:
 #ifdef __GADT_GNUC
-			using ActionList;
-			using UpdateStateFunc;
-			using MakeActionFunc;
-			using DetemineWinnerFunc;
+			using ActionList = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::ActionList;
+			using UpdateStateFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::UpdateStateFunc;
+			using MakeActionFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::MakeActionFunc;
+			using DetemineWinnerFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetemineWinnerFunc;
+			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::is_debug;
 #endif
 			using EvalForParentFunc = std::function<EvalValue(const State&, const AgentIndex)>;
 
@@ -201,6 +196,24 @@ namespace gadt
 		template<typename State, typename Action, bool _is_debug = false>
 		class MinimaxSearch final : public GameAlgorithmBase<State, Action, AgentIndex, _is_debug>
 		{
+#ifdef __GADT_GNUC
+		private:
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::_algorithm_name;
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::_log_controller;
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::logger;
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::log_enabled;
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::json_output_enabled;
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::timeout;
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::is_debug;
+
+		public:
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::SetName;
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::InitLog;
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::EnableLog;
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::DisableLog;
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::EnableJsonOutput;
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::DisableJsonOutput;
+#endif
 		public:
 			using Node			= MinimaxNode<State, Action, _is_debug>;
 			using FuncPackage	= typename Node::FuncPackage;

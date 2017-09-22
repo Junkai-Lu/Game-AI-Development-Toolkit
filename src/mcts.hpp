@@ -1,11 +1,3 @@
-/*
-* General monte carlo tree search algorithm lib.
-*
-* a search framework for perfect information sequential games, which allow
-* user to insert extra function or redefine default functions to custom the
-* search algorithm.
-*/
-
 /* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -439,10 +431,11 @@ namespace gadt
 		{
 		public:
 #ifdef __GADT_GNUC
-			using ActionList;
-			using UpdateStateFunc;
-			using MakeActionFunc;
-			using DetemineWinnerFunc;
+			using ActionList = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::ActionList;
+			using UpdateStateFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::UpdateStateFunc;
+			using MakeActionFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::MakeActionFunc;
+			using DetemineWinnerFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetemineWinnerFunc;
+			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::is_debug;
 #endif
 			using Node					= MctsNode<State, Action, Result, _is_debug>;
 			using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;
@@ -600,6 +593,25 @@ namespace gadt
 		template<typename State, typename Action, typename Result, bool _is_debug = false>
 		class MonteCarloTreeSearch final : public GameAlgorithmBase<State,Action,Result,_is_debug>
 		{
+#ifdef __GADT_GNUC
+		private:
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::_algorithm_name;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::_log_controller;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::logger;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::log_enabled;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::json_output_enabled;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::timeout;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::is_debug;
+
+		public:
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::SetName;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::InitLog;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::EnableLog;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::DisableLog;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::EnableJsonOutput;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::DisableJsonOutput;
+#endif
+
 		public:
 			using Node			= MctsNode<State, Action, Result, _is_debug>;			//searcg node.	
 			
@@ -642,16 +654,12 @@ namespace gadt
 				for (size_t thread_id = 0; thread_id < _setting.thread_num; thread_id++)
 				{
 					Allocator* thread_allocator = allocators.construct(_setting.max_node_per_thread);
-					threads.push_back(std::thread([](Node* root_node, Allocator* allocator, FuncPackage func, MctsSetting setting)->void {
-						timer::TimePoint start_tp;
-						size_t iteration_time = 0;
-						for (iteration_time = 0; iteration_time < setting.max_iteration_per_thread; iteration_time++)
+					threads.push_back(std::thread([&](Allocator* allocator)->void {
+						size_t iteration_time = _setting.max_iteration_per_thread;
+						for (size_t i = 0; i < iteration_time; i++)
 						{
 							//stop search if timout.
-							if (start_tp.time_since_created() > setting.timeout && setting.timeout != 0)
-							{
-								break;//timeout, stop search.
-							}
+							if (this->timeout(tp_mcts_start, _setting)) { return; }
 
 							//excute garbage collection if need.
 							if (allocator->is_full())
@@ -660,9 +668,9 @@ namespace gadt
 							}
 
 							//excute next.
-							root_node->Selection(*allocator, func, setting);
+							root_node.Selection(*allocator, _func_package, _setting);
 						}
-					}, &root_node, thread_allocator, _func_package, _setting));
+					}, thread_allocator));
 				}
 
 				//join all threads.

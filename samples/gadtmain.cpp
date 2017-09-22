@@ -1,16 +1,3 @@
-/* 
-* Game AI Development Toolkit
-*
-* The game ai development toolkit(gadt) is a tiny library for C++11, providing tools for game AI development.
-* 
-* The core content provided by the library include three kinds of functions. they are data 
-* struct for games such as bitboard, bitset for pokers; algorithm for games, such as monte
-* carlo tree search, minimax search, alpha-beta search and other famous algorithms for game
-* ai. the final part include some tiny functions, such a simple shell-based GUI library, a
-* tiny state machine template and so on.
-*
-*/
-
 /* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -38,7 +25,9 @@
 #include "../src/bitboard.hpp"		//bit board data struct
 #include "../src/mcts.hpp"			//monte carlo tree search for games.
 #include "../src/minimax.hpp"		//minimax,and alphabeta for games.
+#include "../src/monte_carlo.hpp"	//monte carlo simulation algorithm.
 #include "../src/mcts.hpp"			//monte carlo tree search for games, new version.
+#include "./games/renju.h"
 
 #include "gadt_unittest.h"			//a simple unittest
 
@@ -63,8 +52,15 @@ void ShellDefine()
 	auto* root = gadt.CreateShellPage("root");
 	auto* test = gadt.CreateShellPage("test");
 	auto* mcts = gadt.CreateShellPage("mcts");
+	auto* game = gadt.CreateShellPage("game");
+	auto* renju = gadt.CreateShellPage<renju::RenjuState>("renju");
 
 	root->AddChildPage("test", "start unit test");
+	root->AddChildPage("game", "game examples");
+
+	game->AddChildPage("renju", "renju game");
+
+	renju->AddFunction("print", "print state", [](renju::RenjuState& state) {state.Print(); });
 
 	//Unit Test Page
 	for (auto p : unittest::func_list)
