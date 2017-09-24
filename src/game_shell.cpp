@@ -380,14 +380,14 @@ namespace gadt
 		}
 
 		//start from appointed page.
-		void GameShell::StartFromPage(std::string name)
+		void GameShell::StartFromPage(std::string name, std::string init_command)
 		{
 			if (page_exist(name))
 			{
 				be_focus();
 				_dir_list.push_back(name);
 				ClearScreen();
-				command::CommandParser parser;
+				command::CommandParser parser(init_command);
 				for (;;)
 				{
 					if (_dir_list.empty())

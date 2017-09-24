@@ -169,6 +169,12 @@ namespace gadt
 			return data? "true":"false";
 		}
 
+		//srting to interger.
+		inline int ToInt(std::string str)
+		{
+			return atoi(str.c_str());
+		}
+
 		//convert to string.
 		template<typename T>
 		inline std::string ToString(T data)

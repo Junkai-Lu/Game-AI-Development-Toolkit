@@ -61,6 +61,48 @@ void ShellDefine()
 	game->AddChildPage("renju", "renju game");
 
 	renju->AddFunction("print", "print state", [](renju::RenjuState& state) {state.Print(); });
+	renju->AddFunction("take", "take action", [](renju::RenjuState& state, const shell::ParamsList& params) {
+		if (params.size() >= 3)
+		{
+			renju::RenjuAction action = {
+				{ console::ToInt(params[0]),console::ToInt(params[1]) },
+				renju::RenjuPlayer(console::ToInt(params[2]))
+			};
+			if (state.is_legal_action(action))
+			{
+				state.TakeAction(action);
+				state.Print();
+				return;
+			}
+		}
+		std::cout << "illegal action" << std::endl;
+	});
+	renju->AddFunction("winner", "show winner", [](renju::RenjuState& state) {
+		std::cout << "winner = " << (int)state.winner() << std::endl; 
+	});
+	renju->AddFunction("reset", "reset state", [](renju::RenjuState& state) {
+		state = renju::RenjuState();
+	});
+	renju->AddFunction("actions", "show actions", [](renju::RenjuState& state, const shell::ParamsList& params) {
+		renju::RenjuActionGenerator generator(state);
+		if (params.size() > 0)
+		{
+			if (params[0] == "all")
+			{
+				generator.Print(generator.GetAllActions());
+			}
+			else
+			{
+				size_t dist = size_t(console::ToInt(params[0]));
+				generator.Print(generator.GetNearbyActions(dist));
+			}
+		}
+		else
+		{
+			std::cout << "need 1 parameter, 'all' or number" << std::endl;
+		}
+		
+	});
 
 	//Unit Test Page
 	for (auto p : unittest::func_list)
@@ -80,7 +122,7 @@ void ShellDefine()
 	mcts->AddFunction("search","search part", [](){unittest::TestMctsSearch(); });
 
 	//Start Shell
-	gadt.StartFromPage("root");
+	gadt.StartFromPage("root", "game/renju");
 }
 
 int main()

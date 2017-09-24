@@ -798,7 +798,7 @@ namespace gadt
 			GameShell(GameShell&) = delete;
 
 			//start from appointed page.
-			void StartFromPage(std::string name);
+			void StartFromPage(std::string name, std::string init_command = "");
 
 			//enter page by name.
 			void EnterPage(std::string name);

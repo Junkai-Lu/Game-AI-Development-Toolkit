@@ -839,6 +839,18 @@ namespace gadt
 				return _action_list.is_end();
 			}
 		};
+
+		template<typename T>
+		class Matrix
+		{
+		public:
+			using pointer = Matrix<T>*;
+			using reference = Matrix<T>&;
+			using ElementType = T;
+
+		private:
+			
+		};
 	}
 
 	namespace random
