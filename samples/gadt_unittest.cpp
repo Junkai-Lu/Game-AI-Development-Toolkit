@@ -313,7 +313,7 @@ namespace gadt
 		void TestFileLib()
 		{
 			srand((unsigned int)time(NULL));
-			std::string path = "./test_dir"  + console::IntergerToString(rand() % 99999999);
+			std::string path = "./test_dir"  + ToString(rand() % 99999999);
 			if (!file::DirExist(path))
 			{
 				GADT_ASSERT(true, file::MakeDir(path));
@@ -570,7 +570,7 @@ namespace gadt
 		void TestRandomPool()
 		{
 			const size_t ub = 20;
-			random::RandomPool<size_t, true> pool(ub);
+			stl::RandomPool<size_t, true> pool(ub);
 			for (size_t i = 0; i < ub; i++)
 			{
 				pool.add(i, i);

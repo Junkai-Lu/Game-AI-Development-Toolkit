@@ -20,9 +20,7 @@
 */
 
 #include "gadtlib.h"
-#include "visual_tree.h"
-#include "gadt_stl.hpp"
-#include "gadt_define.hpp"
+#include "gadt_algorithm.hpp"
 
 #pragma once
 
@@ -77,12 +75,12 @@ namespace gadt
 				table::ConsoleTable tb(2, 6);
 				tb.set_width({ 12,6 });
 				tb.enable_title({"MCTS SETTING"});
-				tb.set_cell_in_row(0, { { "timeout" },					{ console::ToString(timeout) } });
-				tb.set_cell_in_row(1, { { "thread_num" },				{ console::ToString(thread_num) } });
-				tb.set_cell_in_row(2, { { "max_iteration_per_thread" },	{ console::ToString(max_iteration_per_thread) } });
-				tb.set_cell_in_row(3, { { "max_node_per_thread" },		{ console::ToString(max_node_per_thread) } });
-				tb.set_cell_in_row(4, { { "no_winner_index" },			{ console::ToString(no_winner_index) } });
-				tb.set_cell_in_row(5, { { "simulation_warning_length" },{ console::ToString(simulation_warning_length) } });
+				tb.set_cell_in_row(0, { { "timeout" },					{ ToString(timeout) } });
+				tb.set_cell_in_row(1, { { "thread_num" },				{ ToString(thread_num) } });
+				tb.set_cell_in_row(2, { { "max_iteration_per_thread" },	{ ToString(max_iteration_per_thread) } });
+				tb.set_cell_in_row(3, { { "max_node_per_thread" },		{ ToString(max_node_per_thread) } });
+				tb.set_cell_in_row(4, { { "no_winner_index" },			{ ToString(no_winner_index) } });
+				tb.set_cell_in_row(5, { { "simulation_warning_length" },{ ToString(simulation_warning_length) } });
 				return tb.output_string();
 			}
 		};
@@ -722,18 +720,18 @@ namespace gadt
 
 					//MCTS RESULT
 					table::ConsoleTable tb(7, root_node.action_list().size() + 2);
-					tb.enable_title({ "MCTS RESULT: TIME = [ " + console::ToString(tp_mcts_start.time_since_created()) + "s ]" });
+					tb.enable_title({ "MCTS RESULT: TIME = [ " + ToString(tp_mcts_start.time_since_created()) + "s ]" });
 					tb.set_cell_in_row(0, { { "Index" },{ "Action" },{ "Value" },{ "Visit" },{ "Win" },{ "Size" },{ "Best" } });
 					tb.set_width({ 3,10,4,4,4,4,2 });
 					for (size_t i = 0; i < root_node.action_list().size(); i++)
 					{
 						tb.set_cell_in_row(i + 1, {
-							{ console::ToString(i) },
+							{ ToString(i) },
 							{ _log_controller.action_to_str_func()(root_node.action_list()[i]) },
-							{ console::ToString(child_value_set[i]) },
-							{ console::ToString(visit_time_set[i])},
-							{ console::ToString(win_time_set[i]) },
-							{ console::ToString(tree_size_set[i]) },
+							{ ToString(child_value_set[i]) },
+							{ ToString(visit_time_set[i])},
+							{ ToString(win_time_set[i]) },
+							{ ToString(tree_size_set[i]) },
 							{ i == best_node_index ? "Yes " : "  " }
 						});
 					}
@@ -741,10 +739,10 @@ namespace gadt
 						{ "Total" },
 						{ "" },
 						{ "" },
-						{ console::ToString(total_visit_time) },
-						{ console::ToString(total_win_time) },
-						{ console::ToString(total_tree_size) },
-						{ console::ToString(best_node_index) } 
+						{ ToString(total_visit_time) },
+						{ ToString(total_win_time) },
+						{ ToString(total_tree_size) },
+						{ ToString(best_node_index) } 
 					});
 					logger() << tb.output_string(true, false) << std::endl;
 				}

@@ -20,7 +20,7 @@
 */
 
 #include "gadtlib.h"
-#include "gadt_define.hpp"
+#include "gadt_algorithm.hpp"
 
 #pragma once
 
@@ -75,11 +75,11 @@ namespace gadt
 				table::ConsoleTable tb(2, 5);
 				tb.set_width({ 12,6 });
 				tb.enable_title({ "MONTE CARLO SETTING" });
-				tb.set_cell_in_row(index++, { { "timeout" },{ console::ToString(timeout) } });
-				tb.set_cell_in_row(index++, { { "thread_num" },{ console::ToString(thread_num) } });
-				tb.set_cell_in_row(index++, { { "enable_action_policy" },{ console::ToString(enable_action_policy) } });
-				tb.set_cell_in_row(index++, { { "no_winner_index" },{ console::ToString(no_winner_index) } });
-				tb.set_cell_in_row(index++, { { "simulation_warning_length" },{ console::ToString(simulation_warning_length) } });
+				tb.set_cell_in_row(index++, { { "timeout" },{ ToString(timeout) } });
+				tb.set_cell_in_row(index++, { { "thread_num" },{ ToString(thread_num) } });
+				tb.set_cell_in_row(index++, { { "enable_action_policy" },{ ToString(enable_action_policy) } });
+				tb.set_cell_in_row(index++, { { "no_winner_index" },{ ToString(no_winner_index) } });
+				tb.set_cell_in_row(index++, { { "simulation_warning_length" },{ ToString(simulation_warning_length) } });
 				return tb.output_string();
 			}
 		};
@@ -405,17 +405,17 @@ namespace gadt
 				{
 					//MCTS RESULT
 					table::ConsoleTable tb(6, child_nodes.size() + 2);
-					tb.enable_title({ "MONTE CARLO SIMULATION RESULT: TIME = [ " + console::ToString(tp_mc_start.time_since_created()) + "s ]" });
+					tb.enable_title({ "MONTE CARLO SIMULATION RESULT: TIME = [ " + ToString(tp_mc_start.time_since_created()) + "s ]" });
 					tb.set_cell_in_row(0, { { "Index" },{ "Action" },{ "Value" },{ "Visit" },{ "Win" },{ "Best" } });
 					tb.set_width({ 3,10,4,4,4,2 });
 					for (size_t i = 0; i < child_nodes.size(); i++)
 					{
 						tb.set_cell_in_row(i + 1, {
-							{ console::ToString(i) },
+							{ ToString(i) },
 							{ this->_log_controller.action_to_str_func()(action_list[i]) },
-							{ console::ToString(child_value_set[i]) },
-							{ console::ToString(child_nodes[i].visited_time()) },
-							{ console::ToString(child_nodes[i].win_time()) },
+							{ ToString(child_value_set[i]) },
+							{ ToString(child_nodes[i].visited_time()) },
+							{ ToString(child_nodes[i].win_time()) },
 							{ i == best_node_index ? "Yes " : "  " }
 						});
 					}
@@ -423,9 +423,9 @@ namespace gadt
 						{ "Total" },
 						{ "" },
 						{ "" },
-						{ console::ToString(root.visited_time()) },
-						{ console::ToString(root.win_time()) },
-						{ console::ToString(best_node_index) }
+						{ ToString(root.visited_time()) },
+						{ ToString(root.win_time()) },
+						{ ToString(best_node_index) }
 					});
 					logger() << tb.output_string(true, false) << std::endl;
 				}

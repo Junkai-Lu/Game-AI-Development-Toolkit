@@ -84,6 +84,75 @@ namespace gadt
 	using UcbValue = double;
 	using EvalValue = double;
 
+	/*
+	struct Coordinate is used to express a plane coordinate.
+	*/
+	struct Coordinate
+	{
+		int x;
+		int y;
+
+		inline Coordinate operator+(Coordinate cn)
+		{
+			return { x + cn.x,y + cn.y };
+		}
+
+		inline Coordinate operator-(Coordinate cn)
+		{
+			return { x - cn.x,y - cn.y };
+		}
+
+		inline void operator+=(Coordinate cn)
+		{
+			x += cn.x;
+			y += cn.y;
+		}
+
+		inline void operator-=(Coordinate cn)
+		{
+			x -= cn.x;
+			y -= cn.y;
+		}
+
+		inline void swap()
+		{
+			int t = x; x = y; y = t;
+		}
+
+		inline void swap(Coordinate& cn)
+		{
+			Coordinate t = cn; *this = cn; cn = *this;
+		}
+
+		std::string to_string() const
+		{
+			std::stringstream ss;
+			ss << "[" << x << "," << y << "]";
+			return ss.str();
+		}
+	};
+
+	//srting to interger.
+	inline int ToInt(std::string str)
+	{
+		return atoi(str.c_str());
+	}
+
+	//bool convert to string.
+	inline std::string ToString(bool data)
+	{
+		return data ? "true" : "false";
+	}
+
+	//convert to string.
+	template<typename T>
+	inline std::string ToString(T data)
+	{
+		std::stringstream ss;
+		ss << data;
+		return ss.str();
+	}
+
 	namespace console
 	{
 		//console color type
@@ -139,53 +208,6 @@ namespace gadt
 				change_color(temp_color);
 			}
 		};
-		
-		//bool to string. that can be replaced by '<< boolalpha'
-		inline std::string BoolToString(bool b)
-		{
-			if (b)
-			{
-				return "true";
-			}
-			return "false";
-		}
-
-		//interger to string.
-		inline std::string IntergerToString(size_t i)
-		{
-			std::ostringstream os;
-			if (os << i) return os.str();
-			return "invalid conversion";
-		}
-
-		//double to string
-		inline std::string DoubleToString(double d)
-		{
-			std::ostringstream os;
-			if (os << d) return os.str();
-			return "invalid conversion";
-		}
-
-		//bool convert to string.
-		inline std::string ToString(bool data)
-		{
-			return data? "true":"false";
-		}
-
-		//srting to interger.
-		inline int ToInt(std::string str)
-		{
-			return atoi(str.c_str());
-		}
-
-		//convert to string.
-		template<typename T>
-		inline std::string ToString(T data)
-		{
-			std::stringstream ss;
-			ss << data;
-			return ss.str();
-		}
 
 		//colorful print.
 		template<typename T>
@@ -357,69 +379,8 @@ namespace gadt
 		bool RemoveDir(std::string path);
 	}
 
-	namespace log
-	{
-		//error log class. 
-		class ErrorLog
-		{
-		private:
-			std::vector<std::string> _error_list;
-
-		public:
-			//default constructor.
-			ErrorLog()
-			{
-
-			}
-
-			//constructor with init list.
-			ErrorLog(std::initializer_list<std::string> init_list)
-			{
-				for (auto err : init_list)
-				{
-					_error_list.push_back(err);
-				}
-			}
-
-			//copy constructor is banned
-			ErrorLog(const ErrorLog&) = delete;
-
-			//add a new error.
-			inline void add(std::string err)
-			{
-				_error_list.push_back(err);
-			}
-
-			//return true if no error exist.
-			inline bool is_empty() const
-			{
-				return _error_list.size() == 0;
-			}
-
-			//output as json format.
-			inline std::string output() const
-			{
-				std::stringstream ss;
-				ss << "[";
-				for (size_t i = 0; i < _error_list.size(); i++)
-				{
-					ss << "\"" << _error_list[i] << "\"";
-					if (i != _error_list.size() - 1)
-					{
-						ss << "," << std::endl;
-					}
-				}
-				ss << "]";
-				return ss.str();
-			}
-		};
-	}
-
 	namespace table
 	{
-		//enable warning in table.
-		
-
 		enum AlignType : int8_t
 		{
 			ALIGN_LEFT = 0,

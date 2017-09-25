@@ -92,7 +92,7 @@ namespace gadt
 				std::cout << std::endl;
 				Cprintf("[File]: " + file, GRAY);
 				std::cout << std::endl;
-				Cprintf("[Line]: " + IntergerToString(line), GRAY);
+				Cprintf("[Line]: " + ToString(line), GRAY);
 				std::cout << std::endl;
 				Cprintf("[Func]: " + function, GRAY);
 				std::cout << std::endl;
@@ -252,7 +252,7 @@ namespace gadt
 				os << space_before_line << " ";
 				for (size_t column = 0; column < _column_size; column++)
 				{
-					std::string index = console::IntergerToString(column + 1);
+					std::string index = ToString(column + 1);
 					os << index << std::string((_column_width[column] * 2) - index.length() + 1, ' ');
 				}
 				os << std::endl;
@@ -292,7 +292,7 @@ namespace gadt
 				//print first line , include value and space.
 				if (enable_index)
 				{
-					std::string index = console::IntergerToString(row + 1);
+					std::string index = ToString(row + 1);
 					os << ' ' << index << std::string(space_before_line_size - index.length() - 1, ' ');
 				}
 				else

@@ -20,8 +20,7 @@
 */
 
 #include "gadtlib.h"
-#include "gadt_stl.hpp"
-#include "gadt_define.hpp"
+#include "gadt_algorithm.hpp"
 
 #pragma once
 
@@ -73,11 +72,11 @@ namespace gadt
 				table::ConsoleTable tb(2, 5);
 				tb.set_width({ 12,6 });
 				tb.enable_title({ "MINIMAX SETTING" });
-				tb.set_cell_in_row(0, { { "timeout" },			{ console::ToString(timeout) } });
-				tb.set_cell_in_row(1, { { "max_depth" },		{ console::ToString(max_depth) } });
-				tb.set_cell_in_row(2, { { "ab_prune_enabled" },	{ console::ToString(ab_prune_enabled) } });
-				tb.set_cell_in_row(3, { { "no_winner_index" },	{ console::ToString(no_winner_index) } });
-				tb.set_cell_in_row(4, { { "original_eval" },	{ console::ToString(original_eval) } });
+				tb.set_cell_in_row(0, { { "timeout" },			{ ToString(timeout) } });
+				tb.set_cell_in_row(1, { { "max_depth" },		{ ToString(max_depth) } });
+				tb.set_cell_in_row(2, { { "ab_prune_enabled" },	{ ToString(ab_prune_enabled) } });
+				tb.set_cell_in_row(3, { { "no_winner_index" },	{ ToString(no_winner_index) } });
+				tb.set_cell_in_row(4, { { "original_eval" },	{ ToString(original_eval) } });
 				return tb.output_string();
 			}
 		};
@@ -367,9 +366,9 @@ namespace gadt
 					for (size_t i = 0; i < root.action_list().size(); i++)
 					{
 						tb.set_cell_in_row(i + 1, {
-							{ console::IntergerToString(i) },
+							{ ToString(i) },
 							{ _log_controller.action_to_str_func()(root.action_list()[i])},
-							{ console::DoubleToString(eval_set[i])},
+							{ ToString(eval_set[i])},
 							{ i == best_action_index ? "Yes ":"  "}
 						});
 					}

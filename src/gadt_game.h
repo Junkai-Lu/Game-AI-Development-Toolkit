@@ -1,5 +1,4 @@
 #include "gadtlib.h"
-#include "gadt_stl.hpp"
 
 #pragma once
 
@@ -7,6 +6,8 @@ namespace gadt
 {
 	namespace game
 	{
+		using Location = Coordinate;
+
 		//define game player of mnk game.
 		enum MnkGamePlayer : AgentIndex
 		{

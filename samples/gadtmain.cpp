@@ -65,8 +65,8 @@ void ShellDefine()
 		if (params.size() >= 3)
 		{
 			renju::RenjuAction action = {
-				{ console::ToInt(params[0]),console::ToInt(params[1]) },
-				renju::RenjuPlayer(console::ToInt(params[2]))
+				{ ToInt(params[0]),ToInt(params[1]) },
+				renju::RenjuPlayer(ToInt(params[2]))
 			};
 			if (state.is_legal_action(action))
 			{
@@ -93,7 +93,7 @@ void ShellDefine()
 			}
 			else
 			{
-				size_t dist = size_t(console::ToInt(params[0]));
+				size_t dist = size_t(ToInt(params[0]));
 				generator.Print(generator.GetNearbyActions(dist));
 			}
 		}
