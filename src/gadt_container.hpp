@@ -488,7 +488,7 @@ namespace gadt
 					Column temp;
 					for (size_t row = 0; row < _number_of_row; row++)
 					{
-						temp.push_back(&((_cells[column])[row]));
+						temp.push_back(&((_elements[column])[row]));
 					}
 					_column.push_back(temp);
 				}
@@ -499,7 +499,7 @@ namespace gadt
 					Row temp;
 					for (size_t column = 0; column < _number_of_columns; column++)
 					{
-						temp.push_back(&((_cells[column])[row]));
+						temp.push_back(&((_elements[column])[row]));
 					}
 					_row.push_back(temp);
 				}
@@ -507,7 +507,7 @@ namespace gadt
 
 			inline bool is_legal_coordinate(size_t x, size_t y)
 			{
-				return column < _number_of_columns || row < _number_of_row;
+				return x < _number_of_columns && y < _number_of_row;
 			}
 
 		public:
@@ -528,6 +528,7 @@ namespace gadt
 				_elements()
 			{
 				init_column_and_row();
+				size_t y = 0;
 				for (auto row : list)
 				{
 					size_t x = 0;
@@ -562,7 +563,7 @@ namespace gadt
 			//get element
 			inline const Element& element(size_t column, size_t row)
 			{
-				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_location(column,row), "out of row range.");
+				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(column,row), "out of row range.");
 				return (_elements[column])[row];
 			}
 
@@ -587,7 +588,7 @@ namespace gadt
 
 			void set_element(const reference elem, size_t column, size_t row)
 			{
-				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_location(column, row), "out of range.");
+				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(column, row), "out of range.");
 				(_elements[column])[row] = elem;
 			}
 
