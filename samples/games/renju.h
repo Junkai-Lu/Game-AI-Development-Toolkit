@@ -21,7 +21,7 @@
 
 #include "../../src/gadtlib.h"
 #include "../../src/monte_carlo.hpp"
-#include "../../src/gadt_game.h"
+#include "../../src/gadt_game.hpp"
 
 #pragma once
 

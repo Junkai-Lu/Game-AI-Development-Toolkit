@@ -24,7 +24,7 @@ SET(SRC_LIST
 		./samples/gadt_unittest.h
         ./samples/gadt_unittest.cpp
         ./samples/gadtmain.cpp
-		./samples/game/renju.hpp
+		./samples/games/renju.h
         )
  
 ADD_EXECUTABLE(Paradoxes ${SRC_LIST})
