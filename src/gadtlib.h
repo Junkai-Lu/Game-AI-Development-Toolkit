@@ -77,6 +77,9 @@
 
 namespace gadt
 {
+	constexpr const bool GADT_STL_ENABLE_WARNING = true;
+	constexpr const bool GADT_TABLE_ENABLE_WARNING = true;
+
 	using AgentIndex = int8_t;//AgentIndex is the index of each player, default is int8_t. 0 is the default no-winner index.
 	using UcbValue = double;
 	using EvalValue = double;
@@ -415,7 +418,7 @@ namespace gadt
 	namespace table
 	{
 		//enable warning in table.
-		constexpr const bool g_TABLE_ENABLE_WARNING = true;
+		
 
 		enum AlignType : int8_t
 		{
@@ -534,7 +537,7 @@ namespace gadt
 			void init_cells();
 
 			//basic output.
-			void basic_output(std::ostream& os, CellOutputFunc cell_cb, bool enable_frame, bool enable_index);
+			void basic_output(std::ostream& os, CellOutputFunc cell_cb, bool enable_framGADT_TABLE_ENABLE_WARNINGe, bool enable_index);
 
 		public:
 			//constructor function
@@ -545,20 +548,20 @@ namespace gadt
 
 			inline const Row& get_row(size_t index) 
 			{
-				GADT_CHECK_WARNING(g_TABLE_ENABLE_WARNING, index >= _row_size, "TABLE01: out of row range.");
+				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, index >= _row_size, "TABLE01: out of row range.");
 				return _row[index]; 
 			}
 
 			inline const Column& get_column(size_t index) 
 			{ 
-				GADT_CHECK_WARNING(g_TABLE_ENABLE_WARNING, index >= _column_size, "TABLE02: out of column range.");
+				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, index >= _column_size, "TABLE02: out of column range.");
 				return _column[index]; 
 			}
 			
 			inline reference cell(size_t column, size_t row)
 			{
-				GADT_CHECK_WARNING(g_TABLE_ENABLE_WARNING, row >= _row_size, "TABLE01: out of row range.");
-				GADT_CHECK_WARNING(g_TABLE_ENABLE_WARNING, column >= _column_size, "TABLE02: out of column range.");
+				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, row >= _row_size, "TABLE01: out of row range.");
+				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, column >= _column_size, "TABLE02: out of column range.");
 				return (_cells[column])[row];
 			}
 
@@ -579,7 +582,7 @@ namespace gadt
 
 			inline void set_width(size_t column, size_t width)
 			{
-				GADT_CHECK_WARNING(g_TABLE_ENABLE_WARNING, column >= _column_size, "TABLE02: out of column range.");
+				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, column >= _column_size, "TABLE02: out of column range.");
 				_column_width[column] = width;
 			}
 

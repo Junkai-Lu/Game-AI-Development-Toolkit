@@ -1,4 +1,5 @@
 #include "gadtlib.h"
+#include "gadt_stl.hpp"
 
 #pragma once
 
@@ -6,34 +7,6 @@ namespace gadt
 {
 	namespace game
 	{
-		struct Location
-		{
-			int x;
-			int y;
-
-			inline Location operator+(Location loc)
-			{
-				return { x + loc.x,y + loc.y };
-			}
-
-			inline Location operator-(Location loc)
-			{
-				return { x - loc.x,y - loc.y };
-			}
-
-			inline void operator+=(Location loc)
-			{
-				x += loc.x;
-				y += loc.y;
-			}
-
-			inline void operator-=(Location loc)
-			{
-				x -= loc.x;
-				y -= loc.y;
-			}
-		};
-
 		//define game player of mnk game.
 		enum MnkGamePlayer : AgentIndex
 		{

@@ -26,6 +26,51 @@
 
 namespace gadt
 {
+	struct Location
+	{
+		int x;
+		int y;
+
+		inline Location operator+(Location loc)
+		{
+			return { x + loc.x,y + loc.y };
+		}
+
+		inline Location operator-(Location loc)
+		{
+			return { x - loc.x,y - loc.y };
+		}
+
+		inline void operator+=(Location loc)
+		{
+			x += loc.x;
+			y += loc.y;
+		}
+
+		inline void operator-=(Location loc)
+		{
+			x -= loc.x;
+			y -= loc.y;
+		}
+
+		inline void swap()
+		{
+			int t = x; x = y; y = t;
+		}
+
+		inline void swap(Location& loc)
+		{
+			Location t = loc; *this = loc; loc = *this;
+		}
+
+		std::string to_string() const
+		{
+			std::stringstream ss;
+			ss << "[" << x << "," << y << "]";
+			return ss.str();
+		}
+	};
+
 	namespace log
 	{
 		/*
@@ -195,7 +240,6 @@ namespace gadt
 
 	namespace stl
 	{
-
 		/*
 		* StackAllocator is a memory allocator, whose memory is preallocate at the time when the object is created.
 		* its memory is allocated by stack, all the element in it can be opearted.
@@ -840,16 +884,142 @@ namespace gadt
 			}
 		};
 
-		template<typename T>
-		class Matrix
+		template<typename T, size_t _WIDTH, size_t _HEIGHT>
+		class ElementMatrixArray
 		{
-		public:
-			using pointer = Matrix<T>*;
-			using reference = Matrix<T>&;
+			using pointer = T*;
+			using reference = T&;
 			using ElementType = T;
 
 		private:
+			T _elements[_WIDTH][_HEIGHT];
+
+		public:
 			
+			const T& element()
+		};
+
+		template<typename T>
+		class ElementMatrix
+		{
+		public:
+			using pointer = T*;
+			using reference = T&;
+			using Element = T;
+			using ElementSet = std::vector<std::vector<T>>;
+			using Row = std::vector<pointer>;
+			using Column = Row;
+
+		private:
+
+			const size_t _number_of_columns;
+			const size_t _number_of_row;
+			ElementSet			_elements;
+			std::vector<Column> _column;
+			std::vector<Row>	_row;
+
+		private:
+			void init_column_and_row()
+			{
+				//init columns
+				for (size_t column = 0; column < _number_of_columns; column++)
+				{
+					Column temp;
+					for (size_t row = 0; row < _number_of_row; row++)
+					{
+						temp.push_back(&((_cells[column])[row]));
+					}
+					_column.push_back(temp);
+				}
+
+				//init rows
+				for (size_t row = 0; row < _number_of_row; row++)
+				{
+					Row temp;
+					for (size_t column = 0; column < _number_of_columns; column++)
+					{
+						temp.push_back(&((_cells[column])[row]));
+					}
+					_row.push_back(temp);
+				}
+			}
+
+		public:
+
+			//constructor function
+			ElementMatrix(size_t column_size, size_t row_size):
+				_number_of_columns(column_size),
+				_number_of_row(row_size),
+				_elements(column_size, std::vector<T>(row_size, T()))
+			{
+				init_column_and_row();
+			}
+
+			//constructor function with initializer list.
+			ElementMatrix(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<T>> list) :
+				_number_of_columns(column_size),
+				_number_of_row(row_size),
+				_elements()
+			{
+				init_column_and_row();
+				for (auto row : list)
+				{
+					size_t x = 0;
+					for (auto value : row)
+					{
+						if (x < _number_of_columns && y < _number_of_row)
+						{
+							((_elements[x])[y]).str = value;
+						}
+						x++;
+					}
+					y++;
+				}
+			}
+
+			//get element
+			inline const Element& element(size_t column, size_t row)
+			{
+				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, row >= _number_of_row, "TABLE01: out of row range.");
+				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, column >= _number_of_columns, "TABLE02: out of column range.");
+				return (_elements[column])[row];
+			}
+
+			inline const Element& element(Location loc)
+			{
+				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, loc.y >= _number_of_row, "TABLE01: out of row range.");
+				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, loc.x >= _number_of_columns, "TABLE02: out of column range.");
+				return (_elements[loc.x])[loc.y];
+			}
+			
+			inline const Row& get_row(size_t index)
+			{
+				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, index >= _number_of_row, "TABLE01: out of row range.");
+				return _row[index];
+			}
+
+			inline const Column& get_column(size_t index)
+			{
+				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, index >= _number_of_columns, "TABLE02: out of column range.");
+				return _column[index];
+			}
+
+			inline size_t number_of_rows() const
+			{
+				return _number_of_row;
+			}
+
+			inline size_t number_of_columns() const
+			{
+				return _number_of_columns;
+			}
+
+			void SetElement(const Element& elem)
+			{
+				
+			}
+
+			void SetRow(size_t index,)
 		};
 	}
 
