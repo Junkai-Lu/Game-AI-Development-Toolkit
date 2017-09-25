@@ -252,6 +252,11 @@ namespace gadt
 			inline node_pointer end() const { return _last_node; }
 		};
 
+		/*
+		* RandomPoolElement the basic part of RandomPool.
+		*
+		* [T] is the type of element.
+		*/
 		template<typename T>
 		struct RandomPoolElement
 		{
@@ -278,6 +283,12 @@ namespace gadt
 			}
 		};
 
+		/*
+		* RandomPool is a container of elements which support to get element randomly by weigh.
+		*
+		* [T] is the type of element.
+		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
+		*/
 		template<typename T, bool _is_debug = false>
 		class RandomPool
 		{
@@ -418,47 +429,11 @@ namespace gadt
 			}
 		};
 
-		template<typename Action, bool _is_debug>
-		class ActionPool
-		{
-		private:
-			using ActionList = List<Action, _is_debug>;
-			using pointer = typename ActionList::pointer;
-			using Allocator = typename ActionList::Allocator;
-
-		private:
-			ActionList _action_list;
-
-		public:
-
-			inline ActionPool(Allocator& allocator) :
-				_action_list(allocator)
-			{
-			}
-
-			inline void push_back(Action action)
-			{
-				_action_list.push_back(action);
-			}
-
-			inline void size() const
-			{
-				return _action_list.size();
-			}
-
-			inline pointer next_action() const
-			{
-				pointer next = _action_list.iterator();
-				_action_list.to_next_iterator();
-				return next;
-			}
-
-			inline bool is_end() const
-			{
-				return _action_list.is_end();
-			}
-		};
-
+		/*
+		* ElementMatrix is a flexiable matrix.
+		*
+		* [T] is the type of element.
+		*/
 		template<typename T>
 		class ElementMatrix
 		{
@@ -636,7 +611,12 @@ namespace gadt
 			}
 		};
 
-		//iterator of mnk game state.
+		/*
+		* MatrixArrayIter is the iterator of MatrixArray.
+		*
+		* [_WIDTH] is the width of matrix.
+		* [_HEIGHT] is the height of matrix.
+		*/
 		template<size_t _WIDTH, size_t _HEIGHT>
 		class MatrixArrayIter
 		{
@@ -674,6 +654,13 @@ namespace gadt
 			}
 		};
 
+		/*
+		* MatrixArray offers a two-dimensional array.
+		*
+		* [T] is the type of element.
+		* [_WIDTH] is the width of matrix.
+		* [_HEIGHT] is the height of matrix.
+		*/
 		template<typename T, size_t _WIDTH, size_t _HEIGHT>
 		class MatrixArray
 		{
