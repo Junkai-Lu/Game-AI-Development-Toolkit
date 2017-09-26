@@ -666,6 +666,7 @@ namespace gadt
 		{
 			using pointer = T*;
 			using reference = T&;
+			using const_reference = const T&;
 			using Element = T;
 			using InitList = std::initializer_list<T>;
 			using Iter = MatrixArrayIter<_WIDTH, _HEIGHT>;
@@ -674,43 +675,82 @@ namespace gadt
 
 			Element _elements[_WIDTH][_HEIGHT];
 
+		public:
+
 			inline bool is_legal_coordinate(size_t x, size_t y) const
 			{
 				return x < _WIDTH && y < _HEIGHT;
 			}
 
-		public:
+			inline bool is_legal_coordinate(Coordinate coord) const
+			{
+				return is_legal_coordinate(coord.x, coord.y);
+			}
+
+			MatrixArray() = default;
+
+			MatrixArray(Element elem)
+			{
+				for (auto coord : *this)
+					set_element(coord, elem);
+			}
 
 			Iter begin() const
 			{
-				return Iter(0, 0);
+				return Iter({ 0, 0 });
 			}
 
 			Iter end() const
 			{
-				return Iter(0, _HEIGHT);
+				return Iter({ 0, _HEIGHT });
 			}
 
-			inline const reference element(size_t x, size_t y) const
+			inline const_reference element(size_t x, size_t y) const
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x, y), "out of row range.");
 				return _elements[x][y];
 			}
 
-			inline const reference element(Coordinate coord)const
+			inline const_reference element(Coordinate coord) const
 			{
 				return element(coord.x, coord.y);
 			}
 
-			inline void set_element(const Element& elem, size_t x, size_t y)
+			inline void set_element(size_t x, size_t y, const_reference elem)
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x, y), "out of row range.");
 				_elements[x][y] = elem;
 			}
 
-			inline void set_element(const Element& elem, Coordinate coord)
+			inline void set_element(Coordinate coord, const_reference elem)
 			{
-				set_element(elem, coord.x, coord.y);
+				set_element(coord.x, coord.y, elem);
+			}
+
+			inline bool any(const_reference elem) const
+			{
+				for (auto coord : *this)
+				{
+					if (element(coord) == elem)
+						return true;
+				}
+				return false;
+			}
+
+			inline bool none(const_reference elem) const
+			{
+				for (auto coord : *this)
+				{
+					if (element(coord) == elem)
+						return false;
+				}
+				return true;
+			}
+
+			inline reference operator[](Coordinate coord)
+			{
+				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(coord.x, coord.y), "out of row range.");
+				return _elements[coord.x][coord.y];
 			}
 		};
 	}

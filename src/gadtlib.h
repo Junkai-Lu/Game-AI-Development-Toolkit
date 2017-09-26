@@ -92,26 +92,59 @@ namespace gadt
 		int x;
 		int y;
 
-		inline Coordinate operator+(Coordinate cn)
+		inline Coordinate operator+(Coordinate coord) const
 		{
-			return { x + cn.x,y + cn.y };
+			return { x + coord.x,y + coord.y };
 		}
 
-		inline Coordinate operator-(Coordinate cn)
+		inline Coordinate operator-(Coordinate coord) const
 		{
-			return { x - cn.x,y - cn.y };
+			return { x - coord.x,y - coord.y };
 		}
 
-		inline void operator+=(Coordinate cn)
+		inline Coordinate operator*(int i) const
 		{
-			x += cn.x;
-			y += cn.y;
+			return { x*i, y*i };
 		}
 
-		inline void operator-=(Coordinate cn)
+		inline Coordinate operator/(int i) const
 		{
-			x -= cn.x;
-			y -= cn.y;
+			return { x/i, y/i };
+		}
+
+		inline int operator*(Coordinate coord) const
+		{
+			return { (x * coord.x) + (y* coord.y) };
+		}
+
+		inline void operator*=(int i)
+		{
+			x *= i;
+			y *= i;
+		}
+
+		inline void operator/=(Coordinate coord)
+		{
+			x /= coord.x;
+			y /= coord.y;
+		}
+
+		inline void operator/=(int i)
+		{
+			x /= i;
+			y /= i;
+		}
+
+		inline void operator+=(Coordinate coord)
+		{
+			x += coord.x;
+			y += coord.y;
+		}
+
+		inline void operator-=(Coordinate coord)
+		{
+			x -= coord.x;
+			y -= coord.y;
 		}
 
 		inline void swap()
@@ -119,9 +152,9 @@ namespace gadt
 			int t = x; x = y; y = t;
 		}
 
-		inline void swap(Coordinate& cn)
+		inline void swap(Coordinate& coord)
 		{
-			Coordinate t = cn; *this = cn; cn = *this;
+			Coordinate t = coord; *this = coord; coord = *this;
 		}
 
 		std::string to_string() const

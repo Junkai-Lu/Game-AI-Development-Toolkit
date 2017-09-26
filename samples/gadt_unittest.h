@@ -77,7 +77,7 @@ namespace gadt
 			using Result = Player;
 			using ActionSet = std::vector<Action>;
 
-			State GetNewState(const State& state, const Action& action);
+			void UpdateState(State& state, const Action& action);
 			void MakeAction(const State& state, ActionSet& as);
 			Player DetemineWinner(const State& state);
 			Result StateToResult(const State& state, AgentIndex winner);

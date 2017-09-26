@@ -22,6 +22,8 @@
 #include "../../src/gadtlib.h"
 #include "../../src/monte_carlo.hpp"
 #include "../../src/gadt_game.hpp"
+#include "../../src/game_shell.h"
+#include "../../src/mcts.hpp"
 
 #pragma once
 
@@ -29,9 +31,47 @@ namespace gadt
 {
 	namespace renju
 	{
-		using RenjuPlayer = game::MnkGamePlayer;
-		using RenjuState = game::MnkGameState<9, 9, 5>;
+		constexpr const size_t g_WIDTH = 19;
+		constexpr const size_t g_HEIGHT = 19;
+		constexpr const size_t g_LENGTH = 5;
+
+		enum RenjuPlayer: AgentIndex
+		{
+			WHITE = -1,
+			EMPTY = 0,
+			BLACK = 1,
+			DRAW = 10,
+			FLAG = 20
+
+		};
+		using RenjuState = game::MnkGameState<g_WIDTH, g_HEIGHT, g_LENGTH>;
 		using RenjuAction = game::MnkGameAction;
-		using RenjuActionGenerator = game::MnkGameActionGenerator<9, 9, 5>;
+		using RenjuActionList = std::vector<RenjuAction>;
+		using RenjuResult = RenjuPlayer;
+		using RenjuActionGenerator = game::MnkGameActionGenerator<g_WIDTH, g_HEIGHT, g_LENGTH>;
+
+		void DefineRenjuShell(shell::GameShell& shell, std::string page_name);
+
+		void UpdateState(RenjuState& state, const RenjuAction& action);
+
+		void MakeAction(const RenjuState& state, RenjuActionList& list);
+
+		RenjuPlayer DetemineWinner(const RenjuState& state);
+
+		RenjuResult StateToResult(const RenjuState& state, AgentIndex winner);
+
+		bool AllowUpdateValue(const RenjuState& state, RenjuResult winner);
+
+		std::string StateToString(const RenjuState& state);
+
+		std::string ActionToString(const RenjuAction& action);
+
+		std::string ResultToString(const RenjuResult& result);
+
+		void PrintRenjuState(const RenjuState& state);
+
+		void PrintRenjuActions(const RenjuState& state, RenjuActionList action_list);
+
+		using RenjuMCTS = mcts::MonteCarloTreeSearch<RenjuState, RenjuAction, RenjuResult, true>;
 	}
 }
