@@ -92,6 +92,21 @@ namespace gadt
 		int x;
 		int y;
 
+		operator bool()
+		{
+			return x != 0 || y != 0;
+		}
+
+		inline bool operator==(Coordinate coord) const
+		{
+			return x == coord.x && y == coord.y;
+		}
+
+		inline bool operator!=(Coordinate coord) const
+		{
+			return x != coord.x || y != coord.y;
+		}
+
 		inline Coordinate operator+(Coordinate coord) const
 		{
 			return { x + coord.x,y + coord.y };

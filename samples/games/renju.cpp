@@ -211,8 +211,6 @@ namespace gadt
 				}
 			});
 		}
-
-		
 	}
 }
 

@@ -430,6 +430,45 @@ namespace gadt
 		};
 
 		/*
+		* MatrixArrayIter is the iterator of matrix container.
+		*/
+		class MatrixIter
+		{
+		private:
+			Coordinate _coord;
+			const size_t _width;
+			const size_t _height;
+
+		public:
+			MatrixIter(Coordinate coord, size_t width, size_t height) :
+				_coord(coord),
+				_width(width),
+				_height(height)
+			{
+			}
+
+			bool operator!=(const MatrixIter& iter) const
+			{
+				return _coord != iter._coord;
+			}
+
+			void operator++()
+			{
+				_coord.x++;
+				if (_coord.x >= _width)
+				{
+					_coord.x = 0;
+					_coord.y++;
+				}
+			}
+
+			Coordinate operator* ()
+			{
+				return _coord;
+			}
+		};
+
+		/*
 		* ElementMatrix is a flexiable matrix.
 		*
 		* [T] is the type of element.
@@ -440,6 +479,7 @@ namespace gadt
 		public:
 			using pointer = T*;
 			using reference = T&;
+			using const_reference = const T&;
 			using Element = T;
 			using ElementSet = std::vector<std::vector<T>>;
 			using Row = std::vector<pointer>;
@@ -488,10 +528,10 @@ namespace gadt
 		public:
 
 			//constructor function
-			ElementMatrix(size_t column_size, size_t row_size) :
+			ElementMatrix(size_t column_size, size_t row_size, const_reference elem = Element()) :
 				_number_of_columns(column_size),
 				_number_of_row(row_size),
-				_elements(column_size, std::vector<T>(row_size, T()))
+				_elements(column_size, std::vector<T>(row_size, elem))
 			{
 				init_column_and_row();
 			}
@@ -519,11 +559,13 @@ namespace gadt
 				}
 			}
 
+			//get number of rows.
 			inline size_t number_of_rows() const
 			{
 				return _number_of_row;
 			}
 
+			//get number of columns.
 			inline size_t number_of_columns() const
 			{
 				return _number_of_columns;
@@ -542,18 +584,21 @@ namespace gadt
 				return (_elements[column])[row];
 			}
 
+			//get row by index.
 			inline const Row& get_row(size_t index)
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, index >= _number_of_row, "out of row range.");
 				return _row[index];
 			}
 
+			//get column by index.
 			inline const Column& get_column(size_t index)
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, index >= _number_of_columns, "out of column range.");
 				return _column[index];
 			}
 
+			//set element.
 			void set_element(const reference elem)
 			{
 				for (std::vector<Element>& row : _elements)
@@ -561,12 +606,14 @@ namespace gadt
 						e = elem;
 			}
 
+			//set element.
 			void set_element(const reference elem, size_t column, size_t row)
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(column, row), "out of range.");
 				(_elements[column])[row] = elem;
 			}
 
+			//set element.
 			void set_element(const reference elem, Coordinate coord)
 			{
 				set_element(coord.x, coord.y);
@@ -612,49 +659,6 @@ namespace gadt
 		};
 
 		/*
-		* MatrixArrayIter is the iterator of MatrixArray.
-		*
-		* [_WIDTH] is the width of matrix.
-		* [_HEIGHT] is the height of matrix.
-		*/
-		template<size_t _WIDTH, size_t _HEIGHT>
-		class MatrixArrayIter
-		{
-		private:
-			Coordinate _coord;
-
-		public:
-			MatrixArrayIter(Coordinate coord) :
-				_coord(coord)
-			{
-			}
-
-			bool operator!=(const MatrixArrayIter& iter) const
-			{
-				if (_coord.x != iter._coord.x || _coord.y != iter._coord.y)
-				{
-					return true;
-				}
-				return false;
-			}
-
-			void operator++()
-			{
-				_coord.x++;
-				if (_coord.x >= _WIDTH)
-				{
-					_coord.x = 0;
-					_coord.y++;
-				}
-			}
-
-			Coordinate operator* ()
-			{
-				return _coord;
-			}
-		};
-
-		/*
 		* MatrixArray offers a two-dimensional array.
 		*
 		* [T] is the type of element.
@@ -669,7 +673,7 @@ namespace gadt
 			using const_reference = const T&;
 			using Element = T;
 			using InitList = std::initializer_list<T>;
-			using Iter = MatrixArrayIter<_WIDTH, _HEIGHT>;
+			using Iter = MatrixIter;
 
 		private:
 
@@ -697,12 +701,12 @@ namespace gadt
 
 			Iter begin() const
 			{
-				return Iter({ 0, 0 });
+				return Iter({ 0, 0 }, _WIDTH, _HEIGHT);
 			}
 
 			Iter end() const
 			{
-				return Iter({ 0, _HEIGHT });
+				return Iter({ 0, _HEIGHT }, _WIDTH, _HEIGHT);
 			}
 
 			inline const_reference element(size_t x, size_t y) const

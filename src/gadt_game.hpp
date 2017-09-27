@@ -33,7 +33,7 @@ namespace gadt
 		class MnkGameState
 		{
 		public:
-			using Iter = stl::MatrixArrayIter<_WIDTH, _HEIGHT>;
+			using Iter = stl::MatrixIter;
 
 		private:
 			stl::MatrixArray<AgentIndex, _WIDTH, _HEIGHT> _piece;

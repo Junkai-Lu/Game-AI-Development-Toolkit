@@ -80,7 +80,7 @@ void ShellDefine()
 	mcts->AddFunction("search","search part", [](){unittest::TestMctsSearch(); });
 
 	//Start Shell
-	gadt.StartFromPage("root", "game/renju");
+	gadt.StartFromPage("root","ls");
 }
 
 int main()
