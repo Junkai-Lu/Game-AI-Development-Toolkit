@@ -20,6 +20,7 @@
 */
 
 #include "gadtlib.h"
+#include "gadt_log.hpp"
 
 #pragma once
 
@@ -448,7 +449,7 @@ namespace gadt
 								std::cout << ">> ";
 								console::Cprintf("[" + define::GetCommandTypeName(i) + "]", console::YELLOW);
 								std::cout << std::endl;
-								table::ConsoleTable tb(3, _cmd_name_list[i].size());
+								log::ConsoleTable tb(3, _cmd_name_list[i].size());
 								tb.set_width({ SYMBOL_WIDTH,NAME_WIDTH,DESC_WIDTH });
 								for (size_t n = 0; n < _cmd_name_list[i].size(); n++)
 								{
@@ -471,7 +472,7 @@ namespace gadt
 						std::cout << ">> ";
 						console::Cprintf("[ COMMANDS ]", console::YELLOW);
 						std::cout << std::endl;
-						table::ConsoleTable tb(3, _command_list.size());
+						log::ConsoleTable tb(3, _command_list.size());
 						tb.set_width({ SYMBOL_WIDTH,NAME_WIDTH,DESC_WIDTH });
 						size_t n = 0;
 						for (const auto& pair: _command_list)

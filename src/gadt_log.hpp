@@ -20,6 +20,7 @@
 */
 
 #include "gadtlib.h"
+#include "gadt_container.hpp"
 
 #pragma once
 
@@ -244,6 +245,345 @@ namespace gadt
 				_visual_tree.output_json(ofs);
 			}
 
+		};
+
+		enum AlignType : int8_t
+		{
+			ALIGN_LEFT = 0,
+			ALIGN_MIDDLE = 1,
+			ALIGN_RIGHT = 2
+		};
+
+		//basic cell of table.
+		struct TableCell
+		{
+			std::string				str;
+			console::ConsoleColor	color;
+			AlignType				align;
+
+			TableCell() :
+				str(),
+				color(console::DEFAULT),
+				align(ALIGN_LEFT)
+			{
+			}
+
+			TableCell(std::string _str) :
+				str(_str),
+				color(console::DEFAULT),
+				align(ALIGN_LEFT)
+			{
+			}
+
+			TableCell(std::string _str, console::ConsoleColor _color) :
+				str(_str),
+				color(_color),
+				align(ALIGN_LEFT)
+			{
+			}
+
+			TableCell(std::string _str, AlignType _align) :
+				str(),
+				color(console::DEFAULT),
+				align(_align)
+			{
+			}
+
+			TableCell(std::string _str, console::ConsoleColor _color, AlignType _align) :
+				str(_str),
+				color(_color),
+				align(_align)
+			{
+			}
+
+			//get string.
+			std::string to_string(size_t max_length) const
+			{
+				std::string temp;
+				if (str.length() < max_length)
+				{
+					size_t space_width = max_length - str.length();
+					if (align == ALIGN_LEFT)
+					{
+						temp += str;
+						temp += std::string(space_width, ' ');
+					}
+					else if (align == ALIGN_RIGHT)
+					{
+						temp += std::string(space_width, ' ');
+						temp += str;
+					}
+					else if (align == ALIGN_MIDDLE)
+					{
+						size_t left_width = space_width / 2;
+						size_t right_width = space_width - left_width;
+						temp += std::string(left_width, ' ');
+						temp += str;
+						temp += std::string(right_width, ' ');
+					}
+				}
+				else
+				{
+					temp = str.substr(0, max_length);
+				}
+				return temp;
+			}
+		};
+
+		//console table
+		class ConsoleTable
+		{
+		private:
+			using pointer = TableCell*;
+			using reference = TableCell&;
+			using const_reference = const TableCell&;
+			using InitList = std::initializer_list<TableCell>;
+			using CellPtrSet = std::vector<pointer>;
+			using CellOutputFunc = std::function<void(const TableCell&, size_t, std::ostream&)>;
+			using FrameOutputFunc = std::function<void(std::string str, std::ostream&)>;
+			
+			//size
+			stl::ElementMatrix<TableCell> _cells;
+			std::vector<size_t> _column_width;
+
+			//title
+			bool _enable_title;
+			TableCell _title_cell;
+
+		private:
+
+			//basic output.
+			void BasicOutput(std::ostream & os, CellOutputFunc CellCallback, bool enable_frame, bool enable_index)
+			{
+				std::string frame = enable_frame ? "+-|" : "   ";
+				const size_t space_before_line_size = 4;
+				std::string space_before_line(space_before_line_size, ' ');
+
+				os << std::endl;
+
+				//print indexs upper the table.
+
+				if (enable_index)
+				{
+					os << space_before_line << " ";
+					for (size_t column = 0; column < this->number_of_columns(); column++)
+					{
+						std::string index = ToString(column + 1);
+						os << index << std::string((_column_width[column] * 2) - index.length() + 1, ' ');
+					}
+					os << std::endl;
+				}
+
+				//print title
+				if (_enable_title)
+				{
+					size_t str_width = 1;
+					for (auto w : _column_width) { str_width += (w * 2 + 1); }
+					str_width -= 2;
+					os << space_before_line << frame[0];
+					os << std::string(str_width, frame[1]);
+					os << frame[0] << std::endl;
+
+					os << space_before_line << frame[2];
+					CellCallback(_title_cell, str_width, os);
+					os << frame[2] << std::endl;
+				}
+
+				//print upper line of the table.
+				if (enable_frame)
+				{
+					os << space_before_line << frame[0];
+					for (size_t column = 0; column < this->number_of_columns(); column++)
+					{
+						os << std::string(_column_width[column] * 2, frame[1]) << frame[0];
+						if (column == this->number_of_columns() - 1)
+						{
+							os << std::endl;
+						}
+					}
+				}
+
+				for (size_t row = 0; row < this->number_of_rows(); row++)
+				{
+					//print first line , include value and space.
+					if (enable_index)
+					{
+						std::string index = ToString(row + 1);
+						os << ' ' << index << std::string(space_before_line_size - index.length() - 1, ' ');
+					}
+					else
+					{
+						os << space_before_line;
+					}
+					os << frame[2];
+					for (size_t column = 0; column < this->number_of_columns(); column++)
+					{
+						const size_t width = _column_width[column] * 2;
+						const TableCell& c = get_cell(column, row);
+						CellCallback(c, width, os);
+						if (column != this->number_of_columns() - 1) { os << frame[2]; }
+						else
+						{
+							os << frame[2] << std::endl;
+						}
+					}
+
+					//print second line
+					if (enable_frame)
+					{
+						os << space_before_line << frame[0];
+						for (size_t column = 0; column < this->number_of_columns(); column++)
+						{
+							os << std::string(_column_width[column] * 2, frame[1]);
+							os << frame[0];
+							if (column == this->number_of_columns() - 1)
+							{
+								os << std::endl;
+							}
+						}
+					}
+				}
+
+			}
+
+		public:
+			//constructor function
+			ConsoleTable(size_t column_size, size_t row_size) :
+				_cells(column_size, row_size),
+				_column_width(column_size, 2),
+				_enable_title(false)
+			{
+			}
+
+			//constructor function with initializer list(cell).
+			ConsoleTable(size_t column_size, size_t row_size, std::initializer_list<InitList> list):
+				_cells(column_size, row_size, list),
+				_column_width(column_size, 2),
+				_enable_title(false)
+			{
+			}
+
+			//constructor function with initializer list(string).
+			ConsoleTable(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<std::string>> list) :
+				_cells(column_size, row_size, list),
+				_column_width(column_size, 2),
+				_enable_title(false)
+			{
+			}
+
+			inline size_t number_of_rows() const
+			{
+				return _cells.number_of_rows();
+			}
+
+			//get number of columns.
+			inline size_t number_of_columns() const
+			{
+				return _cells.number_of_columns();
+			}
+
+			inline const_reference get_cell(size_t column, size_t row) const
+			{
+				return _cells.get_element(column, row);
+			}
+
+			inline const_reference get_cell(Coordinate coord) const
+			{
+				return _cells.get_element(coord);
+			}
+
+			inline CellPtrSet get_row(size_t index) const
+			{
+				return _cells.get_row(index);
+			}
+
+			inline CellPtrSet get_column(size_t index) const
+			{
+				return _cells.get_column(index);
+			}
+
+			inline void enable_title(TableCell cell)
+			{
+				_enable_title = true;
+				_title_cell = cell;
+			}
+
+			inline void disable_title()
+			{
+				_enable_title = false;
+			}
+
+			void set_width(size_t column, size_t width)
+			{
+				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, column >= number_of_columns(), "TABLE02: out of column range.");
+				_column_width[column] = width;
+			}
+
+			void set_width(std::initializer_list<size_t> width_list)
+			{
+				size_t i = 0;
+				for (size_t width : width_list)
+				{
+					if (i < number_of_columns())
+					{
+						_column_width[i] = width;
+					}
+					i++;
+				}
+			}
+
+			inline void set_cell(const_reference cell, size_t column, size_t row)
+			{
+				_cells.set_element(cell, column, row);
+			}
+
+			inline void set_cell(const_reference cell, Coordinate coord)
+			{
+				_cells.set_element(cell, coord);
+			}
+
+			inline void set_cell_in_row(TableCell cell, size_t row)
+			{
+				_cells.set_row(row, cell);
+			}
+
+			inline void set_cell_in_row(size_t row, std::initializer_list<TableCell> cell_list)
+			{
+				_cells.set_row(row, cell_list);
+			}
+
+			inline void set_cell_in_column(TableCell cell, size_t column)
+			{
+				_cells.set_column(column, cell);
+			}
+
+			inline void set_cell_in_column(size_t column, std::initializer_list<TableCell> cell_list)
+			{
+				_cells.set_column(column, cell_list);
+			}
+
+			std::string output_string(bool enable_frame = true, bool enable_index = false)
+			{
+				CellOutputFunc cell_cb = [](const TableCell& c, size_t max_width, std::ostream& os)->void {
+					os << c.to_string(max_width);
+				};
+				std::stringstream ss;
+				BasicOutput(ss, cell_cb, enable_frame, enable_index);
+				return ss.str();
+			}
+
+			void print(bool enable_frame = true, bool enable_index = false)
+			{
+				CellOutputFunc callback = [](const TableCell& c, size_t max_width, std::ostream& os)->void {
+					console::Cprintf(c.to_string(max_width), c.color);
+				};
+				BasicOutput(std::cout, callback, enable_frame, enable_index);
+			}
+
+			reference operator[](Coordinate coord)
+			{
+				return _cells[coord];
+			}
 		};
 	}
 }

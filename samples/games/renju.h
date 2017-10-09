@@ -44,13 +44,12 @@ namespace gadt
 			FLAG = 20
 
 		};
+
 		using RenjuState = game::MnkGameState<g_WIDTH, g_HEIGHT, g_LENGTH>;
 		using RenjuAction = game::MnkGameAction;
 		using RenjuActionList = std::vector<RenjuAction>;
 		using RenjuResult = RenjuPlayer;
 		using RenjuActionGenerator = game::MnkGameActionGenerator<g_WIDTH, g_HEIGHT, g_LENGTH>;
-
-		void DefineRenjuShell(shell::GameShell& shell, std::string page_name);
 
 		void UpdateState(RenjuState& state, const RenjuAction& action);
 
@@ -73,5 +72,7 @@ namespace gadt
 		void PrintRenjuActions(const RenjuState& state, RenjuActionList action_list);
 
 		using RenjuMCTS = mcts::MonteCarloTreeSearch<RenjuState, RenjuAction, RenjuResult, true>;
+
+		void DefineRenjuShell(shell::GameShell& shell, std::string page_name);
 	}
 }

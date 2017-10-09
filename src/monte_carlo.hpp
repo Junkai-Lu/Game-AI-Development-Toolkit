@@ -72,7 +72,7 @@ namespace gadt
 			std::string info() const override
 			{
 				size_t index = 0;
-				table::ConsoleTable tb(2, 5);
+				log::ConsoleTable tb(2, 5);
 				tb.set_width({ 12,6 });
 				tb.enable_title({ "MONTE CARLO SETTING" });
 				tb.set_cell_in_row(index++, { { "timeout" },{ ToString(timeout) } });
@@ -404,7 +404,7 @@ namespace gadt
 				if (log_enabled())
 				{
 					//MCTS RESULT
-					table::ConsoleTable tb(6, child_nodes.size() + 2);
+					log::ConsoleTable tb(6, child_nodes.size() + 2);
 					tb.enable_title({ "MONTE CARLO SIMULATION RESULT: TIME = [ " + ToString(tp_mc_start.time_since_created()) + "s ]" });
 					tb.set_cell_in_row(0, { { "Index" },{ "Action" },{ "Value" },{ "Visit" },{ "Win" },{ "Best" } });
 					tb.set_width({ 3,10,4,4,4,2 });

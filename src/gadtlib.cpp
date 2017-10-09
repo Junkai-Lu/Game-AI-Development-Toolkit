@@ -82,6 +82,7 @@ namespace gadt
 			std::cout << std::endl << std::endl;
 		}
 
+		//warning check.
 		void WarningCheck(bool condition, std::string reason, std::string file, int line, std::string function)
 		{
 			if (condition)
@@ -100,6 +101,7 @@ namespace gadt
 			}
 		}
 
+		//pause.
 		void SystemPause()
 		{
 #ifdef __GADT_GNUC
@@ -109,6 +111,8 @@ namespace gadt
 			system("pause");
 #endif
 		}
+
+		//clear screen
 		void SystemClear()
 		{
 #ifdef __GADT_GNUC

@@ -408,7 +408,7 @@ namespace gadt
 			//get info of the random pool
 			std::string info() const
 			{
-				table::ConsoleTable tb(3, _ele_alloc.size() + 1);
+				log::ConsoleTable tb(3, _ele_alloc.size() + 1);
 				tb.set_cell_in_row(0, { { "index" },{ "weight" },{ "range" } });
 				tb.set_width({ 6,6,10 });
 				tb.enable_title({ "random pool" });
@@ -476,7 +476,7 @@ namespace gadt
 		template<typename T>
 		class ElementMatrix
 		{
-		public:
+		protected:
 			using pointer = T*;
 			using reference = T&;
 			using const_reference = const T&;
@@ -486,7 +486,7 @@ namespace gadt
 			using Column = Row;
 			using InitList = std::initializer_list<T>;
 
-		private:
+		protected:
 
 			const size_t		_number_of_columns;
 			const size_t		_number_of_row;
@@ -495,6 +495,7 @@ namespace gadt
 			std::vector<Row>	_row;
 
 		private:
+			//initialize columns and rows.
 			void init_column_and_row()
 			{
 				//init columns
@@ -520,7 +521,8 @@ namespace gadt
 				}
 			}
 
-			inline bool is_legal_coordinate(size_t x, size_t y)
+			//return true if the coordinate is legal
+			inline bool is_legal_coordinate(size_t x, size_t y) const
 			{
 				return x < _number_of_columns && y < _number_of_row;
 			}
@@ -536,8 +538,32 @@ namespace gadt
 				init_column_and_row();
 			}
 
+			////constructor function with initializer list.
+			//ElementMatrix(size_t column_size, size_t row_size, std::initializer_list<InitList> list) :
+			//	_number_of_columns(column_size),
+			//	_number_of_row(row_size),
+			//	_elements()
+			//{
+			//	init_column_and_row();
+			//	size_t y = 0;
+			//	for (auto row : list)
+			//	{
+			//		size_t x = 0;
+			//		for (auto value : row)
+			//		{
+			//			if (x < _number_of_columns && y < _number_of_row)
+			//			{
+			//				((_elements[x])[y]) = value;
+			//			}
+			//			x++;
+			//		}
+			//		y++;
+			//	}
+			//}
+
 			//constructor function with initializer list.
-			ElementMatrix(size_t column_size, size_t row_size, std::initializer_list<InitList> list) :
+			template<typename ParamType>
+			ElementMatrix(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<ParamType>> list) :
 				_number_of_columns(column_size),
 				_number_of_row(row_size),
 				_elements()
@@ -551,7 +577,7 @@ namespace gadt
 					{
 						if (x < _number_of_columns && y < _number_of_row)
 						{
-							((_elements[x])[y]).str = value;
+							((_elements[x])[y]) = Element(value);
 						}
 						x++;
 					}
@@ -572,34 +598,34 @@ namespace gadt
 			}
 
 			//get element
-			inline const Element& element(Coordinate coord)
+			inline const Element& get_element(Coordinate coord) const
 			{
-				return element(coord.x, coord.y);
+				return get_element(coord.x, coord.y);
 			}
 
 			//get element
-			inline const Element& element(size_t column, size_t row)
+			inline const Element& get_element(size_t column, size_t row) const
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(column,row), "out of row range.");
 				return (_elements[column])[row];
 			}
 
 			//get row by index.
-			inline const Row& get_row(size_t index)
+			inline const Row& get_row(size_t index) const
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, index >= _number_of_row, "out of row range.");
 				return _row[index];
 			}
 
 			//get column by index.
-			inline const Column& get_column(size_t index)
+			inline const Column& get_column(size_t index) const
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, index >= _number_of_columns, "out of column range.");
 				return _column[index];
 			}
 
 			//set element.
-			void set_element(const reference elem)
+			void set_element(const_reference elem)
 			{
 				for (std::vector<Element>& row : _elements)
 					for (Element& e : row)
@@ -607,28 +633,30 @@ namespace gadt
 			}
 
 			//set element.
-			void set_element(const reference elem, size_t column, size_t row)
+			void set_element(const_reference elem, size_t column, size_t row)
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(column, row), "out of range.");
 				(_elements[column])[row] = elem;
 			}
 
 			//set element.
-			void set_element(const reference elem, Coordinate coord)
+			void set_element(const_reference elem, Coordinate coord)
 			{
-				set_element(coord.x, coord.y);
+				set_element(elem, coord.x, coord.y);
 			}
 
-			void set_row(size_t row, const reference elem)
+			//set row as same element.
+			void set_row(size_t row, const_reference elem)
 			{
 				for (pointer elem_ptr : get_row(row))
 					*elem_ptr = elem;
 			}
 
+			//set row by init list.
 			void set_row(size_t row, InitList list)
 			{
 				size_t i = 0;
-				for (const reference elem : list)
+				for (const_reference elem : list)
 				{
 					if (i < get_row(row).size())
 						*get_row(row)[i] = elem;
@@ -638,16 +666,18 @@ namespace gadt
 				}
 			}
 
-			void set_column(size_t column, const reference elem)
+			//set column as same element.
+			void set_column(size_t column, const_reference elem)
 			{
 				for (pointer elem_ptr : get_column(column))
 					*elem_ptr = elem;
 			}
 
+			//set column bt init list.
 			void set_column(size_t column, InitList list)
 			{
 				size_t i = 0;
-				for (const reference elem : list)
+				for (const_reference elem : list)
 				{
 					if (i < get_column(column).size())
 						*get_column(column)[i] = elem;
@@ -655,6 +685,35 @@ namespace gadt
 						break;
 					i++;
 				}
+			}
+
+			//return true if element exist.
+			inline bool any(const_reference elem) const
+			{
+				for (auto coord : *this)
+				{
+					if (element(coord) == elem)
+						return true;
+				}
+				return false;
+			}
+
+			//return true if element do not exist.
+			inline bool none(const_reference elem) const
+			{
+				for (auto coord : *this)
+				{
+					if (element(coord) == elem)
+						return false;
+				}
+				return true;
+			}
+
+			//get element by coordinate.
+			inline reference operator[](Coordinate coord)
+			{
+				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(coord.x, coord.y), "out of row range.");
+				return element(coord);
 			}
 		};
 
@@ -668,6 +727,7 @@ namespace gadt
 		template<typename T, size_t _WIDTH, size_t _HEIGHT>
 		class MatrixArray
 		{
+		private:
 			using pointer = T*;
 			using reference = T&;
 			using const_reference = const T&;

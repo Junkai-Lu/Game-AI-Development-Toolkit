@@ -81,7 +81,7 @@ namespace gadt
 
 		void PrintRenjuState(const RenjuState& state)
 		{
-			table::ConsoleTable tb(state.width(), state.height());
+			log::ConsoleTable tb(state.width(), state.height());
 			std::stringstream ss;
 			ss << "player:" << (int)state.next_player() << " winner:" << (int)state.winner();
 			tb.enable_title({ ss.str() });
@@ -89,44 +89,44 @@ namespace gadt
 			{
 				if (state.piece(coord) == BLACK)
 				{
-					tb.cell(coord.x, coord.y) = { "¡ñ" };
+					tb.set_cell({ "¡ñ" }, coord);
 				}
 				else if (state.piece(coord) == WHITE)
 				{
-					tb.cell(coord.x, coord.y) = { "¡ð" };
+					tb.set_cell({ "¡ð" }, coord);
 				}
 				else if (state.piece(coord) == FLAG)
 				{
-					tb.cell(coord.x, coord.y) = { "¡î" };
+					tb.set_cell({ "¡î" }, coord);
 				}
 				else
 				{
 					if (coord.x == 0)
 					{
 						if (coord.y == 0)
-							tb.cell(coord.x, coord.y) = { "©³" };
+							tb.set_cell({ "©³" }, coord);
 						else if (coord.y == state.height() - 1)
-							tb.cell(coord.x, coord.y) = { "©»" };
+							tb.set_cell({ "©»" }, coord);
 						else
-							tb.cell(coord.x, coord.y) = { "©Ç" };
+							tb.set_cell({ "©Ç" }, coord);
 					}
 					else if (coord.x == state.width() - 1)
 					{
 						if (coord.y == 0)
-							tb.cell(coord.x, coord.y) = { "©·" };
+							tb.set_cell({ "©·" }, coord);
 						else if (coord.y == state.height() - 1)
-							tb.cell(coord.x, coord.y) = { "©¿" };
+							tb.set_cell({ "©¿" }, coord);
 						else
-							tb.cell(coord.x, coord.y) = { "©Ï" };
+							tb.set_cell({ "©Ï" }, coord);
 					}
 					else
 					{
 						if (coord.y == 0)
-							tb.cell(coord.x, coord.y) = { "©×" };
+							tb.set_cell({ "©×" }, coord);
 						else if (coord.y == state.height() - 1)
-							tb.cell(coord.x, coord.y) = { "©ß" };
+							tb.set_cell({ "©ß" }, coord);
 						else
-							tb.cell(coord.x, coord.y) = { "©í" };
+							tb.set_cell({ "©í" }, coord);
 					}
 				}
 			}

@@ -529,8 +529,8 @@ namespace gadt
 		void TestTable()
 		{
 			std::ios::sync_with_stdio(false);
-			gadt::table::ConsoleTable table(3, 5,{
-				{"1","2","3"},
+			log::ConsoleTable table(3, 5,{
+				{ "1","2","3" },
 				{ "4","5","6" },
 				{ "7","8","9" },
 				{ "10","11","12" }
@@ -538,12 +538,12 @@ namespace gadt
 			table.set_width({ 4,4,4,4 });
 			GADT_ASSERT(table.get_row(0).size(), 3);
 			GADT_ASSERT(table.get_column(0).size(), 5);
-			GADT_ASSERT(table[0][1]->str, "2");
-			table.set_cell_in_row(0, { "hello", console::BLUE, table::ALIGN_RIGHT });
-			table.set_cell_in_column(1, { "world", console::RED , table::ALIGN_MIDDLE});
-			GADT_ASSERT(table.cell(0, 0).str, "hello");
-			GADT_ASSERT(table.cell(2, 0).str, "hello");
-			GADT_ASSERT(table.cell(1, 2).str, "world");
+			GADT_ASSERT(table.get_cell(0,1).str, "2");
+			table.set_cell_in_row({ "hello", console::BLUE, table::ALIGN_RIGHT }, 0);
+			table.set_cell_in_column(1, log::TableCell("world", console::RED, table::ALIGN_MIDDLE));
+			GADT_ASSERT(table.get_cell(0, 0).str, "hello");
+			GADT_ASSERT(table.get_cell(2, 0).str, "hello");
+			GADT_ASSERT(table.get_cell(1, 2).str, "world");
 			//table.print();
 			//std::cout << table.output_string();
 		}

@@ -72,7 +72,7 @@ namespace gadt
 			//output print with str behind each line.
 			std::string info() const override
 			{
-				table::ConsoleTable tb(2, 6);
+				log::ConsoleTable tb(2, 6);
 				tb.set_width({ 12,6 });
 				tb.enable_title({"MCTS SETTING"});
 				tb.set_cell_in_row(0, { { "timeout" },					{ ToString(timeout) } });
@@ -719,7 +719,7 @@ namespace gadt
 					}
 
 					//MCTS RESULT
-					table::ConsoleTable tb(7, root_node.action_list().size() + 2);
+					log::ConsoleTable tb(7, root_node.action_list().size() + 2);
 					tb.enable_title({ "MCTS RESULT: TIME = [ " + ToString(tp_mcts_start.time_since_created()) + "s ]" });
 					tb.set_cell_in_row(0, { { "Index" },{ "Action" },{ "Value" },{ "Visit" },{ "Win" },{ "Size" },{ "Best" } });
 					tb.set_width({ 3,10,4,4,4,4,2 });
@@ -790,7 +790,7 @@ namespace gadt
 		};
 	}
 
-	//old-code of the monte carlo tree search. it may be deleted someday.
+	//old implement of the monte carlo tree search. it may be deleted someday.
 	namespace mcts_old
 	{
 		//allow check warning if it is true.

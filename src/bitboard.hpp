@@ -359,7 +359,7 @@ namespace gadt
 			}
 
 			//initilize BitBoard by list
-			inline BitBoard64(std::initializer_list<size_t> init_list):
+			explicit inline BitBoard64(std::initializer_list<size_t> init_list):
 				_data(0)
 			{
 #ifdef GADT_DEBUG_INFO
@@ -548,6 +548,18 @@ namespace gadt
 			{
 				return _data == target._data;
 			}
+			inline BitBoard64 operator&(gadt_int64 target) const
+			{
+				return BitBoard64(_data & target);
+			}
+			inline BitBoard64 operator|(gadt_int64 target) const
+			{
+				return BitBoard64(_data | target);
+			}
+			inline BitBoard64 operator^(gadt_int64 target) const
+			{
+				return BitBoard64(_data ^ target);
+			}
 			inline BitBoard64 operator&(const BitBoard64 target) const 
 			{ 
 				return BitBoard64(_data & target._data); 
@@ -563,6 +575,20 @@ namespace gadt
 			inline BitBoard64 operator~() const
 			{
 				return BitBoard64(~_data);
+			}
+			inline void operator&=(gadt_int64 target)
+			{
+				_data &= target;
+#ifdef GADT_DEBUG_INFO
+				refresh();
+#endif
+			}
+			inline void operator|=(gadt_int64 target)
+			{
+				_data |= target;
+#ifdef GADT_DEBUG_INFO
+				refresh();
+#endif
 			}
 			inline void operator&=(const BitBoard64 target) 
 			{
