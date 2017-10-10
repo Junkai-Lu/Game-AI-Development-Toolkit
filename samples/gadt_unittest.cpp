@@ -539,8 +539,8 @@ namespace gadt
 			GADT_ASSERT(table.get_row(0).size(), 3);
 			GADT_ASSERT(table.get_column(0).size(), 5);
 			GADT_ASSERT(table.get_cell(0,1).str, "2");
-			table.set_cell_in_row({ "hello", console::BLUE, table::ALIGN_RIGHT }, 0);
-			table.set_cell_in_column(1, log::TableCell("world", console::RED, table::ALIGN_MIDDLE));
+			table.set_cell_in_row(0, { "hello", console::BLUE, log::ALIGN_RIGHT });
+			table.set_cell_in_column(1, { "world", console::RED, log::ALIGN_MIDDLE });
 			GADT_ASSERT(table.get_cell(0, 0).str, "hello");
 			GADT_ASSERT(table.get_cell(2, 0).str, "hello");
 			GADT_ASSERT(table.get_cell(1, 2).str, "world");

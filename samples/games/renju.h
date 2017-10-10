@@ -73,6 +73,6 @@ namespace gadt
 
 		using RenjuMCTS = mcts::MonteCarloTreeSearch<RenjuState, RenjuAction, RenjuResult, true>;
 
-		void DefineRenjuShell(shell::GameShell& shell, std::string page_name);
+		void DefineRenjuShell(shell::GameShell& shell);
 	}
 }

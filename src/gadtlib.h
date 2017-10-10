@@ -264,6 +264,16 @@ namespace gadt
 			costream::print<T>(data, color);
 		}
 
+		//get input from keyboard as string.
+		template<typename T = std::string>
+		T GetInput(std::string tip = "Input >>")
+		{
+			std::cout << tip;
+			T input;
+			std::cin >> input;
+			return input;
+		}
+
 		//show error in terminal.
 		void ShowError(std::string reason);
 
@@ -425,201 +435,6 @@ namespace gadt
 
 		//remove dir and return true if remove successfully. 
 		bool RemoveDir(std::string path);
-	}
-
-	namespace table
-	{
-		enum AlignType : int8_t
-		{
-			ALIGN_LEFT = 0,
-			ALIGN_MIDDLE = 1,
-			ALIGN_RIGHT = 2
-		};
-
-		//basic cell of table.
-		struct TableCell
-		{
-			std::string				str;
-			console::ConsoleColor	color;
-			AlignType				align;
-
-			TableCell() :
-				str(),
-				color(console::DEFAULT),
-				align(ALIGN_LEFT)
-			{
-			}
-
-			TableCell(std::string _str) :
-				str(_str),
-				color(console::DEFAULT),
-				align(ALIGN_LEFT)
-			{
-			}
-
-			TableCell(std::string _str,console::ConsoleColor _color) :
-				str(_str),
-				color(_color),
-				align(ALIGN_LEFT)
-			{
-			}
-
-			TableCell(std::string _str, AlignType _align) :
-				str(),
-				color(console::DEFAULT),
-				align(_align)
-			{
-			}
-
-			TableCell(std::string _str, console::ConsoleColor _color, AlignType _align) :
-				str(_str),
-				color(_color),
-				align(_align)
-			{
-			}
-
-			//get string.
-			std::string GetString(size_t max_length) const
-			{
-				std::string temp;
-				if (str.length() < max_length)
-				{
-					size_t space_width = max_length - str.length();
-					if (align == ALIGN_LEFT)
-					{
-						temp += str;
-						temp += std::string(space_width, ' ');
-					}
-					else if (align == ALIGN_RIGHT)
-					{
-						temp += std::string(space_width, ' ');
-						temp += str;
-					}
-					else if (align == ALIGN_MIDDLE)
-					{
-						size_t left_width = space_width / 2;
-						size_t right_width = space_width - left_width;
-						temp += std::string(left_width, ' ');
-						temp += str;
-						temp += std::string(right_width, ' ');
-					}
-				}
-				else
-				{
-					temp = str.substr(0, max_length);
-				}
-				return temp;
-			}
-		};
-
-		//console table
-		class ConsoleTable
-		{
-		private:
-			using pointer = TableCell*;
-			using reference = TableCell&;
-			using CellSet = std::vector<std::vector<TableCell>>;
-			using Column = std::vector<TableCell*>;
-			using Row = std::vector<TableCell*>;	
-			using CellOutputFunc = std::function<void(const TableCell&, size_t, std::ostream&)>;
-			using FrameOutputFunc = std::function<void(std::string str, std::ostream&)>;
-
-			//size
-			const size_t _column_size;
-			const size_t _row_size;
-			
-			//cells
-			CellSet				_cells;
-			std::vector<Column> _column;
-			std::vector<Row>	_row;
-			std::vector<size_t> _column_width;
-			
-			//title
-			bool _enable_title;
-			TableCell _title_cell;
-
-			//static member.
-			static const size_t _default_width;
-
-		private:
-			//initialize cells and column/row
-			void init_cells();
-
-			//basic output.
-			void basic_output(std::ostream& os, CellOutputFunc cell_cb, bool enable_framGADT_TABLE_ENABLE_WARNINGe, bool enable_index);
-
-		public:
-			//constructor function
-			ConsoleTable(size_t column_size, size_t row_size);
-
-			//constructor function with initializer list.
-			ConsoleTable(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<std::string>> list);
-
-			inline const Row& get_row(size_t index) 
-			{
-				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, index >= _row_size, "TABLE01: out of row range.");
-				return _row[index]; 
-			}
-
-			inline const Column& get_column(size_t index) 
-			{ 
-				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, index >= _column_size, "TABLE02: out of column range.");
-				return _column[index]; 
-			}
-			
-			inline reference cell(size_t column, size_t row)
-			{
-				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, row >= _row_size, "TABLE01: out of row range.");
-				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, column >= _column_size, "TABLE02: out of column range.");
-				return (_cells[column])[row];
-			}
-
-			inline size_t row_size() const 
-			{
-				return _row_size; 
-			}
-			
-			inline size_t column_size() const 
-			{
-				return _column_size; 
-			}
-
-			inline const Row& operator[](size_t index)
-			{
-				return get_row(index);
-			}
-
-			inline void set_width(size_t column, size_t width)
-			{
-				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, column >= _column_size, "TABLE02: out of column range.");
-				_column_width[column] = width;
-			}
-
-			inline void enable_title(TableCell cell)
-			{
-				_enable_title = true;
-				_title_cell = cell;
-			}
-
-			inline void disable_title()
-			{
-				_enable_title = false;
-			}
-
-			void set_width(std::initializer_list<size_t> width_list);
-
-			void set_cell_in_row(size_t row, TableCell cell);
-
-			void set_cell_in_row(size_t row, std::initializer_list<TableCell> cell_list);
-
-			void set_cell_in_column(size_t column, TableCell cell);
-
-			void set_cell_in_column(size_t column, std::initializer_list<TableCell> cell_list);
-
-			std::string output_string(bool enable_frame = true, bool enable_index = false);
-
-			void print(bool enable_frame = true, bool enable_index = false);
-		};
 	}
 
 	namespace func

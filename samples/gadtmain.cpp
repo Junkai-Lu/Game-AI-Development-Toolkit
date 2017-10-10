@@ -28,6 +28,7 @@
 #include "../src/monte_carlo.hpp"	//monte carlo simulation algorithm.
 #include "../src/mcts.hpp"			//monte carlo tree search for games, new version.
 #include "./games/renju.h"
+#include "./games/ewn.h"
 
 #include "gadt_unittest.h"			//a simple unittest
 
@@ -53,12 +54,15 @@ void ShellDefine()
 	auto* test = gadt.CreateShellPage("test");
 	auto* mcts = gadt.CreateShellPage("mcts");
 	auto* game = gadt.CreateShellPage("game");
-	renju::DefineRenjuShell(gadt, "renju");
-
+	
 	root->AddChildPage("test", "start unit test");
 	root->AddChildPage("game", "game examples");
 
+	renju::DefineRenjuShell(gadt);
+	ewn::DefineEwnShell(gadt);
+
 	game->AddChildPage("renju", "renju game");
+	game->AddChildPage("ewn", "EinSteinw¨¹rfeltnicht! game");
 
 	
 

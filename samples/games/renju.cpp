@@ -144,7 +144,7 @@ namespace gadt
 			PrintRenjuState(temp);
 		}
 
-		void DefineRenjuShell(shell::GameShell& shell, std::string page_name)
+		void DefineRenjuShell(shell::GameShell& shell)
 		{
 			auto* renju = shell.CreateShellPage<RenjuState>("renju", 1);
 			renju->AddFunction("print", "print state", [](RenjuState& state) {

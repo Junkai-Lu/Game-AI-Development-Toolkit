@@ -476,7 +476,7 @@ namespace gadt
 		template<typename T>
 		class ElementMatrix
 		{
-		protected:
+		private:
 			using pointer = T*;
 			using reference = T&;
 			using const_reference = const T&;
@@ -485,11 +485,12 @@ namespace gadt
 			using Row = std::vector<pointer>;
 			using Column = Row;
 			using InitList = std::initializer_list<T>;
+			using Iter = MatrixIter;
 
-		protected:
+		private:
 
-			const size_t		_number_of_columns;
-			const size_t		_number_of_row;
+			const size_t		_width;
+			const size_t		_height;
 			ElementSet			_elements;
 			std::vector<Column> _column;
 			std::vector<Row>	_row;
@@ -499,10 +500,10 @@ namespace gadt
 			void init_column_and_row()
 			{
 				//init columns
-				for (size_t column = 0; column < _number_of_columns; column++)
+				for (size_t column = 0; column < _width; column++)
 				{
 					Column temp;
-					for (size_t row = 0; row < _number_of_row; row++)
+					for (size_t row = 0; row < _height; row++)
 					{
 						temp.push_back(&((_elements[column])[row]));
 					}
@@ -510,10 +511,10 @@ namespace gadt
 				}
 
 				//init rows
-				for (size_t row = 0; row < _number_of_row; row++)
+				for (size_t row = 0; row < _height; row++)
 				{
 					Row temp;
-					for (size_t column = 0; column < _number_of_columns; column++)
+					for (size_t column = 0; column < _width; column++)
 					{
 						temp.push_back(&((_elements[column])[row]));
 					}
@@ -524,49 +525,26 @@ namespace gadt
 			//return true if the coordinate is legal
 			inline bool is_legal_coordinate(size_t x, size_t y) const
 			{
-				return x < _number_of_columns && y < _number_of_row;
+				return x < _width && y < _height;
 			}
 
 		public:
 
 			//constructor function
-			ElementMatrix(size_t column_size, size_t row_size, const_reference elem = Element()) :
-				_number_of_columns(column_size),
-				_number_of_row(row_size),
-				_elements(column_size, std::vector<T>(row_size, elem))
+			ElementMatrix(size_t width, size_t height, const_reference elem = Element()) :
+				_width(width),
+				_height(height),
+				_elements(width, std::vector<T>(height, elem))
 			{
 				init_column_and_row();
 			}
 
-			////constructor function with initializer list.
-			//ElementMatrix(size_t column_size, size_t row_size, std::initializer_list<InitList> list) :
-			//	_number_of_columns(column_size),
-			//	_number_of_row(row_size),
-			//	_elements()
-			//{
-			//	init_column_and_row();
-			//	size_t y = 0;
-			//	for (auto row : list)
-			//	{
-			//		size_t x = 0;
-			//		for (auto value : row)
-			//		{
-			//			if (x < _number_of_columns && y < _number_of_row)
-			//			{
-			//				((_elements[x])[y]) = value;
-			//			}
-			//			x++;
-			//		}
-			//		y++;
-			//	}
-			//}
-
 			//constructor function with initializer list.
 			template<typename ParamType>
 			ElementMatrix(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<ParamType>> list) :
-				_number_of_columns(column_size),
-				_number_of_row(row_size),
-				_elements()
+				_width(column_size),
+				_height(row_size),
+				_elements(column_size, std::vector<T>(row_size, Element()))
 			{
 				init_column_and_row();
 				size_t y = 0;
@@ -575,7 +553,7 @@ namespace gadt
 					size_t x = 0;
 					for (auto value : row)
 					{
-						if (x < _number_of_columns && y < _number_of_row)
+						if (x < _width && y < _height)
 						{
 							((_elements[x])[y]) = Element(value);
 						}
@@ -586,15 +564,15 @@ namespace gadt
 			}
 
 			//get number of rows.
-			inline size_t number_of_rows() const
+			inline size_t height() const
 			{
-				return _number_of_row;
+				return _height;
 			}
 
 			//get number of columns.
-			inline size_t number_of_columns() const
+			inline size_t width() const
 			{
-				return _number_of_columns;
+				return _width;
 			}
 
 			//get element
@@ -604,23 +582,23 @@ namespace gadt
 			}
 
 			//get element
-			inline const Element& get_element(size_t column, size_t row) const
+			inline const Element& get_element(size_t x, size_t y) const
 			{
-				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(column,row), "out of row range.");
-				return (_elements[column])[row];
+				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x,y), "out of row range.");
+				return (_elements[x])[y];
 			}
 
 			//get row by index.
 			inline const Row& get_row(size_t index) const
 			{
-				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, index >= _number_of_row, "out of row range.");
+				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, index >= _height, "out of row range.");
 				return _row[index];
 			}
 
 			//get column by index.
 			inline const Column& get_column(size_t index) const
 			{
-				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, index >= _number_of_columns, "out of column range.");
+				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, index >= _width, "out of column range.");
 				return _column[index];
 			}
 
@@ -633,10 +611,10 @@ namespace gadt
 			}
 
 			//set element.
-			void set_element(const_reference elem, size_t column, size_t row)
+			void set_element(const_reference elem, size_t x, size_t y)
 			{
-				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(column, row), "out of range.");
-				(_elements[column])[row] = elem;
+				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x, y), "out of range.");
+				(_elements[x])[y] = elem;
 			}
 
 			//set element.
@@ -646,20 +624,20 @@ namespace gadt
 			}
 
 			//set row as same element.
-			void set_row(size_t row, const_reference elem)
+			void set_row(size_t row_index, const_reference elem)
 			{
-				for (pointer elem_ptr : get_row(row))
+				for (pointer elem_ptr : get_row(row_index))
 					*elem_ptr = elem;
 			}
 
 			//set row by init list.
-			void set_row(size_t row, InitList list)
+			void set_row(size_t row_index, InitList list)
 			{
 				size_t i = 0;
 				for (const_reference elem : list)
 				{
-					if (i < get_row(row).size())
-						*get_row(row)[i] = elem;
+					if (i < get_row(row_index).size())
+						*get_row(row_index)[i] = elem;
 					else
 						break;
 					i++;
@@ -667,20 +645,20 @@ namespace gadt
 			}
 
 			//set column as same element.
-			void set_column(size_t column, const_reference elem)
+			void set_column(size_t column_index, const_reference elem)
 			{
-				for (pointer elem_ptr : get_column(column))
+				for (pointer elem_ptr : get_column(column_index))
 					*elem_ptr = elem;
 			}
 
 			//set column bt init list.
-			void set_column(size_t column, InitList list)
+			void set_column(size_t column_index, InitList list)
 			{
 				size_t i = 0;
 				for (const_reference elem : list)
 				{
-					if (i < get_column(column).size())
-						*get_column(column)[i] = elem;
+					if (i < get_column(column_index).size())
+						*get_column(column_index)[i] = elem;
 					else
 						break;
 					i++;
@@ -709,11 +687,21 @@ namespace gadt
 				return true;
 			}
 
+			Iter begin() const
+			{
+				return Iter({ 0, 0 }, width(), height());
+			}
+
+			Iter end() const
+			{
+				return Iter({ 0, _HEIGHT }, _WIDTH, _HEIGHT);
+			}
+
 			//get element by coordinate.
 			inline reference operator[](Coordinate coord)
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(coord.x, coord.y), "out of row range.");
-				return element(coord);
+				return (_elements[coord.x])[coord.y];
 			}
 		};
 

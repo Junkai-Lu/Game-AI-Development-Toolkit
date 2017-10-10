@@ -38,13 +38,13 @@ namespace gadt
 		constexpr const size_t g_WIDTH = 5;
 		constexpr const size_t g_HEIGHT = 5;
 
-		//piece. 0 is empty, 1~6 are red pieces, 7~12 are blue pieces.
-		using EwnPiece = uint8_t;
+		//piece. -1 is empty, 0~5 are red pieces, 6~11 are blue pieces.
+		using EwnPiece = int8_t;
 		using RollResult = uint8_t;
 		using Formation = std::vector<RollResult>;
 
 		//piece types in board.
-		enum EwnResult : AgentIndex
+		enum EwnPlayer : AgentIndex
 		{
 			NO_PLAYER = 0,
 			RED = 1,
@@ -55,6 +55,7 @@ namespace gadt
 		{
 			Coordinate source;
 			Coordinate dest;
+			RollResult roll;
 
 			std::string to_string() const
 			{
@@ -63,6 +64,8 @@ namespace gadt
 				return ss.str();
 			}
 		};
+
+		using EwnActionList = std::vector<EwnAction>;
 
 		//state class
 		class EwnState
@@ -73,14 +76,17 @@ namespace gadt
 
 		private:
 			EwnBoard _board;
+			Coordinate _piece_coord[12];
 			PieceFlag _piece_flag;
-			EwnResult _next_player;
+			EwnPlayer _next_player;
 			RollResult _roll_result;
 
 		private:
 			void Init(Formation red, Formation blue);
 
 			bool IsLegalFormation(Formation formation) const;
+
+			Formation InputFormation() const;
 
 		public:
 			
@@ -94,9 +100,17 @@ namespace gadt
 
 			void Print() const;
 
+			RollResult GetNeighbourPiece(EwnPlayer player, RollResult roll, int step)
+			{
+				int temp = roll + step;
+				while (temp > 0 && temp < 7 && !piece_exist(player, roll))
+					temp += step;
+				return (RollResult)temp;
+			}
+
 			inline EwnPiece piece(Coordinate coord) const { return _board.element(coord); }
 			inline bool piece_exist(size_t index) const { return _piece_flag[index]; }
-			inline EwnResult next_player() const { return _next_player; }
+			inline EwnPlayer next_player() const { return _next_player; }
 			inline RollResult roll_result() const { return _roll_result; }
 			inline bool get_player(EwnPiece piece) const 
 			{
@@ -104,12 +118,21 @@ namespace gadt
 					return NO_PLAYER;
 				return piece <= 6 ? RED : BLUE;
 			}
+			inline bool piece_exist(AgentIndex player, RollResult roll) const { return _piece_flag[((player - 1) * 6 + roll)]; }
 		};
-
-
 
 		void UpdateState(EwnState& state, const EwnAction& action);
 
-		void DefineEwnShell(shell::GameShell& shell, std::string page_name);
+		void MakeAction(const EwnState& state, EwnActionList& action_list);
+
+		EwnPlayer DetemineWinner(const EwnState& state);
+
+		EwnPlayer StateToResult(const EwnState& state, AgentIndex winner);
+
+		bool AllowUpdateValue(const EwnState& state, EwnPlayer winner);
+
+		void DefineEwnShell(shell::GameShell& shell);
+
+
 	}
 }

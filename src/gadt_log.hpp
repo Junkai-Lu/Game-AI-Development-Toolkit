@@ -247,6 +247,7 @@ namespace gadt
 
 		};
 
+		//align type
 		enum AlignType : int8_t
 		{
 			ALIGN_LEFT = 0,
@@ -327,6 +328,21 @@ namespace gadt
 					temp = str.substr(0, max_length);
 				}
 				return temp;
+			}
+
+			inline void set_left_aligh()
+			{
+				align = ALIGN_LEFT;
+			}
+
+			inline void set_middle_aligh()
+			{
+				align = ALIGN_MIDDLE;
+			}
+
+			inline void set_right_aligh()
+			{
+				align = ALIGN_RIGHT;
 			}
 		};
 
@@ -473,13 +489,13 @@ namespace gadt
 
 			inline size_t number_of_rows() const
 			{
-				return _cells.number_of_rows();
+				return _cells.height();
 			}
 
 			//get number of columns.
 			inline size_t number_of_columns() const
 			{
-				return _cells.number_of_columns();
+				return _cells.width();
 			}
 
 			inline const_reference get_cell(size_t column, size_t row) const
@@ -542,7 +558,7 @@ namespace gadt
 				_cells.set_element(cell, coord);
 			}
 
-			inline void set_cell_in_row(TableCell cell, size_t row)
+			inline void set_cell_in_row(size_t row, TableCell cell)
 			{
 				_cells.set_row(row, cell);
 			}
@@ -552,7 +568,7 @@ namespace gadt
 				_cells.set_row(row, cell_list);
 			}
 
-			inline void set_cell_in_column(TableCell cell, size_t column)
+			inline void set_cell_in_column(size_t column, TableCell cell)
 			{
 				_cells.set_column(column, cell);
 			}
