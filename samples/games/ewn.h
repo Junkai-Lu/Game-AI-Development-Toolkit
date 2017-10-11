@@ -37,10 +37,14 @@ namespace gadt
 	{
 		constexpr const size_t g_WIDTH = 5;
 		constexpr const size_t g_HEIGHT = 5;
+		constexpr const int8_t g_EMPTY = -1;
 
 		//piece. -1 is empty, 0~5 are red pieces, 6~11 are blue pieces.
+		//roll 0~5, -1 means no roll
+		//
+
 		using EwnPiece = int8_t;
-		using RollResult = uint8_t;
+		using RollResult = int8_t;
 		using Formation = std::vector<RollResult>;
 
 		//piece types in board.
@@ -60,7 +64,7 @@ namespace gadt
 			std::string to_string() const
 			{
 				std::stringstream ss;
-				ss << "from " << source.to_string() << " to " << dest.to_string();
+				ss << "from " << source.to_string() << " to " << dest.to_string() << " roll = " << (int)roll;
 				return ss.str();
 			}
 		};
@@ -96,14 +100,14 @@ namespace gadt
 
 			void TakeAction(const EwnAction& action);
 
-			AgentIndex GetWinner() const;
+			EwnPlayer GetWinner() const;
 
 			void Print() const;
 
-			RollResult GetNeighbourPiece(EwnPlayer player, RollResult roll, int step)
+			RollResult GetNeighbourPiece(EwnPlayer player, RollResult roll, int step) const
 			{
 				int temp = roll + step;
-				while (temp > 0 && temp < 7 && !piece_exist(player, roll))
+				while (temp >= 0 && temp < 6 && !piece_exist(player, temp))
 					temp += step;
 				return (RollResult)temp;
 			}
@@ -119,6 +123,22 @@ namespace gadt
 				return piece <= 6 ? RED : BLUE;
 			}
 			inline bool piece_exist(AgentIndex player, RollResult roll) const { return _piece_flag[((player - 1) * 6 + roll)]; }
+			inline Coordinate piece_coord(AgentIndex player, RollResult roll) const { return _piece_coord[((player - 1) * 6 + roll)]; }
+			inline bool is_legal_coord(Coordinate coord) const { return _board.is_legal_coordinate(coord); }
+		};
+
+		class EwnActionGenerator
+		{
+		private:
+			const EwnState& _state;
+
+		public:
+			EwnActionGenerator(const EwnState& state):
+				_state(state)
+			{
+			}
+
+			EwnActionList GetAllActions() const;
 		};
 
 		void UpdateState(EwnState& state, const EwnAction& action);
@@ -127,7 +147,7 @@ namespace gadt
 
 		EwnPlayer DetemineWinner(const EwnState& state);
 
-		EwnPlayer StateToResult(const EwnState& state, AgentIndex winner);
+		EwnPlayer StateToResult(const EwnState& state, EwnPlayer winner);
 
 		bool AllowUpdateValue(const EwnState& state, EwnPlayer winner);
 

@@ -52,19 +52,20 @@ void ShellDefine()
 
 	auto* root = gadt.CreateShellPage("root");
 	auto* test = gadt.CreateShellPage("test");
-	auto* mcts = gadt.CreateShellPage("mcts");
 	auto* game = gadt.CreateShellPage("game");
-	
+	auto* doc = gadt.CreateShellPage("doc");
+	auto* mcts = gadt.CreateShellPage("mcts");
+
+
 	root->AddChildPage("test", "start unit test");
 	root->AddChildPage("game", "game examples");
+	root->AddChildPage("doc", "lib documents");
 
 	renju::DefineRenjuShell(gadt);
 	ewn::DefineEwnShell(gadt);
 
 	game->AddChildPage("renju", "renju game");
 	game->AddChildPage("ewn", "EinSteinw¨¹rfeltnicht! game");
-
-	
 
 	//Unit Test Page
 	for (auto p : unittest::func_list)
@@ -84,7 +85,7 @@ void ShellDefine()
 	mcts->AddFunction("search","search part", [](){unittest::TestMctsSearch(); });
 
 	//Start Shell
-	gadt.StartFromPage("root","ls");
+	gadt.StartFromPage("root","game/ewn/ls");
 }
 
 int main()

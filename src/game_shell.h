@@ -727,6 +727,7 @@ namespace gadt
 			std::string GetInput()
 			{
 				char buffer[256];
+				std::cin.clear();
 				std::cin.getline(buffer, 256);
 				return std::string(buffer);
 			}

@@ -270,6 +270,8 @@ namespace gadt
 		{
 			std::cout << tip;
 			T input;
+			std::cin.clear();
+			std::cin.sync();
 			std::cin >> input;
 			return input;
 		}
@@ -469,6 +471,14 @@ namespace gadt
 				}
 			}
 			return best_index;
+		}
+
+		template<typename T>
+		const T& GetRandomElement(const std::vector<T>& vec)
+		{
+			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty container");
+			size_t rnd = rand() % vec.size();
+			return vec[rnd];
 		}
 	}
 }

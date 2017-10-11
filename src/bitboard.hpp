@@ -521,7 +521,7 @@ namespace gadt
 						c[64 - 1 - i] = '0';
 					}
 				}
-				return std::string(c);
+				return std::string(c, 64);
 			}
 
 			inline bool operator[](size_t index) const
