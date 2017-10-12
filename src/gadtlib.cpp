@@ -212,4 +212,13 @@ namespace gadt
 		}
 	}
 
+	namespace func
+	{
+		size_t GetManhattanDistance(Coordinate fir, Coordinate sec)
+		{
+			return abs(fir.x - sec.x) + abs(fir.y - sec.y);
+		}
+	}
 }
+
+

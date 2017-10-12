@@ -85,7 +85,7 @@ namespace gadt
 	using EvalValue = double;
 
 	/*
-	struct Coordinate is used to express a plane coordinate.
+	* struct Coordinate is used to express a plane coordinate.
 	*/
 	struct Coordinate
 	{
@@ -441,6 +441,7 @@ namespace gadt
 
 	namespace func
 	{
+		//get mex element in vector.
 		template<typename T>
 		size_t GetMaxElement(const std::vector<T>& vec)
 		{
@@ -457,6 +458,7 @@ namespace gadt
 			return best_index;
 		}
 
+		//get max element in vector.
 		template<typename T>
 		size_t GetMaxElement(const std::vector<T>& vec, std::function<bool(const T&, const T&)> more_than)
 		{
@@ -473,6 +475,7 @@ namespace gadt
 			return best_index;
 		}
 
+		//get random elements from a vector.
 		template<typename T>
 		const T& GetRandomElement(const std::vector<T>& vec)
 		{
@@ -480,5 +483,8 @@ namespace gadt
 			size_t rnd = rand() % vec.size();
 			return vec[rnd];
 		}
+		
+		//get manhattan distance between two coordinate.
+		size_t GetManhattanDistance(Coordinate fir, Coordinate sec);
 	}
 }

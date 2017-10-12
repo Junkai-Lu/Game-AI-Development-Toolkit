@@ -76,7 +76,7 @@ namespace gadt
 		{
 			if (_board.element(0, 0) >= 6)
 				return BLUE;
-			if (_board.element(g_WIDTH, g_HEIGHT) >= 0 && _board.element(g_WIDTH, g_HEIGHT) < 6)
+			if (_board.element(g_WIDTH - 1, g_HEIGHT -1 ) >= 0 && _board.element(g_WIDTH - 1, g_HEIGHT - 1 ) < 6)
 				return RED;
 			if ((_piece_flag & 0x3F).none())
 				return BLUE;
@@ -150,7 +150,23 @@ namespace gadt
 			std::cout << "    >> Piece Flag = " << _piece_flag.to_string().substr(52,12) << std::endl;
 		}
 
-		EwnActionList EwnActionGenerator::GetAllActions() const
+		void EwnActionGenerator::AddActionForPiece(EwnActionList& actions, EwnPlayer player, RollResult roll, bool enable_herustic) const
+		{
+			int distant = player == RED ? 1 : -1;
+			Coordinate target = ((player == RED) ? Coordinate{ g_WIDTH - 1, g_HEIGHT - 1 } : Coordinate{ 0, 0 });
+			Coordinate dir[3] = { { distant, 0 },{ 0,distant },{ distant,distant } };
+			Coordinate source_coord = _state.piece_coord(player, roll);
+			size_t source_dis = enable_herustic ? func::GetManhattanDistance(source_coord, target) : 0;
+			for (auto d : dir)
+			{
+				Coordinate dest_coord = source_coord + d;
+				size_t dest_dis = enable_herustic ? func::GetManhattanDistance(dest_coord, target) : 0;
+				if (_state.is_legal_coord(dest_coord) && (!enable_herustic || dest_dis < source_dis))
+					actions.push_back({ source_coord, dest_coord, g_EMPTY });
+			}
+		}
+
+		EwnActionList EwnActionGenerator::GetActions(bool enable_herustic) const
 		{
 			EwnActionList actions;
 			if (_state.roll_result() == g_EMPTY)
@@ -161,34 +177,16 @@ namespace gadt
 			}
 			EwnPlayer player = _state.next_player();
 			RollResult roll = _state.roll_result();
-			int distant = player == RED ? 1 : -1;
-			Coordinate dir[3] = { { distant, 0 },{ 0,distant },{ distant,distant } };
 			if (_state.piece_exist(player, roll))
 			{
-				Coordinate source_coord = _state.piece_coord(player, roll);
-				for (auto d : dir)
-				{
-					Coordinate dest_coord = source_coord + d;
-					if (_state.is_legal_coord(dest_coord))
-						actions.push_back({ source_coord, dest_coord, g_EMPTY });
-				}
+				AddActionForPiece(actions, player, roll, enable_herustic);
 			}
 			else
 			{
 				RollResult neigh[2] = { _state.GetNeighbourPiece(player, roll, -1),_state.GetNeighbourPiece(player, roll, 1) };
 				for (auto n : neigh)
-				{
 					if (n >= 0 && n < 6)
-					{
-						Coordinate source_coord = _state.piece_coord(player, n);
-						for (auto d : dir)
-						{
-							Coordinate dest_coord = source_coord + d;
-							if(_state.is_legal_coord(dest_coord))
-								actions.push_back({ source_coord, dest_coord, g_EMPTY });
-						}
-					}
-				}
+						AddActionForPiece(actions, player, n, enable_herustic);
 			}
 			return actions;
 		}
@@ -243,6 +241,23 @@ namespace gadt
 				UpdateState(state, act);
 				std::cout << "take action = " << act.to_string() << std::endl;
 				state.Print();
+			});
+			ewn->AddFunction("winner", "get winner", [](EwnState& state) {
+				auto winner = DetemineWinner(state);
+				switch (winner)
+				{
+				case gadt::ewn::NO_PLAYER:
+					std::cout << "NO PLAYER" << std::endl;
+					break;
+				case gadt::ewn::RED:
+					console::Cprintf("RED\n", console::RED);
+					break;
+				case gadt::ewn::BLUE:
+					console::Cprintf("BLUE\n", console::BLUE);
+					break;
+				default:
+					break;
+				}
 			});
 		}
 		

@@ -132,13 +132,27 @@ namespace gadt
 		private:
 			const EwnState& _state;
 
+		private:
+
+			void AddActionForPiece(EwnActionList& actions, EwnPlayer player, RollResult roll, bool enable_herustic) const;
+
+			EwnActionList GetActions(bool enable_herustic) const;
+
 		public:
 			EwnActionGenerator(const EwnState& state):
 				_state(state)
 			{
 			}
 
-			EwnActionList GetAllActions() const;
+			inline EwnActionList GetAllActions() const
+			{
+				return GetActions(false);
+			}
+
+			EwnActionList GetHerusticActions() const
+			{
+				return GetActions(true);
+			}
 		};
 
 		void UpdateState(EwnState& state, const EwnAction& action);
