@@ -586,9 +586,10 @@ namespace gadt
 		* [State] is the game-state class, which is defined by the user.
 		* [Action] is the game-action class, which is defined by the user.
 		* [Result] is the game-result class, which stand for a terminal state of the game.
+		* [_no_winner_index] means the state do not have winner.
 		* [_is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
 		*/
-		template<typename State, typename Action, typename Result, bool _is_debug = false>
+		template<typename State, typename Action, typename Result = AgentIndex, bool _is_debug = false>
 		class MonteCarloTreeSearch final : public GameAlgorithmBase<State,Action,Result,_is_debug>
 		{
 #ifdef __GADT_GNUC
