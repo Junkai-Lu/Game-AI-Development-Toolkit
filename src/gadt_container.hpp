@@ -430,7 +430,7 @@ namespace gadt
 		};
 
 		/*
-		* MatrixArrayIter is the iterator of matrix container.
+		* RectangularArrayIter is the iterator of matrix container.
 		*/
 		class MatrixIter
 		{
@@ -706,14 +706,14 @@ namespace gadt
 		};
 
 		/*
-		* MatrixArray offers a two-dimensional array.
+		* RectangularArray offers a two-dimensional array.
 		*
 		* [T] is the type of element.
 		* [_WIDTH] is the width of matrix.
 		* [_HEIGHT] is the height of matrix.
 		*/
 		template<typename T, size_t _WIDTH, size_t _HEIGHT>
-		class MatrixArray
+		class RectangularArray
 		{
 		private:
 			using pointer = T*;
@@ -739,12 +739,23 @@ namespace gadt
 				return is_legal_coordinate(coord.x, coord.y);
 			}
 
-			MatrixArray() = default;
+			RectangularArray() = default;
 
-			MatrixArray(Element elem)
+			RectangularArray(Element elem)
 			{
 				for (auto coord : *this)
 					set_element(coord, elem);
+			}
+
+			inline constexpr size_t height() const
+			{
+				return _HEIGHT;
+			}
+
+			//get number of columns.
+			inline constexpr size_t width() const
+			{
+				return _WIDTH;
 			}
 
 			Iter begin() const

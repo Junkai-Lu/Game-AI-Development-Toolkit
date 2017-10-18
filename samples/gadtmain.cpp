@@ -29,6 +29,7 @@
 #include "../src/mcts.hpp"			//monte carlo tree search for games, new version.
 #include "./games/renju.h"
 #include "./games/ewn.h"
+#include "./games/breakthrough.h"
 
 #include "gadt_unittest.h"			//a simple unittest
 
@@ -61,11 +62,14 @@ void ShellDefine()
 	root->AddChildPage("game", "game examples");
 	root->AddChildPage("doc", "lib documents");
 
+	breakthrough::DefineBreakthoughShell(gadt);
 	renju::DefineRenjuShell(gadt);
 	ewn::DefineEwnShell(gadt);
+	
 
 	game->AddChildPage("renju", "renju game");
 	game->AddChildPage("ewn", "EinSteinw¨¹rfeltnicht! game");
+	game->AddChildPage("breakthough", "breakthough game");
 
 	//Unit Test Page
 	for (auto p : unittest::func_list)
@@ -85,7 +89,7 @@ void ShellDefine()
 	mcts->AddFunction("search","search part", [](){unittest::TestMctsSearch(); });
 
 	//Start Shell
-	gadt.StartFromPage("root","game/ewn/ls");
+	gadt.StartFromPage("root","game/breakthough/ls");
 }
 
 int main()

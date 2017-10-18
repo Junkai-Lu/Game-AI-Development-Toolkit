@@ -75,7 +75,7 @@ namespace gadt
 		class EwnState
 		{
 		private:
-			using EwnBoard = stl::MatrixArray<EwnPiece, g_WIDTH, g_HEIGHT>;
+			using EwnBoard = stl::RectangularArray<EwnPiece, g_WIDTH, g_HEIGHT>;
 			using PieceFlag = bitboard::BitBoard64;
 
 		private:

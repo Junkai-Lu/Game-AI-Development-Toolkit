@@ -36,8 +36,8 @@ namespace gadt
 			using Iter = stl::MatrixIter;
 
 		private:
-			stl::MatrixArray<AgentIndex, _WIDTH, _HEIGHT> _piece;
-			stl::MatrixArray<bool, _WIDTH, _HEIGHT> _action_range;
+			stl::RectangularArray<AgentIndex, _WIDTH, _HEIGHT> _piece;
+			stl::RectangularArray<bool, _WIDTH, _HEIGHT> _action_range;
 			AgentIndex _winner;
 			AgentIndex _next_player;
 			size_t _piece_count;
