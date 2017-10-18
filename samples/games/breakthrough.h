@@ -51,6 +51,8 @@ namespace gadt
 			Coordinate dest;
 		};
 
+		using BtActionList = std::vector<BtAction>;
+
 		class BtState
 		{
 		private:
@@ -59,13 +61,68 @@ namespace gadt
 		private:
 			Board _board;
 
-			void Init()
+			inline void Init()
 			{
-
+				_board.set_row(0, WHITE);
+				_board.set_row(1, WHITE);
+				_board.set_row(g_BT_HEIGHT - 1, BLACK);
+				_board.set_row(g_BT_HEIGHT - 2, BLACK);
 			}
 
 		public:
 
+			BtState()
+			{
+				Init();
+			}
+
+			BtState(const BtState& state, const BtAction& action)
+			{
+				*this = state;
+				TakeAction(action);
+			}
+
+			void TakeAction(const BtAction& action)
+			{
+
+			}
+
+			void Print() const
+			{
+				log::ConsoleTable table(g_BT_WIDTH, g_BT_HEIGHT);
+				for (auto coord : _board)
+				{
+					switch (_board.element(coord))
+					{
+					case WHITE:
+						table.set_cell({ "¡ï" }, coord);
+						break;
+					case BLACK:
+						table.set_cell({ "¡î" }, coord);
+						break;
+					default:
+						break;
+					}
+				}
+				table.print();
+			}
+		};
+
+		class BtActionGenerator
+		{
+		private:
+			const BtState& _state;
+
+		public:
+			BtActionGenerator(const BtState& state):
+				_state(state)
+			{
+			}
+
+			BtActionList GetAllAction() const
+			{
+
+			}
 		};
 
 		void DefineBreakthoughShell(shell::GameShell& shell);

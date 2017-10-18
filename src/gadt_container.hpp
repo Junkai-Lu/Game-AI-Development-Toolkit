@@ -468,6 +468,22 @@ namespace gadt
 			}
 		};
 
+		/*template<typename T>
+		class MatrixBase
+		{
+			//get number of rows.
+			virtual size_t height() const = 0;
+
+			//get number of columns.
+			virtual size_t width() const = 0;
+
+			//get element
+			virtual const T& element(Coordinate coord) const = 0;
+
+			//get element
+			virtual const T& element(size_t x, size_t y) const = 0;
+		};*/
+
 		/*
 		* ElementMatrix is a flexiable matrix.
 		*
@@ -564,25 +580,25 @@ namespace gadt
 			}
 
 			//get number of rows.
-			inline size_t height() const
+			inline size_t height() const 
 			{
 				return _height;
 			}
 
 			//get number of columns.
-			inline size_t width() const
+			inline size_t width() const 
 			{
 				return _width;
 			}
 
 			//get element
-			inline const Element& get_element(Coordinate coord) const
+			inline const_reference element(Coordinate coord) const 
 			{
-				return get_element(coord.x, coord.y);
+				return element(coord.x, coord.y);
 			}
 
 			//get element
-			inline const Element& get_element(size_t x, size_t y) const
+			inline const_reference element(size_t x, size_t y) const 
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x,y), "out of row range.");
 				return (_elements[x])[y];
@@ -687,11 +703,13 @@ namespace gadt
 				return true;
 			}
 
+			//get iterator begin.
 			Iter begin() const
 			{
 				return Iter({ 0, 0 }, width(), height());
 			}
 
+			//get iterator end.
 			Iter end() const
 			{
 				return Iter({ 0, _HEIGHT }, _WIDTH, _HEIGHT);
@@ -720,6 +738,8 @@ namespace gadt
 			using reference = T&;
 			using const_reference = const T&;
 			using Element = T;
+			using Row = std::vector<pointer>;
+			using Column = Row;
 			using InitList = std::initializer_list<T>;
 			using Iter = MatrixIter;
 
@@ -729,67 +749,139 @@ namespace gadt
 
 		public:
 
+			//return true if the coordinate is legal.
 			inline bool is_legal_coordinate(size_t x, size_t y) const
 			{
 				return x < _WIDTH && y < _HEIGHT;
 			}
 
+			//return true if the coordinate is legal.
 			inline bool is_legal_coordinate(Coordinate coord) const
 			{
 				return is_legal_coordinate(coord.x, coord.y);
 			}
 
+			//constructor function with default elements.
 			RectangularArray() = default;
 
+			//constructor function with appointed elements.
 			RectangularArray(Element elem)
 			{
 				for (auto coord : *this)
 					set_element(coord, elem);
 			}
 
+			//get height, which is the number of rows. 
 			inline constexpr size_t height() const
 			{
 				return _HEIGHT;
 			}
 
-			//get number of columns.
+			//get width, which is the number of columns.
 			inline constexpr size_t width() const
 			{
 				return _WIDTH;
 			}
 
+			//get iterator begin
 			Iter begin() const
 			{
 				return Iter({ 0, 0 }, _WIDTH, _HEIGHT);
 			}
 
+			//get iterator end
 			Iter end() const
 			{
 				return Iter({ 0, _HEIGHT }, _WIDTH, _HEIGHT);
 			}
 
+			//get element
 			inline const_reference element(size_t x, size_t y) const
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x, y), "out of row range.");
 				return _elements[x][y];
 			}
 
+			//get element
 			inline const_reference element(Coordinate coord) const
 			{
 				return element(coord.x, coord.y);
 			}
 
+			//set element
 			inline void set_element(size_t x, size_t y, const_reference elem)
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x, y), "out of row range.");
 				_elements[x][y] = elem;
 			}
 
+			//set element
 			inline void set_element(Coordinate coord, const_reference elem)
 			{
 				set_element(coord.x, coord.y, elem);
 			}
 
+			//return the Row which include pointers to elements in the row.
+			Row get_row(size_t row_index)
+			{
+				Row row(width());
+				for (size_t i = 0; i < width(); i++)
+					row[i] = &_elements[i][row_index];
+				return row;
+			}
+
+			//return the Column which include pointers to elements in the column.
+			Column get_column(size_t column_index)
+			{
+				Row column(height());
+				for (size_t i = 0; i < height(); i++)
+					column[i] = &_elements[column_index][i];
+				return column;
+			}
+
+			//set row as same element.
+			void set_row(size_t row_index, const_reference elem)
+			{
+				for (pointer elem_ptr : get_row(row_index))
+					*elem_ptr = elem;
+			}
+
+			//set row by init list.
+			void set_row(size_t row_index, InitList list)
+			{
+				size_t i = 0;
+				for (const_reference elem : list)
+				{
+					if (i < get_row(row_index).size())
+						*get_row(row_index)[i] = elem;
+					else
+						break;
+					i++;
+				}
+			}
+
+			//set column as same element.
+			void set_column(size_t column_index, const_reference elem)
+			{
+				for (pointer elem_ptr : get_column(column_index))
+					*elem_ptr = elem;
+			}
+
+			//set column bt init list.
+			void set_column(size_t column_index, InitList list)
+			{
+				size_t i = 0;
+				for (const_reference elem : list)
+				{
+					if (i < get_column(column_index).size())
+						*get_column(column_index)[i] = elem;
+					else
+						break;
+					i++;
+				}
+			}
+
+			//return true if any element exist in the matrix.
 			inline bool any(const_reference elem) const
 			{
 				for (auto coord : *this)
@@ -800,6 +892,7 @@ namespace gadt
 				return false;
 			}
 
+			//return true if none of the element exist in the matrix.
 			inline bool none(const_reference elem) const
 			{
 				for (auto coord : *this)

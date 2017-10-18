@@ -487,31 +487,7 @@ namespace gadt
 			{
 			}
 
-			//constructor function from RectangularArray
-			template<typename T, size_t WIDTH, size_t HEIGHT>
-			ConsoleTable(const stl::RectangularArray<T, WIDTH, HEIGHT>& matrix, std::function<log::TableCell(const T&)> func):
-				_cells(matrix.width(), matrix.height()),
-				_column_width(matrix.width(), 2),
-				_enable_title(false)
-			{
-				for (auto coord : matrix)
-				{
-					set_cell(func(matrix.element(coord)), coord);
-				}
-			}
-
-			template<typename T>
-			ConsoleTable(const stl::ElementMatrix<T> matrix, std::function<log::TableCell(const T&)> func) :
-				_cells(matrix.width(), matrix.height()),
-				_column_width(matrix.width(), 2),
-				_enable_title(false)
-			{
-				for (auto coord : matrix)
-				{
-					set_cell(func(matrix.element(coord)), coord);
-				}
-			}
-
+			//get number of rows.
 			inline size_t number_of_rows() const
 			{
 				return _cells.height();
@@ -525,12 +501,12 @@ namespace gadt
 
 			inline const_reference get_cell(size_t column, size_t row) const
 			{
-				return _cells.get_element(column, row);
+				return _cells.element(column, row);
 			}
 
 			inline const_reference get_cell(Coordinate coord) const
 			{
-				return _cells.get_element(coord);
+				return _cells.element(coord);
 			}
 
 			inline CellPtrSet get_row(size_t index) const

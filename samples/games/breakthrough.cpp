@@ -28,7 +28,7 @@ namespace gadt
 		void DefineBreakthoughShell(shell::GameShell & shell)
 		{
 			auto bt = shell.CreateShellPage<BtState>("breakthough");
-			//bt->AddFunction("print", "print state", [](EwnState& state)->void {state.Print(); });
+			bt->AddFunction("print", "print state", [](BtState& state)->void {state.Print(); });
 		}
 	}
 }
