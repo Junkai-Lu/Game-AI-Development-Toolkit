@@ -284,7 +284,7 @@ namespace gadt
 			}
 
 			TableCell(std::string _str, AlignType _align) :
-				str(),
+				str(_str),
 				color(console::DEFAULT),
 				align(_align)
 			{
