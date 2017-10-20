@@ -372,7 +372,7 @@ namespace gadt
 							{ i == best_action_index ? "Yes ":"  "}
 						});
 					}
-					logger() << tb.output_string(true, false) << std::endl;
+					logger() << tb.output_string(log::ENABLE_FRAME, log::DISABLE_INDEX) << std::endl;
 				}
 
 				if (json_output_enabled())

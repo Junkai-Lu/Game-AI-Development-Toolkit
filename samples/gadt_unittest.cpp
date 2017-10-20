@@ -383,7 +383,7 @@ namespace gadt
 			);
 			mcts.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr);
 			//mcts.EnableJsonOutput();
-			mcts.EnableLog();
+			//mcts.EnableLog();
 			tic_tac_toe::State state;
 			state.dot[0][0] = tic_tac_toe::WHITE;
 			/*for (size_t i = 1; i <= 16; i++)
@@ -538,7 +538,7 @@ namespace gadt
 			table.set_width({ 4,4,4,4 });
 			GADT_ASSERT(table.get_row(0).size(), 3);
 			GADT_ASSERT(table.get_column(0).size(), 5);
-			GADT_ASSERT(table.get_cell(0,1).str, "2");
+			GADT_ASSERT(table.get_cell(1,0).str, "2");
 			table.set_cell_in_row(0, { "hello", console::BLUE, log::ALIGN_RIGHT });
 			table.set_cell_in_column(1, { "world", console::RED, log::ALIGN_MIDDLE });
 			GADT_ASSERT(table.get_cell(0, 0).str, "hello");
@@ -561,7 +561,7 @@ namespace gadt
 				);
 			minimax.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr);
 			//minimax.EnableJsonOutput();
-			minimax.EnableLog();
+			//minimax.EnableLog();
 			tic_tac_toe::State state;
 			state.dot[0][0] = tic_tac_toe::WHITE;
 			tic_tac_toe::Action action = minimax.DoNegamax(state, { timeout, max_depth, false });
@@ -600,7 +600,7 @@ namespace gadt
 			tic_tac_toe::State state;
 			state.dot[0][0] = tic_tac_toe::WHITE;
 			mc.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr);
-			mc.EnableLog();
+			//mc.EnableLog();
 			tic_tac_toe::Action action = mc.DoMonteCarlo(state, setting);
 			//GADT_ASSERT((action.x == 1 && action.y == 1), true);
 		}

@@ -82,6 +82,7 @@ namespace gadt
 		void PrintRenjuState(const RenjuState& state)
 		{
 			log::ConsoleTable tb(state.width(), state.height());
+			tb.set_width(1);
 			std::stringstream ss;
 			ss << "player:" << (int)state.next_player() << " winner:" << (int)state.winner();
 			tb.enable_title({ ss.str() });
@@ -130,7 +131,7 @@ namespace gadt
 					}
 				}
 			}
-			tb.print(false, true);
+			tb.print(log::DISABLE_FRAME, log::INDEX_FROM_ZERO);
 		}
 
 		void PrintRenjuActions(const RenjuState& state, RenjuActionList action_list)

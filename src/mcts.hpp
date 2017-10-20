@@ -745,7 +745,7 @@ namespace gadt
 						{ ToString(total_tree_size) },
 						{ ToString(best_node_index) } 
 					});
-					logger() << tb.output_string(true, false) << std::endl;
+					logger() << tb.output_string() << std::endl;
 				}
 
 				GADT_CHECK_WARNING(is_debug(), root_actions.size() == 0, "MCTS102: best value for root node equal to 0.");

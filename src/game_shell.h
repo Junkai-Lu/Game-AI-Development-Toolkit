@@ -462,7 +462,7 @@ namespace gadt
 										{ desc,console::WHITE }
 									});
 								}
-								tb.print(false, false);
+								tb.print(log::HALF_EMPTY_FRAME, log::DISABLE_INDEX);
 								std::cout << std::endl;
 							}
 						}
@@ -487,7 +487,7 @@ namespace gadt
 							});
 							n++;
 						}
-						tb.print(false, false);
+						tb.print(log::HALF_EMPTY_FRAME, log::DISABLE_INDEX);
 						std::cout << std::endl;
 					}
 				}

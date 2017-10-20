@@ -247,12 +247,29 @@ namespace gadt
 
 		};
 
-		//align type
-		enum AlignType : int8_t
+		//align mode of cell
+		enum AlignMode : int8_t
 		{
 			ALIGN_LEFT = 0,
 			ALIGN_MIDDLE = 1,
 			ALIGN_RIGHT = 2
+		};
+
+		//frame mode of table
+		enum FrameMode: int8_t
+		{
+			DISABLE_FRAME = 0,
+			EMPTY_FRAME = 1,
+			HALF_EMPTY_FRAME = 2,
+			ENABLE_FRAME = 3
+		};
+
+		//index type of table
+		enum IndexMode : int8_t
+		{
+			DISABLE_INDEX = -1,
+			INDEX_FROM_ZERO = 0,
+			INDEX_FROM_ONE = 1
 		};
 
 		//basic cell of table.
@@ -260,7 +277,7 @@ namespace gadt
 		{
 			std::string				str;
 			console::ConsoleColor	color;
-			AlignType				align;
+			AlignMode				align;
 
 			TableCell() :
 				str(),
@@ -283,14 +300,14 @@ namespace gadt
 			{
 			}
 
-			TableCell(std::string _str, AlignType _align) :
+			TableCell(std::string _str, AlignMode _align) :
 				str(_str),
 				color(console::DEFAULT),
 				align(_align)
 			{
 			}
 
-			TableCell(std::string _str, console::ConsoleColor _color, AlignType _align) :
+			TableCell(std::string _str, console::ConsoleColor _color, AlignMode _align) :
 				str(_str),
 				color(_color),
 				align(_align)
@@ -369,9 +386,23 @@ namespace gadt
 		private:
 
 			//basic output.
-			void BasicOutput(std::ostream & os, CellOutputFunc CellCallback, bool enable_frame, bool enable_index)
+			void BasicOutput(std::ostream & os, CellOutputFunc CellCallback, FrameMode frame_mode, IndexMode index_mode)
 			{
-				std::string frame = enable_frame ? "+-|" : "   ";
+				char frame[3];
+				bool enable_index = (index_mode != DISABLE_INDEX);
+				switch (frame_mode)
+				{
+				case gadt::log::DISABLE_FRAME:
+					frame[0] = 0; frame[1] = 0; frame[2] = 0;
+					break;
+				case gadt::log::ENABLE_FRAME:
+					frame[0] = '+'; frame[1] = '-'; frame[2] = '|';
+					break;
+				default:
+					frame[0] = ' '; frame[1] = ' '; frame[2] = ' ';
+					break;
+				}
+				//std::string frame = enable_frame ? "+-|" : "   ";
 				const size_t space_before_line_size = 4;
 				std::string space_before_line(space_before_line_size, ' ');
 
@@ -382,10 +413,11 @@ namespace gadt
 				if (enable_index)
 				{
 					os << space_before_line << " ";
+					size_t extra = frame_mode == DISABLE_FRAME ? 0 : 1;
 					for (size_t column = 0; column < this->number_of_columns(); column++)
 					{
-						std::string index = ToString(column + 1);
-						os << index << std::string((_column_width[column] * 2) - index.length() + 1, ' ');
+						std::string index = ToString(column + index_mode);
+						os << index << std::string((_column_width[column] * 2) - index.length() + extra, ' ');
 					}
 					os << std::endl;
 				}
@@ -406,7 +438,7 @@ namespace gadt
 				}
 
 				//print upper line of the table.
-				if (enable_frame)
+				if (frame_mode != DISABLE_FRAME)
 				{
 					os << space_before_line << frame[0];
 					for (size_t column = 0; column < this->number_of_columns(); column++)
@@ -424,7 +456,7 @@ namespace gadt
 					//print first line , include value and space.
 					if (enable_index)
 					{
-						std::string index = ToString(row + 1);
+						std::string index = ToString(row + index_mode);
 						os << ' ' << index << std::string(space_before_line_size - index.length() - 1, ' ');
 					}
 					else
@@ -437,15 +469,13 @@ namespace gadt
 						const size_t width = _column_width[column] * 2;
 						const TableCell& c = get_cell(column, row);
 						CellCallback(c, width, os);
-						if (column != this->number_of_columns() - 1) { os << frame[2]; }
-						else
-						{
-							os << frame[2] << std::endl;
-						}
+						
+						if (frame_mode != DISABLE_FRAME) { os << frame[2]; }
+						if (column == this->number_of_columns() - 1) { os << std::endl; }
 					}
 
 					//print second line
-					if (enable_frame)
+					if (frame_mode != DISABLE_FRAME && frame_mode != HALF_EMPTY_FRAME)
 					{
 						os << space_before_line << frame[0];
 						for (size_t column = 0; column < this->number_of_columns(); column++)
@@ -499,43 +529,58 @@ namespace gadt
 				return _cells.width();
 			}
 
+			//get cell by coordinate
 			inline const_reference get_cell(size_t column, size_t row) const
 			{
 				return _cells.element(column, row);
 			}
 
+			//get cell by coordinate
 			inline const_reference get_cell(Coordinate coord) const
 			{
 				return _cells.element(coord);
 			}
 
+			//get row by index
 			inline CellPtrSet get_row(size_t index) const
 			{
 				return _cells.get_row(index);
 			}
 
+			//get column by index
 			inline CellPtrSet get_column(size_t index) const
 			{
 				return _cells.get_column(index);
 			}
 
+			//enable title
 			inline void enable_title(TableCell cell)
 			{
 				_enable_title = true;
 				_title_cell = cell;
 			}
 
+			//disable title
 			inline void disable_title()
 			{
 				_enable_title = false;
 			}
 
+			//set width for all columns
+			void set_width(size_t width)
+			{
+				for (auto& value : _column_width)
+					value = width;
+			}
+
+			//set width for appointed column
 			void set_width(size_t column, size_t width)
 			{
 				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, column >= number_of_columns(), "TABLE02: out of column range.");
 				_column_width[column] = width;
 			}
 
+			//set width by initializer list
 			void set_width(std::initializer_list<size_t> width_list)
 			{
 				size_t i = 0;
@@ -549,54 +594,63 @@ namespace gadt
 				}
 			}
 
+			//set cell by coordinate
 			inline void set_cell(const_reference cell, size_t column, size_t row)
 			{
 				_cells.set_element(cell, column, row);
 			}
 
+			//set cell by coordinate
 			inline void set_cell(const_reference cell, Coordinate coord)
 			{
 				_cells.set_element(cell, coord);
 			}
 
+			//set cell in appointed row
 			inline void set_cell_in_row(size_t row, TableCell cell)
 			{
 				_cells.set_row(row, cell);
 			}
 
+			//set cell in appointed row by initializer list
 			inline void set_cell_in_row(size_t row, std::initializer_list<TableCell> cell_list)
 			{
 				_cells.set_row(row, cell_list);
 			}
 
+			//set cell in appointed column
 			inline void set_cell_in_column(size_t column, TableCell cell)
 			{
 				_cells.set_column(column, cell);
 			}
 
+			//set cell in appointed column by initializer list
 			inline void set_cell_in_column(size_t column, std::initializer_list<TableCell> cell_list)
 			{
 				_cells.set_column(column, cell_list);
 			}
 
-			std::string output_string(bool enable_frame = true, bool enable_index = false)
+			//get string format of table.
+			std::string output_string(FrameMode frame_mode = ENABLE_FRAME, IndexMode index_mode = DISABLE_INDEX)
 			{
 				CellOutputFunc cell_cb = [](const TableCell& c, size_t max_width, std::ostream& os)->void {
 					os << c.to_string(max_width);
 				};
 				std::stringstream ss;
-				BasicOutput(ss, cell_cb, enable_frame, enable_index);
+				BasicOutput(ss, cell_cb, frame_mode, index_mode);
 				return ss.str();
 			}
 
-			void print(bool enable_frame = true, bool enable_index = false)
+			//print table.
+			void print(FrameMode frame_mode = ENABLE_FRAME, IndexMode index_mode = DISABLE_INDEX)
 			{
 				CellOutputFunc callback = [](const TableCell& c, size_t max_width, std::ostream& os)->void {
 					console::Cprintf(c.to_string(max_width), c.color);
 				};
-				BasicOutput(std::cout, callback, enable_frame, enable_index);
+				BasicOutput(std::cout, callback, frame_mode, index_mode);
 			}
 
+			//get cell reference by coordinate
 			reference operator[](Coordinate coord)
 			{
 				return _cells[coord];

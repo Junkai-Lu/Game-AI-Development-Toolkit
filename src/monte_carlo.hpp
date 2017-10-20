@@ -427,7 +427,7 @@ namespace gadt
 						{ ToString(root.win_time()) },
 						{ ToString(best_node_index) }
 					});
-					logger() << tb.output_string(true, false) << std::endl;
+					logger() << tb.output_string() << std::endl;
 				}
 
 				return action_list[best_node_index];

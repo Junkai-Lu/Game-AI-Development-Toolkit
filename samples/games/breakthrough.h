@@ -139,7 +139,7 @@ namespace gadt
 						break;
 					}
 				}
-				table.print(true, true);
+				table.print(log::ENABLE_FRAME, log::INDEX_FROM_ZERO);
 			}
 
 			BtPlayer Winner() const

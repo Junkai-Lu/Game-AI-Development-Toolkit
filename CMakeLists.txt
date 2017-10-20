@@ -10,13 +10,13 @@ SET(SRC_LIST
         ./src/gadtlib.cpp
 		./src/game_shell.h
         ./src/game_shell.cpp
+		./src/visual_tree.h
+        ./src/visual_tree.cpp
         ./src/bitboard.hpp
 		./src/gadt_container.hpp
-		./src/gadt_memory.hpp
+		./src/gadt_game.hpp
 		./src/gadt_log.hpp
-        ./src/visual_tree.h
-        ./src/visual_tree.cpp
-        ./src/gadt_game.hpp
+		./src/gadt_memory.hpp
 		./src/gadt_algorithm.hpp
         ./src/monte_carlo.hpp
 		./src/minimax.hpp
@@ -25,6 +25,11 @@ SET(SRC_LIST
         ./samples/gadt_unittest.cpp
         ./samples/gadtmain.cpp
 		./samples/games/renju.h
+		./samples/games/renju.cpp
+		./samples/games/ewn.h
+		./samples/games/ewn.cpp
+		./samples/games/breakthough.h
+		./samples/games/breakthough.cpp
         )
  
 ADD_EXECUTABLE(Paradoxes ${SRC_LIST})
