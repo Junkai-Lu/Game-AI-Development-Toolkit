@@ -284,152 +284,6 @@ namespace gadt
 		};
 
 		/*
-		* RandomPool is a container of elements which support to get element randomly by weigh.
-		*
-		* [T] is the type of element.
-		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
-		*/
-		template<typename T, bool _is_debug = false>
-		class RandomPool
-		{
-		private:
-			using pointer = T*;
-			using reference = T&;
-			using Element = RandomPoolElement<T>;
-			using Allocator = stl::LinearAllocator<Element, _is_debug>;
-
-		private:
-
-			Allocator	_ele_alloc;
-			size_t		_accumulated_range;
-
-			constexpr inline bool is_debug() const
-			{
-				return _is_debug;
-			}
-
-		public:
-			//default constructor.
-			RandomPool(size_t max_size) :
-				_ele_alloc(max_size),
-				_accumulated_range(0)
-			{
-			}
-
-			//constructor with init list.
-			RandomPool(size_t max_size, std::initializer_list<std::pair<size_t, T>> init_list) :
-				_ele_alloc(max_size),
-				_accumulated_range(0)
-			{
-				for (const std::pair<size_t, T>& pair : init_list)
-				{
-					add(pair.first, pair.second);
-				}
-			}
-
-			//clear all elements.
-			void clear()
-			{
-				_ele_alloc.flush();
-				_accumulated_range = 0;
-			}
-
-			//add new element by copy.
-			inline bool add(size_t weight, T data)
-			{
-				if (_ele_alloc.construct(weight, _accumulated_range, _accumulated_range + weight, data))
-				{
-					_accumulated_range += weight;
-					return true;
-				}
-				return false;
-			}
-
-			//add new element by constructor.
-			template<class... Types>
-			inline bool add(size_t weight, Types&&... args)
-			{
-				if (_ele_alloc.construct(weight, _accumulated_range, _accumulated_range + weight, std::forward<Types>(args)...))
-				{
-					_accumulated_range += weight;
-					return true;
-				}
-				return false;
-			}
-
-			//get chance that element[index] be selected.
-			inline double get_chance(size_t index) const
-			{
-				if (index < _ele_alloc.size())
-				{
-					return double(_ele_alloc[index]->weight) / double(_accumulated_range);
-				}
-				return 0.0;
-			}
-
-			//get element reference by index.
-			inline const reference get_element(size_t index) const
-			{
-				return _ele_alloc[index]->data;
-			}
-
-			//get weight of element by index.
-			inline size_t get_weight(size_t index) const
-			{
-				if (index < _ele_alloc.size())
-				{
-					return _ele_alloc[index]->weight;
-				}
-				return 0;
-			}
-
-			//get random element.
-			inline const reference random() const
-			{
-				GADT_CHECK_WARNING(is_debug(), size() == 0, "random pool is empty.");
-				size_t rnd = rand() % _accumulated_range;
-				for (size_t i = 0; i < size(); i++)
-				{
-					if (rnd >= _ele_alloc[i]->left && rnd < _ele_alloc[i]->right)
-					{
-						return _ele_alloc[i]->data;
-					}
-				}
-				GADT_CHECK_WARNING(is_debug(), true, "unsuccessful random pick up.");
-				return _ele_alloc[0]->data;
-			}
-
-			//get the size of the element.
-			inline size_t size() const
-			{
-				return _ele_alloc.size();
-			}
-
-			//get info of the random pool
-			std::string info() const
-			{
-				log::ConsoleTable tb(3, _ele_alloc.size() + 1);
-				tb.set_cell_in_row(0, { { "index" },{ "weight" },{ "range" } });
-				tb.set_width({ 6,6,10 });
-				tb.enable_title({ "random pool" });
-				for (size_t i = 0; i < _ele_alloc.size(); i++)
-				{
-					tb.set_cell_in_row(i + 1, {
-						{ ToString(i) },
-						{ ToString(get_weight(i)) },
-						{ _ele_alloc.element(i)->range() }
-					});
-				}
-				return tb.output_string();
-			}
-
-			const reference operator[](size_t index)
-			{
-				return get_element(index);
-			}
-		};
-
-		/*
 		* RectangularArrayIter is the iterator of matrix container.
 		*/
 		class MatrixIter
@@ -712,7 +566,7 @@ namespace gadt
 			//get iterator end.
 			Iter end() const
 			{
-				return Iter({ 0, _HEIGHT }, _WIDTH, _HEIGHT);
+				return Iter({ 0, height() }, width(), height());
 			}
 
 			//get element by coordinate.
@@ -907,6 +761,152 @@ namespace gadt
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(coord.x, coord.y), "out of row range.");
 				return _elements[coord.x][coord.y];
+			}
+		};
+
+		/*
+		* RandomPool is a container of elements which support to get element randomly by weigh.
+		*
+		* [T] is the type of element.
+		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
+		*/
+		template<typename T, bool _is_debug = false>
+		class RandomPool
+		{
+		private:
+			using pointer = T*;
+			using reference = T&;
+			using Element = RandomPoolElement<T>;
+			using Allocator = stl::LinearAllocator<Element, _is_debug>;
+
+		private:
+
+			Allocator	_ele_alloc;
+			size_t		_accumulated_range;
+
+			constexpr inline bool is_debug() const
+			{
+				return _is_debug;
+			}
+
+		public:
+			//default constructor.
+			RandomPool(size_t max_size) :
+				_ele_alloc(max_size),
+				_accumulated_range(0)
+			{
+			}
+
+			//constructor with init list.
+			RandomPool(size_t max_size, std::initializer_list<std::pair<size_t, T>> init_list) :
+				_ele_alloc(max_size),
+				_accumulated_range(0)
+			{
+				for (const std::pair<size_t, T>& pair : init_list)
+				{
+					add(pair.first, pair.second);
+				}
+			}
+
+			//clear all elements.
+			void clear()
+			{
+				_ele_alloc.flush();
+				_accumulated_range = 0;
+			}
+
+			//add new element by copy.
+			inline bool add(size_t weight, T data)
+			{
+				if (_ele_alloc.construct(weight, _accumulated_range, _accumulated_range + weight, data))
+				{
+					_accumulated_range += weight;
+					return true;
+				}
+				return false;
+			}
+
+			//add new element by constructor.
+			template<class... Types>
+			inline bool add(size_t weight, Types&&... args)
+			{
+				if (_ele_alloc.construct(weight, _accumulated_range, _accumulated_range + weight, std::forward<Types>(args)...))
+				{
+					_accumulated_range += weight;
+					return true;
+				}
+				return false;
+			}
+
+			//get chance that element[index] be selected.
+			inline double get_chance(size_t index) const
+			{
+				if (index < _ele_alloc.size())
+				{
+					return double(_ele_alloc[index]->weight) / double(_accumulated_range);
+				}
+				return 0.0;
+			}
+
+			//get element reference by index.
+			inline const reference get_element(size_t index) const
+			{
+				return _ele_alloc[index]->data;
+			}
+
+			//get weight of element by index.
+			inline size_t get_weight(size_t index) const
+			{
+				if (index < _ele_alloc.size())
+				{
+					return _ele_alloc[index]->weight;
+				}
+				return 0;
+			}
+
+			//get random element.
+			inline const reference random() const
+			{
+				GADT_CHECK_WARNING(is_debug(), size() == 0, "random pool is empty.");
+				size_t rnd = rand() % _accumulated_range;
+				for (size_t i = 0; i < size(); i++)
+				{
+					if (rnd >= _ele_alloc[i]->left && rnd < _ele_alloc[i]->right)
+					{
+						return _ele_alloc[i]->data;
+					}
+				}
+				GADT_CHECK_WARNING(is_debug(), true, "unsuccessful random pick up.");
+				return _ele_alloc[0]->data;
+			}
+
+			//get the size of the element.
+			inline size_t size() const
+			{
+				return _ele_alloc.size();
+			}
+
+			//get info of the random pool
+			std::string info() const
+			{
+				log::ConsoleTable tb(3, _ele_alloc.size() + 1);
+				tb.set_cell_in_row(0, { { "index" },{ "weight" },{ "range" } });
+				tb.set_width({ 6,6,10 });
+				tb.enable_title({ "random pool" });
+				for (size_t i = 0; i < _ele_alloc.size(); i++)
+				{
+					tb.set_cell_in_row(i + 1, {
+						{ ToString(i) },
+						{ ToString(get_weight(i)) },
+						{ _ele_alloc.element(i)->range() }
+					});
+				}
+				return tb.output_string();
+			}
+
+			const reference operator[](size_t index)
+			{
+				return get_element(index);
 			}
 		};
 	}

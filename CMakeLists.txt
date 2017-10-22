@@ -28,8 +28,8 @@ SET(SRC_LIST
 		./samples/games/renju.cpp
 		./samples/games/ewn.h
 		./samples/games/ewn.cpp
-		./samples/games/breakthough.h
-		./samples/games/breakthough.cpp
+		./samples/games/breakthrough.h
+		./samples/games/breakthrough.cpp
         )
  
 ADD_EXECUTABLE(Paradoxes ${SRC_LIST})
