@@ -412,7 +412,7 @@ namespace gadt
 
 				if (enable_index)
 				{
-					os << space_before_line << " ";
+					os << space_before_line;
 					size_t extra = frame_mode == DISABLE_FRAME ? 0 : 1;
 					for (size_t column = 0; column < this->number_of_columns(); column++)
 					{

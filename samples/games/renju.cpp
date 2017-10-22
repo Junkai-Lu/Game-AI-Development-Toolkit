@@ -90,45 +90,19 @@ namespace gadt
 			{
 				if (state.piece(coord) == BLACK)
 				{
-					tb.set_cell({ "¡ñ" }, coord);
+					tb.set_cell({ "X" }, coord);
 				}
 				else if (state.piece(coord) == WHITE)
 				{
-					tb.set_cell({ "¡ð" }, coord);
+					tb.set_cell({ "O" }, coord);
 				}
 				else if (state.piece(coord) == FLAG)
 				{
-					tb.set_cell({ "¡î" }, coord);
+					tb.set_cell({ "F" }, coord);
 				}
 				else
 				{
-					if (coord.x == 0)
-					{
-						if (coord.y == 0)
-							tb.set_cell({ "©³" }, coord);
-						else if (coord.y == state.height() - 1)
-							tb.set_cell({ "©»" }, coord);
-						else
-							tb.set_cell({ "©Ç" }, coord);
-					}
-					else if (coord.x == state.width() - 1)
-					{
-						if (coord.y == 0)
-							tb.set_cell({ "©·" }, coord);
-						else if (coord.y == state.height() - 1)
-							tb.set_cell({ "©¿" }, coord);
-						else
-							tb.set_cell({ "©Ï" }, coord);
-					}
-					else
-					{
-						if (coord.y == 0)
-							tb.set_cell({ "©×" }, coord);
-						else if (coord.y == state.height() - 1)
-							tb.set_cell({ "©ß" }, coord);
-						else
-							tb.set_cell({ "©í" }, coord);
-					}
+					tb.set_cell({ "+" }, coord);
 				}
 			}
 			tb.print(log::DISABLE_FRAME, log::INDEX_FROM_ZERO);

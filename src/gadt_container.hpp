@@ -886,24 +886,6 @@ namespace gadt
 				return _ele_alloc.size();
 			}
 
-			//get info of the random pool
-			std::string info() const
-			{
-				log::ConsoleTable tb(3, _ele_alloc.size() + 1);
-				tb.set_cell_in_row(0, { { "index" },{ "weight" },{ "range" } });
-				tb.set_width({ 6,6,10 });
-				tb.enable_title({ "random pool" });
-				for (size_t i = 0; i < _ele_alloc.size(); i++)
-				{
-					tb.set_cell_in_row(i + 1, {
-						{ ToString(i) },
-						{ ToString(get_weight(i)) },
-						{ _ele_alloc.element(i)->range() }
-					});
-				}
-				return tb.output_string();
-			}
-
 			const reference operator[](size_t index)
 			{
 				return get_element(index);

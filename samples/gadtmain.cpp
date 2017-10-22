@@ -69,7 +69,7 @@ void ShellDefine()
 
 	game->AddChildPage("renju", "renju game");
 	game->AddChildPage("ewn", "EinSteinw¨¹rfeltnicht! game");
-	game->AddChildPage("breakthough", "breakthough game");
+	game->AddChildPage("breakthrough", "breakthrough game");
 
 	//Unit Test Page
 	for (auto p : unittest::func_list)
@@ -89,7 +89,7 @@ void ShellDefine()
 	mcts->AddFunction("search","search part", [](){unittest::TestMctsSearch(); });
 
 	//Start Shell
-	gadt.StartFromPage("root","game/breakthough/ls");
+	gadt.StartFromPage("root","game/breakthrough/ls");
 }
 
 int main()

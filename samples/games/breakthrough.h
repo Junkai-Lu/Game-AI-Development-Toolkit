@@ -130,10 +130,10 @@ namespace gadt
 					switch (_board.element(coord))
 					{
 					case WHITE:
-						table.set_cell({ "¡ï" , log::ALIGN_MIDDLE}, coord);
+						table.set_cell({ "W " , console::RED, log::ALIGN_MIDDLE}, coord);
 						break;
 					case BLACK:
-						table.set_cell({ "¡î" , log::ALIGN_MIDDLE}, coord);
+						table.set_cell({ "B " , console::BLUE, log::ALIGN_MIDDLE}, coord);
 						break;
 					default:
 						break;

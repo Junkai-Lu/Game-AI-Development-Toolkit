@@ -27,7 +27,7 @@ namespace gadt
 	{
 		void DefineBreakthoughShell(shell::GameShell & shell)
 		{
-			auto bt = shell.CreateShellPage<BtState>("breakthough");
+			auto bt = shell.CreateShellPage<BtState>("breakthrough");
 			bt->AddFunction("print", "print state", [](BtState& state)->void {state.Print(); });
 			bt->AddFunction("random", "get random action", [](BtState& state)->void {
 				BtActionGenerator generator(state);
