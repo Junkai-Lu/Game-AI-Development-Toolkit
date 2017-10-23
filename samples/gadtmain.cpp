@@ -26,10 +26,10 @@
 #include "../src/mcts.hpp"			//monte carlo tree search for games.
 #include "../src/minimax.hpp"		//minimax,and alphabeta for games.
 #include "../src/monte_carlo.hpp"	//monte carlo simulation algorithm.
-#include "../src/mcts.hpp"			//monte carlo tree search for games, new version.
-#include "./games/renju.h"
-#include "./games/ewn.h"
-#include "./games/breakthrough.h"
+#include "../src/mcts.hpp"			//monte carlo tree search for games
+#include "./games/renju.h"			//game example
+#include "./games/ewn.h"			//game example
+#include "./games/breakthrough.h"	//game example
 
 #include "gadt_unittest.h"			//a simple unittest
 
@@ -62,7 +62,7 @@ void ShellDefine()
 	root->AddChildPage("game", "game examples");
 	root->AddChildPage("doc", "lib documents");
 
-	breakthrough::DefineBreakthoughShell(gadt);
+	breakthrough::DefineBreakthroughShell(gadt);
 	renju::DefineRenjuShell(gadt);
 	ewn::DefineEwnShell(gadt);
 	

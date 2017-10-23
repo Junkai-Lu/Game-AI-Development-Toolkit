@@ -216,6 +216,6 @@ namespace gadt
 		std::string ActionToString(const BtAction& action);
 		std::string ResultToString(const BtPlayer& result);
 
-		void DefineBreakthoughShell(shell::GameShell& shell);
+		void DefineBreakthroughShell(shell::GameShell& shell);
 	}
 }

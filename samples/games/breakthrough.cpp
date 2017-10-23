@@ -25,7 +25,7 @@ namespace gadt
 {
 	namespace breakthrough
 	{
-		void DefineBreakthoughShell(shell::GameShell & shell)
+		void DefineBreakthroughShell(shell::GameShell & shell)
 		{
 			auto bt = shell.CreateShellPage<BtState>("breakthrough");
 			bt->AddFunction("print", "print state", [](BtState& state)->void {state.Print(); });
