@@ -22,6 +22,7 @@
 #include "../src/gadtlib.h"
 #include "../src/visual_tree.h"
 #include "../src/bitboard.hpp"
+#include "../src/gadt_game.hpp"
 #include "../src/gadt_container.hpp"
 #include "../src/gadt_memory.hpp"
 #include "../src/gadt_algorithm.hpp"

@@ -324,29 +324,16 @@ namespace gadt
 		}
 		void TestIndex()
 		{
-			player::PlayerIndex<1, 5> index(2);
-			index.to_next();
-			GADT_ASSERT(3, index.current());
-			GADT_ASSERT(4, index.get_next());
-			GADT_ASSERT(2, index.get_prev());
-			GADT_ASSERT(5, index.get_jump(2));
-			GADT_ASSERT(1, index.get_jump(3));
-			GADT_ASSERT(2, index.get_jump(14));
-			GADT_ASSERT(2, index.get_jump(24));
-
-			player::PlayerGroup<int,1, 5> players(2);
-			players.data(2) = 1;
-			GADT_ASSERT(1, players.data());
-
-			players.to_next();
-			GADT_ASSERT(3, players.current());
-			GADT_ASSERT(4, players.get_next());
-			GADT_ASSERT(2, players.get_prev());
-			GADT_ASSERT(5, players.get_jump(2));
-			GADT_ASSERT(1, players.get_jump(3));
-			GADT_ASSERT(2, players.get_jump(14));
-			GADT_ASSERT(2, players.get_jump(24));
-
+			player::PlayerRange<1, 5> index;
+			AgentIndex player = 2;
+			player = index.Next(player);
+			GADT_ASSERT(3, player);
+			GADT_ASSERT(4, index.Next(player));
+			GADT_ASSERT(2, index.Prev(player));
+			GADT_ASSERT(5, index.Jump(player,2));
+			GADT_ASSERT(1, index.Jump(player, 3));
+			GADT_ASSERT(2, index.Jump(player, 14));
+			GADT_ASSERT(2, index.Jump(player, 24));
 		}
 		void TestMctsNode()
 		{
