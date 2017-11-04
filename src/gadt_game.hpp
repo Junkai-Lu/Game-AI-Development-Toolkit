@@ -5,6 +5,59 @@
 
 namespace gadt
 {
+	namespace player
+	{
+		//PlayerIndex allows to define a index start from any number and with any length.
+		template<AgentIndex BEGIN_INDEX, size_t COUNT>
+		class PlayerRange
+		{
+		public:
+
+			//default construstor.
+			PlayerRange()
+			{
+			}
+
+			//get next index. 
+			inline int Next(AgentIndex agent_index) const
+			{
+				constexpr int end = COUNT != 0 ? BEGIN_INDEX + (int)COUNT : BEGIN_INDEX + 1;
+				return agent_index + 1 < end ? agent_index + 1 : BEGIN_INDEX;
+			}
+
+			//get prev index.
+			inline int Prev(AgentIndex agent_index) const
+			{
+				constexpr int end = COUNT != 0 ? BEGIN_INDEX + (int)COUNT : BEGIN_INDEX + 1;
+				return agent_index - 1 < BEGIN_INDEX ? end - 1 : agent_index - 1;
+			}
+
+			//get index after jump.
+			inline int Jump(AgentIndex agent_index, size_t jump_value) const
+			{
+				constexpr int end = (COUNT != 0 ? BEGIN_INDEX + (int)COUNT : BEGIN_INDEX + 1);
+				jump_value = jump_value % (int)COUNT;
+				if (agent_index + jump_value >= end)
+				{
+					return agent_index - ((int)COUNT - jump_value);
+				}
+				return agent_index + jump_value;
+			}
+
+			//get begin index
+			constexpr inline AgentIndex begin_index() const
+			{
+				return BEGIN_INDEX;
+			}
+
+			//get count of players.
+			constexpr inline size_t count() const
+			{
+				return COUNT;
+			}
+		};
+	}
+
 	namespace game
 	{
 		//define action of mnk game.
