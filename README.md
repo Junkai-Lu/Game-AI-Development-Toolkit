@@ -1,4 +1,7 @@
+![Logo of Paradoxes](http://junkai.lu/img/Paradoxes/logo.png)
+
 # Paradoxes : A Game AI Development Toolkit 
+
 ---------------------------------
 What is Paradoxes?
 ---------------------------------
@@ -75,7 +78,12 @@ Documents
 The documents of Paradoxes are updating. see ./doc folder to require lattest documents.
 If there is any bug or question about Paradoxes, please contact me with email or report issue.
 
+----------------------------------
+Copyright and License
+----------------------------------
+Copyright 2017 JUNKAI LU <junkai-lu@outlook.com>. 
 
+Code released under the MIT license.
 
 
 

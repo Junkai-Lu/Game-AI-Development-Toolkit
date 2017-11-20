@@ -1,3 +1,5 @@
+![Logo of Paradoxes](http://junkai.lu/img/Paradoxes/logo.png)
+
 # Paradoxes # 游戏AI开发工具包 
 ---------------------------------
 介绍
@@ -69,8 +71,12 @@
 Paradoxes在接下来将提供完整的文档支持。在当前，请参阅各个文件中的注释进行使用。
 如果发现BUG或者存在任何疑问，欢迎在Issue中报告或者电子邮件联系本人。
 
+----------------------------------
+版权与协议
+----------------------------------
+Copyright 2017 JUNKAI LU <junkai-lu@outlook.com>。
 
-
+代码发布于MIT协议之下。
 
 
 
