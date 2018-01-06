@@ -1,88 +1,74 @@
 ![Logo of Paradoxes](http://junkai.lu/img/Paradoxes/logo.png)
 
-# Paradoxes # 游戏AI开发工具包 
----------------------------------
-介绍
----------------------------------
-**Paradoxes**是一个跨平台的游戏AI开发工具包，包括了游戏AI开发的各类开发，调试工具。使用*C++11*标准编写。
+#Paradoxes：一个游戏AI开发工具包
 
+Paradoxes是一个小型的，跨平台游戏AI开发库，其使用C++11编写。正如他的名字“游戏AI开发工具包”那样，它为游戏AI开发提供了一系列的工具。
 
-在**Paradoxes**中我们提供了各类常用的AI算法的模板。它可以让使用者非常简单地调用与测试某种AI算法在某一个游戏下的表现。例如Monte Carlo Tree Search，Minimax Search等。同时我们也提供了一些额外的功能，例如游戏AI中一些基础的数据结构，常用算法等。
-
-整个库大致可以被划分为以下几种模块：
-
-- **基础数据结构**，如*位棋盘*(bitboard)等
-- **常用AI算法模板**，如MCTS，Minimax等
-- **调试工具**，如搜索树的可视化等
-- **开发工具**，如shell工具等
-- **一些其他基础工具**。
-- **单元测试**。
-- **示例代码**
-
-**Paradoxes**开发的目的，是希望提供一个强大的，可移植的游戏AI开发工具包，来加强游戏AI的开发与研究效率。并同时提供一套可以参考的游戏AI开发与研究流程以及与相关的工具包。这可以有效提高游戏AI的生产与研究效率，并且降低学习的门槛。因此，我们认为以下**三种用户群体**适合使用：
-
-1. 游戏AI领域的研究人员
-2. 游戏AI相关的工程师
-3. 对游戏AI抱有兴趣的学生以及爱好者
-
----------------------------------
-算法模板
----------------------------------
-
-**Paradoxes**希望可以提供一个简单的，易编写的游戏AI算法标准库。通过简单的定义游戏逻辑，就可以调用某种算法来获得一个可用的游戏AI。并且预留自定义的接口，令使用者可以在标准算法的基础上快速的进行改进。这个特性主要是针对游戏AI的研究人员的，使得研究人员可以避免在各类常用算法的工程实现上消耗过多的时间，而集中精力于改善算法本身。而对于游戏AI领域的工程师而言，**Paradoxes**提供了工程级别的代码实现，可以针对需求直接进行修改。
-
-一个简单的Monte Carlo Tree Search的调用代码示例如下。
-
-    mcts::MonteCarloTreeSearch<State,Action,Result> mcts(...);
-    Action action = mcts.DoMcts(state);
-
-与其类似的，一个Minimax Search的代码示例如下：
-
-    minimax::MinimaxSearch<State,Action> minimax(...);
-    Action action = minimax.DoNegamax(state);
-
-在**Paradoxes**中，我们将一个游戏抽象为State,Action,Result等几个抽象部分，通过定义几个部分之间的逻辑关系，来实现一个完整的游戏。几乎所有游戏都可以被如此抽象，并且通过Paradoxes调用各类AI算法。
-
-更多的细节，请参照详细文档。
-
-----------------------------------
-调试工具
+关于Paradoxes
 ----------------------------------
 
-**Paradoxes**中提供了多种的调试工具，主要针对但不仅限于对搜索算法的调试。例如树可视化工具允许在生成搜索树的同时，将搜索树生成为一颗完整的JSON树，并输出到指定文件中。用户可以使用第三方的可视化工具来浏览搜索树中的数据，同时也可以在执行搜索算法时插入自定义的数据来加快调试速度。
+在我们为一个特定的游戏实现AI时，第一步通常是定义游戏的表示以及逻辑过程。对于不同的游戏来说，这一步的实现上会有着巨大的差异。第二步是在游戏中实现某种算法， 例如MCTS或者Minimax，而最后一步是测试这个算法是否有效。某些时候优化也会被作为一个额外的步骤，用来降低算法的开销。
 
-所有的调试工具都是隐性关闭的。在没有被开启之前，对于运算速度本身几乎没有影响。
+Paradoxes提供了许多的算法模板与调试工具，这使得它的用户可以高效地执行第二以及第三个步骤。在Paradoxes之前，还不存在这样一个包含了这些算法模板与调试工具的库。举例来说，用户可以在游戏的逻辑定义结束后，直接地运行一个标准的蒙特卡罗树搜索算法（像UCT）或者极大极小算法而不需要任何额外的代码。同时，算法模板包含了许多的接口来保证它的拓展性。
 
-一个开启调试的示例如下：
+在算法模板之外，许多开发与调试工具也被包含在Paradoxes之中来使得开发过程可以变得更有效率。例如，用户可以将它们的算法遍历的搜索树输出为一个JSON文件，来检查他们的算法的细节。更多的工具，请参阅Paradoxes的文档。
 
-    mcts::MonteCarloTreeSearch<State,Action,Result> mcts(...);
-    mcts.InitLog(...);
-    mcts.EnableLog();
-    mcts.EnableJsonOutput();
-    Action action = mcts.DoMcts(state);
 
-在Log以及JsonOutput被显式开启之后，算法在运行的同时也会输出日志，并且将最终生成的搜索树以Json的形式保存在文件中。
-
-更多关于调试工具的细节，请参照详细文档。
-
+我在哪里可以使用Paradoxes？
 ----------------------------------
+
+当你通过使用流行的AI算法来开发一个游戏AI时。
+
+Paradoxes包含了许多流行的算法的模板。如果你希望使用它们来做为你的AI的算法框架，Paradoxes将会是一个好的选择。
+
+如果你还无法确定要应用的算法，Paradoxes提供了一个友好的环境来测试为同一种游戏测试多个算法。所有被包括在Paradoxes之中的算法都共享相同的接口，这意味着可以直接地使用相同的代码去运行不同的AI方法，然后比较它们。
+
+
+为什么要使用Paradoxes？
+----------------------------------
+
+Paradoxes为游戏AI开发提供了一些通用的工具包。每一次当我们需要通过使用一些流行的算法为一个新游戏实现一个新的AI时候，我们不得不重新编写或者修改那些算法。为什么我们不能使用一个通用的算法模板呢？然而，这些算法模板在Paradoxes之前是从未有过的。如果你是一名游戏AI开发者或研究者，这个理由对你来说已经足够了。
+在算法之外，Paradoxes还提供了许多额外的功能来加快开发进程。它们与算法模板们享有共同的接口，可以在工程中直接应用。Paradoxes致力于为游戏AI的开发提供完整的工具链，使得这个过程更为简单并更为有效。
+
+特性：
+
+- 轻量级。无依赖。
+- 跨平台，支持Windows/Linux
+- 涵盖了大部分流行的算法
+- 强通用性。支持大部分棋盘/卡牌游戏。
+
+Example
+----------------------------------
+**Monte Carlo simulation**
+
+    MonteCarloSimulation<State, Action> mc(...);
+    MonteCarloSetting setting(...);
+    Action action = mc.DoMonteCarlo(state, setting);
+
+**Minimax search**
+
+    MinimaxSearch<State, Action> minimax(...);
+    MinimaxSetting setting(...);
+    Action action = minimax.DoNegamax(state, setting);
+
+**Monte Carlo tree search**
+
+    MonteCarloTreeSearch<State, Action, Result> mcts(...);
+    MctsSetting setting(...);
+    Action action = mcts.DoMcts(state, setting);
+
+一个简单的关于井字棋的案例，请参照*./example/gadt_unittest.h*文件
+
+
 文档
 ----------------------------------
-Paradoxes在接下来将提供完整的文档支持。在当前，请参阅各个文件中的注释进行使用。
-如果发现BUG或者存在任何疑问，欢迎在Issue中报告或者电子邮件联系本人。
+Paradoxes的文档与教程正在更新。请参见*./doc* 文件夹来获取最新的文档。
 
-----------------------------------
+如果有任何关于Paradoxes的BUG或者建议，请通过[邮件](Junkai-lu@outlook.com)联系我或者在ISSUE中提出。
+
+
 版权与协议
 ----------------------------------
-Copyright 2017 JUNKAI LU <junkai-lu@outlook.com>。
+Copyright 2017 JUNKAI LU <junkai-lu@outlook.com>. 
 
-代码发布于MIT协议之下。
-
-
-
-
-
-
-
-
-
+代码基于MIT协议发布。
