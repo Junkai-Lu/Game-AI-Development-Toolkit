@@ -85,93 +85,108 @@ namespace gadt
 	using EvalValue = double;
 
 	/*
-	* struct Coordinate is used to express a plane coordinate.
+	* struct BasicCoordinate is used to express a plane coordinate of signed integer.
 	*/
-	struct Coordinate
+	template<typename IntType = int64_t, typename std::enable_if<std::is_signed<IntType>::value, int>::type = 0>
+	struct BasicCoordinate
 	{
-		int x;
-		int y;
+		IntType x;
+		IntType y;
 
-		operator bool()
-		{
-			return x != 0 || y != 0;
-		}
+		BasicCoordinate() : x(0), y(0) {}
 
-		inline bool operator==(Coordinate coord) const
+		BasicCoordinate(IntType _x, IntType _y) : x(_x), y(_y) {}
+
+		//bool operation is banned.
+		inline operator bool() = delete;
+
+		//comparison operation
+		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
+		inline bool operator==(BasicCoordinate<T> coord) const
 		{
 			return x == coord.x && y == coord.y;
 		}
 
-		inline bool operator!=(Coordinate coord) const
+		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
+		inline bool operator!=(BasicCoordinate<T> coord) const
 		{
 			return x != coord.x || y != coord.y;
 		}
 
-		inline Coordinate operator+(Coordinate coord) const
+		//with integer.(multiply or divide)
+		template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+		inline BasicCoordinate<IntType> operator*(T i) const
 		{
-			return { x + coord.x,y + coord.y };
+			return BasicCoordinate<IntType>(x*i, y*i);
 		}
 
-		inline Coordinate operator-(Coordinate coord) const
+		template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+		inline BasicCoordinate<IntType> operator/(T i) const
 		{
-			return { x - coord.x,y - coord.y };
+			return BasicCoordinate<IntType>(x / i, y / i);
 		}
 
-		inline Coordinate operator*(int i) const
-		{
-			return { x*i, y*i };
-		}
-
-		inline Coordinate operator/(int i) const
-		{
-			return { x/i, y/i };
-		}
-
-		inline int operator*(Coordinate coord) const
-		{
-			return { (x * coord.x) + (y* coord.y) };
-		}
-
-		inline void operator*=(int i)
+		template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+		inline void operator*=(T i)
 		{
 			x *= i;
 			y *= i;
 		}
 
-		inline void operator/=(Coordinate coord)
-		{
-			x /= coord.x;
-			y /= coord.y;
-		}
-
-		inline void operator/=(int i)
+		template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+		inline void operator/=(T i)
 		{
 			x /= i;
 			y /= i;
 		}
 
-		inline void operator+=(Coordinate coord)
+		//with coordinate(plus or reduce).
+		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
+		inline BasicCoordinate<IntType> operator+(BasicCoordinate<T> coord) const
+		{
+			return BasicCoordinate<IntType>(x + coord.x, y + coord.y);
+		}
+
+		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
+		inline BasicCoordinate<IntType> operator-(BasicCoordinate<T> coord) const
+		{
+			return BasicCoordinate<IntType>(x - coord.x, y - coord.y);
+		}
+
+		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
+		inline void operator+=(BasicCoordinate<T> coord)
 		{
 			x += coord.x;
 			y += coord.y;
 		}
 
-		inline void operator-=(Coordinate coord)
+		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
+		inline void operator-=(BasicCoordinate<T> coord)
 		{
 			x -= coord.x;
 			y -= coord.y;
 		}
 
+		//multiply with another coordinate(the result would be a integer).
+		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
+		inline IntType operator*(BasicCoordinate<T> coord) const
+		{
+			return IntType((x * coord.x) + (y* coord.y));
+		}
+
+		//swap
 		inline void swap()
 		{
-			int t = x; x = y; y = t;
+			IntType t = x; x = y; y = t;
 		}
 
-		inline void swap(Coordinate& coord)
+		//swap with another coordinate.
+		inline void swap(BasicCoordinate<IntType>& coord)
 		{
-			Coordinate t = coord; *this = coord; coord = *this;
+			BasicCoordinate<IntType> t = coord; *this = coord; coord = *this;
 		}
 
+		//convert to  
 		std::string to_string() const
 		{
 			std::stringstream ss;
@@ -179,6 +194,123 @@ namespace gadt
 			return ss.str();
 		}
 	};
+
+	/*
+	* struct BasicUnsignedCoordinate is used to express a plane coordinate of unsigned integer.
+	*/
+	template<typename IntType = uint64_t, typename std::enable_if<std::is_unsigned<IntType>::value, int>::type = 0>
+	struct BasicUnsignedCoordinate
+	{
+		IntType x;
+		IntType y;
+
+		BasicUnsignedCoordinate() : x(0), y(0) {}
+
+		BasicUnsignedCoordinate(IntType _x, IntType _y) : x(_x), y(_y) {}
+
+		//bool operation is banned.
+		inline operator bool() = delete;
+
+		//comparison operation
+		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
+		inline bool operator==(BasicUnsignedCoordinate<T> coord) const
+		{
+			return x == coord.x && y == coord.y;
+		}
+
+		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
+		inline bool operator!=(BasicUnsignedCoordinate<T> coord) const
+		{
+			return x != coord.x || y != coord.y;
+		}
+
+		//with integer.(multiply or divide)
+		template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+		inline BasicUnsignedCoordinate<IntType> operator*(T i) const
+		{
+			return BasicUnsignedCoordinate<IntType>(x*i, y*i);
+		}
+
+		template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+		inline BasicUnsignedCoordinate<IntType> operator/(T i) const
+		{
+			return BasicUnsignedCoordinate<IntType>(x /i, y /i);
+		}
+
+		template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+		inline void operator*=(T i)
+		{
+			x *= i;
+			y *= i;
+		}
+
+		template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+		inline void operator/=(T i)
+		{
+			x /= i;
+			y /= i;
+		}
+
+		//with coordinate(plus or reduce).
+		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
+		inline BasicUnsignedCoordinate<IntType> operator+(BasicUnsignedCoordinate<T> coord) const
+		{
+			return BasicUnsignedCoordinate<IntType>(x + coord.x, y + coord.y);
+		}
+
+		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
+		inline BasicUnsignedCoordinate<IntType> operator-(BasicUnsignedCoordinate<T> coord) const
+		{
+			return BasicUnsignedCoordinate<IntType>(x - coord.x, y - coord.y);
+		}
+
+		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
+		inline void operator+=(BasicUnsignedCoordinate<T> coord)
+		{
+			x += coord.x;
+			y += coord.y;
+		}
+
+		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
+		inline void operator-=(BasicUnsignedCoordinate<T> coord)
+		{
+			x -= coord.x;
+			y -= coord.y;
+		}
+
+		//multiply with another coordinate(the result would be a integer).
+		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
+		inline IntType operator*(BasicUnsignedCoordinate<T> coord) const
+		{
+			return IntType((x * coord.x) + (y* coord.y));
+		}
+
+		//swap
+		inline void swap()
+		{
+			IntType t = x; x = y; y = t;
+		}
+
+		//swap with another coordinate.
+		inline void swap(BasicUnsignedCoordinate<IntType>& coord)
+		{
+			BasicUnsignedCoordinate<IntType> t = coord; *this = coord; coord = *this;
+		}
+
+		//convert to  
+		std::string to_string() const
+		{
+			std::stringstream ss;
+			ss << "[" << x << "," << y << "]";
+			return ss.str();
+		}
+	};
+
+	//default coordinate.
+	using Coordinate = BasicCoordinate<int>;
+
+	//default unsigned coordinate.
+	using UnsignedCoordinate = BasicUnsignedCoordinate<size_t>;
 
 	//srting to interger.
 	inline int ToInt(std::string str)
@@ -387,5 +519,6 @@ namespace gadt
 		
 		//get manhattan distance between two coordinate.
 		size_t GetManhattanDistance(Coordinate fir, Coordinate sec);
+		
 	}
 }

@@ -155,6 +155,60 @@ namespace gadt
 			}
 		}
 
+		void TestCoordinate()
+		{
+			//test signed coordinate
+			BasicCoordinate<int64_t> coord64(-100, -200);
+			BasicCoordinate<int8_t> coord8(-1, -2);
+
+			//comparison
+			GADT_ASSERT(coord64 == BasicCoordinate<int64_t>(-100, -200), true);
+			GADT_ASSERT(coord64 != BasicCoordinate<int64_t>(-100, 0), true);
+			GADT_ASSERT(coord64 != BasicCoordinate<int64_t>(0, -200), true);
+
+			//integer
+			GADT_ASSERT(coord64 * -10 == BasicCoordinate<int16_t>(1000, 2000), true);
+			GADT_ASSERT(coord64 / -10 == BasicCoordinate<int16_t>(10, 20), true);
+			coord64 *= -10;
+			GADT_ASSERT(coord64 == BasicCoordinate<int16_t>(1000, 2000), true);
+			coord64 /= -10;
+			GADT_ASSERT(coord64 == BasicCoordinate<int16_t>(-100, -200), true);
+
+			//coordinate
+			GADT_ASSERT((coord64 + coord8) == BasicCoordinate<int16_t>(-101, -202), true);
+			GADT_ASSERT((coord64 - coord8) == BasicCoordinate<int16_t>(-99, -198), true);
+			coord64 += coord8;
+			GADT_ASSERT(coord64 == BasicCoordinate<int16_t>(-101, -202), true);
+			coord64 -= coord8;
+			GADT_ASSERT(coord64 == BasicCoordinate<int16_t>(-100, -200), true);
+			GADT_ASSERT(coord64 * coord8, 500);
+
+			//test unsigned coordinate
+			BasicUnsignedCoordinate<uint8_t> ucoord8(1, 2);
+			BasicUnsignedCoordinate<uint64_t> ucoord64(100, 200);
+
+			//comparison
+			GADT_ASSERT(ucoord64 == BasicUnsignedCoordinate<uint64_t>(100, 200), true);
+			GADT_ASSERT(ucoord64 != BasicUnsignedCoordinate<uint64_t>(100, 0), true);
+			GADT_ASSERT(ucoord64 != BasicUnsignedCoordinate<uint64_t>(0, 200), true);
+
+			//uinteger
+			GADT_ASSERT(ucoord64 * 10 == BasicUnsignedCoordinate<uint16_t>(1000, 2000), true);
+			GADT_ASSERT(ucoord64 / 10 == BasicUnsignedCoordinate<uint16_t>(10, 20), true);
+			ucoord64 *= 10;
+			GADT_ASSERT(ucoord64 == BasicUnsignedCoordinate<uint16_t>(1000, 2000), true);
+			ucoord64 /= 10;
+			GADT_ASSERT(ucoord64 == BasicUnsignedCoordinate<uint16_t>(100, 200), true);
+
+			//ucoordinate
+			GADT_ASSERT((ucoord64 + ucoord8) == BasicUnsignedCoordinate<uint16_t>(101, 202), true);
+			GADT_ASSERT((ucoord64 - ucoord8) == BasicUnsignedCoordinate<uint16_t>(99, 198), true);
+			ucoord64 += ucoord8;
+			GADT_ASSERT(ucoord64 == BasicUnsignedCoordinate<uint16_t>(101, 202), true);
+			ucoord64 -= ucoord8;
+			GADT_ASSERT(ucoord64 == BasicUnsignedCoordinate<uint16_t>(100, 200), true);
+			GADT_ASSERT(ucoord64 * ucoord8, 500);
+		}
 		void TestBitBoard()
 		{
 			//test BitBoard<>
@@ -593,6 +647,7 @@ namespace gadt
 		}
 
 		const std::vector<FuncPair> func_list = {
+			{ "coordinate"		,TestCoordinate		},
 			{ "bitboard"		,TestBitBoard		},
 			{ "file"			,TestFileLib		},
 			{ "index"			,TestIndex			},

@@ -19,29 +19,29 @@ namespace gadt
 			}
 
 			//get next index. 
-			inline int Next(AgentIndex agent_index) const
+			inline AgentIndex Next(AgentIndex agent_index) const
 			{
 				constexpr int end = COUNT != 0 ? BEGIN_INDEX + (int)COUNT : BEGIN_INDEX + 1;
 				return agent_index + 1 < end ? agent_index + 1 : BEGIN_INDEX;
 			}
 
 			//get prev index.
-			inline int Prev(AgentIndex agent_index) const
+			inline AgentIndex Prev(AgentIndex agent_index) const
 			{
 				constexpr int end = COUNT != 0 ? BEGIN_INDEX + (int)COUNT : BEGIN_INDEX + 1;
 				return agent_index - 1 < BEGIN_INDEX ? end - 1 : agent_index - 1;
 			}
 
 			//get index after jump.
-			inline int Jump(AgentIndex agent_index, size_t jump_value) const
+			inline AgentIndex Jump(AgentIndex agent_index, size_t jump_value) const
 			{
 				constexpr int end = (COUNT != 0 ? BEGIN_INDEX + (int)COUNT : BEGIN_INDEX + 1);
-				jump_value = jump_value % (int)COUNT;
+				jump_value = jump_value % COUNT;
 				if (agent_index + jump_value >= end)
 				{
-					return agent_index - ((int)COUNT - jump_value);
+					return agent_index - AgentIndex(COUNT - jump_value);
 				}
-				return agent_index + jump_value;
+				return agent_index + (AgentIndex)jump_value;
 			}
 
 			//get begin index

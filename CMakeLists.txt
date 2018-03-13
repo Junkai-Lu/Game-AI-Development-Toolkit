@@ -21,15 +21,17 @@ SET(SRC_LIST
         ./src/monte_carlo.hpp
 		./src/minimax.hpp
         ./src/mcts.hpp
-		./samples/gadt_unittest.h
-        ./samples/gadt_unittest.cpp
-        ./samples/gadtmain.cpp
-		./samples/games/renju.h
-		./samples/games/renju.cpp
-		./samples/games/ewn.h
-		./samples/games/ewn.cpp
-		./samples/games/breakthrough.h
-		./samples/games/breakthrough.cpp
+		./examples/gadt_unittest.h
+        ./examples/gadt_unittest.cpp
+        ./examples/gadtmain.cpp
+		./examples/games/renju.h
+		./examples/games/renju.cpp
+		./examples/games/ewn.h
+		./examples/games/ewn.cpp
+		./examples/games/breakthrough.h
+		./examples/games/breakthrough.cpp
+		./lib/json11/json11.hpp
+		./lib/json11/json11.cpp
         )
  
 ADD_EXECUTABLE(Paradoxes ${SRC_LIST})

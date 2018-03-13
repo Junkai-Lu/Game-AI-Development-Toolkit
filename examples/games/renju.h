@@ -31,8 +31,8 @@ namespace gadt
 {
 	namespace renju
 	{
-		constexpr const size_t g_WIDTH = 19;
-		constexpr const size_t g_HEIGHT = 19;
+		constexpr const size_t g_WIDTH = 15;
+		constexpr const size_t g_HEIGHT = 15;
 		constexpr const size_t g_LENGTH = 5;
 
 		enum RenjuPlayer: AgentIndex

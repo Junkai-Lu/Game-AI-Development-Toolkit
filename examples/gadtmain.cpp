@@ -46,7 +46,7 @@ void ShellDefine()
 	gadt.SetDefaultInfoFunc([]()->void{
 		console::Cprintf("=============================================\n", console::GRAY);
 		console::Cprintf("       Game AI Development Toolkit\n", console::YELLOW);
-		console::Cprintf("       Copyright @ Junkai-Lu 2017\n", console::YELLOW);
+		console::Cprintf("       Copyright @ Junkai-Lu 2018\n", console::YELLOW);
 		console::Cprintf("=============================================", console::GRAY);
 		std::cout << endl << endl;
 	});
@@ -89,7 +89,7 @@ void ShellDefine()
 	mcts->AddFunction("search","search part", [](){unittest::TestMctsSearch(); });
 
 	//Start Shell
-	gadt.StartFromPage("root","game/breakthrough/ls");
+	gadt.StartFromPage("root","test/");
 }
 
 int main()
