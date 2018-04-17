@@ -378,16 +378,16 @@ namespace gadt
 		}
 		void TestIndex()
 		{
-			player::PlayerRange<1, 5> index;
+			player::PlayerRange<AgentIndex, 1, 5> index;
 			AgentIndex player = 2;
-			player = index.Next(player);
+			player = index.get_next(player);
 			GADT_ASSERT(3, player);
-			GADT_ASSERT(4, index.Next(player));
-			GADT_ASSERT(2, index.Prev(player));
-			GADT_ASSERT(5, index.Jump(player,2));
-			GADT_ASSERT(1, index.Jump(player, 3));
-			GADT_ASSERT(2, index.Jump(player, 14));
-			GADT_ASSERT(2, index.Jump(player, 24));
+			GADT_ASSERT(4, index.get_next(player));
+			GADT_ASSERT(2, index.get_prev(player));
+			GADT_ASSERT(5, index.get_jump(player,2));
+			GADT_ASSERT(1, index.get_jump(player, 3));
+			GADT_ASSERT(2, index.get_jump(player, 14));
+			GADT_ASSERT(2, index.get_jump(player, 24));
 		}
 		void TestMctsNode()
 		{

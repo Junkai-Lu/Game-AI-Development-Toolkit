@@ -233,7 +233,7 @@ namespace gadt
 			}
 
 			//return true if target is subset of this.
-			bool exist_subset(const BitBoard& target)
+			bool exist_subset(const BitBoard& target) const
 			{
 				for (size_t i = 0; i < target.upper_bound(); i++)
 				{
@@ -246,7 +246,7 @@ namespace gadt
 			}
 
 			//return true if this is a subset of target.
-			bool is_subset_of(const BitBoard& target)
+			bool is_subset_of(const BitBoard& target) const
 			{
 				for (size_t i = 0; i < upper_bound(); i++)
 				{
@@ -488,7 +488,7 @@ namespace gadt
 			}
 
 			//return true if this is a subset of target.
-			bool is_subset_of(const BitBoard64& target)
+			bool is_subset_of(const BitBoard64& target) const
 			{
 				for (size_t i = 0; i < upper_bound(); i++)
 				{
@@ -821,7 +821,7 @@ namespace gadt
 			}
 
 			//return true if target is subset of this.
-			bool exist_subset(const BitPoker& target)
+			bool exist_subset(const BitPoker& target) const
 			{
 				for (size_t i = 0; i < target._upper_bound; i++)
 				{
@@ -834,7 +834,7 @@ namespace gadt
 			}
 
 			//return true if this is a subset of target.
-			bool is_subset_of(const BitPoker& target)
+			bool is_subset_of(const BitPoker& target) const
 			{
 				for (size_t i = 0; i < _upper_bound; i++)
 				{
@@ -1246,7 +1246,7 @@ namespace gadt
 			}
 
 			//return true if target is subset of this.
-			inline bool exist_subset(const BitMahjong& target)
+			inline bool exist_subset(const BitMahjong& target) const
 			{
 				for (size_t i = 0; i < target._upper_bound; i++)
 				{
@@ -1259,7 +1259,7 @@ namespace gadt
 			}
 
 			//return true if this is a subset of target.
-			inline bool is_subset_of(const BitMahjong& target)
+			inline bool is_subset_of(const BitMahjong& target) const
 			{
 				for (size_t i = 0; i < _upper_bound; i++)
 				{

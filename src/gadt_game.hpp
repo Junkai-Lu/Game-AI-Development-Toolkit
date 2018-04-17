@@ -8,9 +8,13 @@ namespace gadt
 	namespace player
 	{
 		//PlayerIndex allows to define a index start from any number and with any length.
-		template<AgentIndex BEGIN_INDEX, size_t COUNT>
+		template< typename IndexType, IndexType BEGIN_INDEX, IndexType COUNT, typename std::enable_if<std::is_integral<IndexType>::value, int>::type = 0 >	
 		class PlayerRange
 		{
+		private:
+
+			IndexType _index;
+
 		public:
 
 			//default construstor.
@@ -19,33 +23,57 @@ namespace gadt
 			}
 
 			//get next index. 
-			inline AgentIndex Next(AgentIndex agent_index) const
+			inline IndexType get_next(IndexType agent_index) const
 			{
 				constexpr int end = COUNT != 0 ? BEGIN_INDEX + (int)COUNT : BEGIN_INDEX + 1;
 				return agent_index + 1 < end ? agent_index + 1 : BEGIN_INDEX;
 			}
 
 			//get prev index.
-			inline AgentIndex Prev(AgentIndex agent_index) const
+			inline IndexType get_prev(IndexType agent_index) const
 			{
 				constexpr int end = COUNT != 0 ? BEGIN_INDEX + (int)COUNT : BEGIN_INDEX + 1;
 				return agent_index - 1 < BEGIN_INDEX ? end - 1 : agent_index - 1;
 			}
 
 			//get index after jump.
-			inline AgentIndex Jump(AgentIndex agent_index, size_t jump_value) const
+			inline IndexType get_jump(IndexType agent_index, size_t jump_value) const
 			{
 				constexpr int end = (COUNT != 0 ? BEGIN_INDEX + (int)COUNT : BEGIN_INDEX + 1);
 				jump_value = jump_value % COUNT;
 				if (agent_index + jump_value >= end)
 				{
-					return agent_index - AgentIndex(COUNT - jump_value);
+					return agent_index - IndexType(COUNT - jump_value);
 				}
-				return agent_index + (AgentIndex)jump_value;
+				return agent_index + (IndexType)jump_value;
+			}
+
+			//move to next index.
+			inline void to_next()
+			{
+				_index = get_next(_index);
+			}
+
+			//move to previous index
+			inline void to_prev()
+			{
+				_index = get_prev(_index);
+			}
+
+			//jump appointed index.
+			inline void jump(size_t jump_value)
+			{
+				_index = get_jump(_index);
+			}
+
+			//get current index
+			inline IndexType current() const
+			{
+				return _index;
 			}
 
 			//get begin index
-			constexpr inline AgentIndex begin_index() const
+			constexpr inline IndexType begin_index() const
 			{
 				return BEGIN_INDEX;
 			}
@@ -220,6 +248,8 @@ namespace gadt
 				for (Coordinate coord : _state)
 					if (_state.in_action_range(coord))
 						actions.push_back({ coord, player });
+				if (actions.size() == 0)
+					actions.push_back({ {_WIDTH / 2, _HEIGHT / 2}, player });
 				return actions;
 			}
 
