@@ -84,6 +84,9 @@ namespace gadt
 	using UcbValue = double;
 	using EvalValue = double;
 
+	template<typename IntType = uint64_t, typename std::enable_if<std::is_unsigned<IntType>::value, int>::type = 0>
+	struct BasicUnsignedCoordinate;
+
 	/*
 	* struct BasicCoordinate is used to express a plane coordinate of signed integer.
 	*/
@@ -99,6 +102,13 @@ namespace gadt
 
 		//bool operation is banned.
 		inline operator bool() = delete;
+
+		//convert to singed coordinate
+		template<typename T = uint64_t, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
+		inline BasicUnsignedCoordinate<T> to_unsigned() const
+		{
+			return { T(x),T(y) };
+		}
 
 		//comparison operation
 		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
@@ -198,7 +208,7 @@ namespace gadt
 	/*
 	* struct BasicUnsignedCoordinate is used to express a plane coordinate of unsigned integer.
 	*/
-	template<typename IntType = uint64_t, typename std::enable_if<std::is_unsigned<IntType>::value, int>::type = 0>
+	template<typename IntType, typename std::enable_if<std::is_unsigned<IntType>::value, int>::type>
 	struct BasicUnsignedCoordinate
 	{
 		IntType x;
@@ -210,6 +220,13 @@ namespace gadt
 
 		//bool operation is banned.
 		inline operator bool() = delete;
+
+		//convert to singed coordinate
+		template<typename T = int, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
+		inline BasicCoordinate<T> to_signed() const
+		{
+			return { T(x),T(y) };
+		}
 
 		//comparison operation
 		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>

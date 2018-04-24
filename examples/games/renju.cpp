@@ -129,7 +129,7 @@ namespace gadt
 				if (params.size() >= 3)
 				{
 					RenjuAction action = {
-						{ ToInt(params[0]),ToInt(params[1]) },
+						{ (size_t)ToInt(params[0]),(size_t)ToInt(params[1]) },
 						RenjuPlayer(ToInt(params[2]))
 					};
 					if (state.IsLegalAction(action))

@@ -289,12 +289,12 @@ namespace gadt
 		class MatrixIter
 		{
 		private:
-			Coordinate _coord;
+			UnsignedCoordinate _coord;
 			const size_t _width;
 			const size_t _height;
 
 		public:
-			MatrixIter(Coordinate coord, size_t width, size_t height) :
+			MatrixIter(UnsignedCoordinate coord, size_t width, size_t height) :
 				_coord(coord),
 				_width(width),
 				_height(height)
@@ -316,7 +316,7 @@ namespace gadt
 				}
 			}
 
-			Coordinate operator* ()
+			UnsignedCoordinate operator* ()
 			{
 				return _coord;
 			}
@@ -446,7 +446,7 @@ namespace gadt
 			}
 
 			//get element
-			inline const_reference element(Coordinate coord) const 
+			inline const_reference element(UnsignedCoordinate coord) const 
 			{
 				return element(coord.x, coord.y);
 			}
@@ -488,7 +488,7 @@ namespace gadt
 			}
 
 			//set element.
-			void set_element(const_reference elem, Coordinate coord)
+			void set_element(const_reference elem, UnsignedCoordinate coord)
 			{
 				set_element(elem, coord.x, coord.y);
 			}
@@ -570,7 +570,7 @@ namespace gadt
 			}
 
 			//get element by coordinate.
-			inline reference operator[](Coordinate coord)
+			inline reference operator[](UnsignedCoordinate coord)
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(coord.x, coord.y), "out of row range.");
 				return (_elements[coord.x])[coord.y];
@@ -610,7 +610,7 @@ namespace gadt
 			}
 
 			//return true if the coordinate is legal.
-			inline bool is_legal_coordinate(Coordinate coord) const
+			inline bool is_legal_coordinate(UnsignedCoordinate coord) const
 			{
 				return is_legal_coordinate(coord.x, coord.y);
 			}
@@ -657,7 +657,7 @@ namespace gadt
 			}
 
 			//get element
-			inline const_reference element(Coordinate coord) const
+			inline const_reference element(UnsignedCoordinate coord) const
 			{
 				return element(coord.x, coord.y);
 			}
@@ -670,7 +670,7 @@ namespace gadt
 			}
 
 			//set element
-			inline void set_element(Coordinate coord, const_reference elem)
+			inline void set_element(UnsignedCoordinate coord, const_reference elem)
 			{
 				set_element(coord.x, coord.y, elem);
 			}
@@ -757,7 +757,7 @@ namespace gadt
 				return true;
 			}
 
-			inline reference operator[](Coordinate coord)
+			inline reference operator[](UnsignedCoordinate coord)
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(coord.x, coord.y), "out of row range.");
 				return _elements[coord.x][coord.y];

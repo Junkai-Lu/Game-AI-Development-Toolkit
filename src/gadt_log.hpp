@@ -536,7 +536,7 @@ namespace gadt
 			}
 
 			//get cell by coordinate
-			inline const_reference get_cell(Coordinate coord) const
+			inline const_reference get_cell(UnsignedCoordinate coord) const
 			{
 				return _cells.element(coord);
 			}
@@ -601,7 +601,7 @@ namespace gadt
 			}
 
 			//set cell by coordinate
-			inline void set_cell(const_reference cell, Coordinate coord)
+			inline void set_cell(const_reference cell, UnsignedCoordinate coord)
 			{
 				_cells.set_element(cell, coord);
 			}
@@ -651,7 +651,7 @@ namespace gadt
 			}
 
 			//get cell reference by coordinate
-			reference operator[](Coordinate coord)
+			reference operator[](UnsignedCoordinate coord)
 			{
 				return _cells[coord];
 			}

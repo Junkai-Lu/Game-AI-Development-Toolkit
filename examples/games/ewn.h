@@ -57,8 +57,8 @@ namespace gadt
 
 		struct EwnAction
 		{
-			Coordinate source;
-			Coordinate dest;
+			UnsignedCoordinate source;
+			UnsignedCoordinate dest;
 			RollResult roll;
 
 			std::string to_string() const
@@ -80,7 +80,7 @@ namespace gadt
 
 		private:
 			EwnBoard _board;
-			Coordinate _piece_coord[12];
+			UnsignedCoordinate _piece_coord[12];
 			PieceFlag _piece_flag;
 			EwnPlayer _next_player;
 			RollResult _roll_result;
@@ -112,7 +112,7 @@ namespace gadt
 				return (RollResult)temp;
 			}
 
-			inline EwnPiece piece(Coordinate coord) const { return _board.element(coord); }
+			inline EwnPiece piece(UnsignedCoordinate coord) const { return _board.element(coord); }
 			inline bool piece_exist(size_t index) const { return _piece_flag[index]; }
 			inline EwnPlayer next_player() const { return _next_player; }
 			inline RollResult roll_result() const { return _roll_result; }
@@ -123,8 +123,8 @@ namespace gadt
 				return piece <= 6 ? RED : BLUE;
 			}
 			inline bool piece_exist(AgentIndex player, RollResult roll) const { return _piece_flag[((player - 1) * 6 + roll)]; }
-			inline Coordinate piece_coord(AgentIndex player, RollResult roll) const { return _piece_coord[((player - 1) * 6 + roll)]; }
-			inline bool is_legal_coord(Coordinate coord) const { return _board.is_legal_coordinate(coord); }
+			inline UnsignedCoordinate piece_coord(AgentIndex player, RollResult roll) const { return _piece_coord[((player - 1) * 6 + roll)]; }
+			inline bool is_legal_coord(UnsignedCoordinate coord) const { return _board.is_legal_coordinate(coord); }
 		};
 
 		class EwnActionGenerator

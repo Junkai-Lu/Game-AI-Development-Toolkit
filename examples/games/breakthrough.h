@@ -47,8 +47,8 @@ namespace gadt
 
 		struct BtAction
 		{
-			Coordinate source;
-			Coordinate dest;
+			UnsignedCoordinate source;
+			UnsignedCoordinate dest;
 
 			std::string to_string() const
 			{
@@ -94,7 +94,7 @@ namespace gadt
 			const Board& board() const { return _board; }
 			BtPlayer next_player() const { return _next_player; }
 			size_t remain_piece(BtPlayer player) const { return player == BLACK ? _black_piece : _white_piece; }
-			BtPlayer piece(Coordinate coord) const { return _board.element(coord); }
+			BtPlayer piece(UnsignedCoordinate coord) const { return _board.element(coord); }
 
 		public:
 
@@ -181,15 +181,16 @@ namespace gadt
 
 				for (auto coord : _state.board())
 				{
+					const auto signed_coord = coord.to_signed();
 					if (_state.piece(coord) == player)
 					{
-						Coordinate right_coord = coord + right_move;
+						UnsignedCoordinate right_coord = (signed_coord + right_move).to_unsigned();
 						if (_state.board().is_legal_coordinate(right_coord) && _state.piece(right_coord) != player)
 							actions.push_back({ coord, right_coord });
-						Coordinate left_coord = coord + left_move;
+						UnsignedCoordinate left_coord = (signed_coord + left_move).to_unsigned();
 						if (_state.board().is_legal_coordinate(left_coord) && _state.piece(left_coord) != player)
 							actions.push_back({ coord, left_coord });
-						Coordinate center_coord = coord + center_move;
+						UnsignedCoordinate center_coord = (signed_coord + center_move).to_unsigned();
 						if (_state.board().is_legal_coordinate(center_coord) && _state.piece(center_coord) == NO_PLAYER)
 							actions.push_back({ coord, center_coord });
 					}

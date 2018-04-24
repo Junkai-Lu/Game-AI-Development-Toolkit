@@ -87,8 +87,8 @@ namespace gadt
 
 		void EwnState::Init(Formation red, Formation blue)
 		{
-			Coordinate red_coord[6] = { {0,0},{1,0},{2,0},{0,1},{1,1},{0,2} };
-			Coordinate blue_coord[6] = { 
+			UnsignedCoordinate red_coord[6] = { {0,0},{1,0},{2,0},{0,1},{1,1},{0,2} };
+			UnsignedCoordinate blue_coord[6] = { 
 				{ g_WIDTH - 1,g_HEIGHT -1 },
 				{ g_WIDTH - 2,g_HEIGHT - 1 },
 				{ g_WIDTH - 3,g_HEIGHT - 1 },
@@ -155,14 +155,14 @@ namespace gadt
 			int distant = player == RED ? 1 : -1;
 			Coordinate target = ((player == RED) ? Coordinate{ g_WIDTH - 1, g_HEIGHT - 1 } : Coordinate{ 0, 0 });
 			Coordinate dir[3] = { { distant, 0 },{ 0,distant },{ distant,distant } };
-			Coordinate source_coord = _state.piece_coord(player, roll);
+			Coordinate source_coord = _state.piece_coord(player, roll).to_signed();
 			size_t source_dis = enable_herustic ? func::GetManhattanDistance(source_coord, target) : 0;
 			for (auto d : dir)
 			{
 				Coordinate dest_coord = source_coord + d;
 				size_t dest_dis = enable_herustic ? func::GetManhattanDistance(dest_coord, target) : 0;
-				if (_state.is_legal_coord(dest_coord) && (!enable_herustic || dest_dis < source_dis))
-					actions.push_back({ source_coord, dest_coord, g_EMPTY });
+				if (_state.is_legal_coord(dest_coord.to_unsigned()) && (!enable_herustic || dest_dis < source_dis))
+					actions.push_back({ source_coord.to_unsigned(), dest_coord.to_unsigned(), g_EMPTY });
 			}
 		}
 

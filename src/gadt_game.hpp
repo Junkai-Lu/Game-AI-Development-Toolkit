@@ -91,11 +91,11 @@ namespace gadt
 		//define action of mnk game.
 		struct MnkGameAction
 		{
-			Coordinate coord;
+			UnsignedCoordinate coord;
 			AgentIndex piece;
 
 			template<typename T>
-			MnkGameAction(Coordinate _coord, T _piece):
+			MnkGameAction(UnsignedCoordinate _coord, T _piece):
 				coord(_coord),
 				piece((AgentIndex)_piece)
 			{
@@ -124,14 +124,14 @@ namespace gadt
 			size_t _piece_count;
 
 		private:
-			void SetActionRange(const Coordinate& coord)
+			void SetActionRange(const UnsignedCoordinate& coord)
 			{
 				for (int i = 1; i <= _ACTION_RANGE; i++)
 				{
 					Coordinate dir[8] = { {0,1}, { 1,1 }, { 1,0 }, { 1,-1 }, { 0, -1 }, { -1,-1 }, { -1,0 }, { -1,1 }};
 					for (Coordinate d : dir)
 					{
-						Coordinate new_coord = coord + (d * i);
+						UnsignedCoordinate new_coord = (coord.to_signed() + (d * i)).to_unsigned();
 						if(_piece.is_legal_coordinate(new_coord))
 							if (_piece[new_coord] == 0)
 								_action_range[new_coord] = true;
@@ -144,7 +144,7 @@ namespace gadt
 			inline constexpr size_t height() const { return _HEIGHT; }
 			inline Iter begin() const { return _piece.begin(); }
 			inline Iter end() const { return _piece.end(); }
-			inline AgentIndex piece(Coordinate coord) const { return _piece.element(coord); }
+			inline AgentIndex piece(UnsignedCoordinate coord) const { return _piece.element(coord); }
 			inline AgentIndex winner() const { return _winner; }
 			inline AgentIndex next_player() const { return _next_player; }
 			inline bool is_empty()
@@ -156,7 +156,7 @@ namespace gadt
 				}
 				return true;
 			}
-			inline bool in_action_range(const Coordinate& coord) const
+			inline bool in_action_range(const UnsignedCoordinate& coord) const
 			{
 				return _action_range.element(coord);
 			}
@@ -192,22 +192,22 @@ namespace gadt
 				SetActionRange(action.coord);
 			}
 
-			AgentIndex JudgeWinnerFromPiece(const Coordinate& coord)
+			AgentIndex JudgeWinnerFromPiece(const UnsignedCoordinate& coord)
 			{
 				if (piece(coord) == 0) { return 0; }
 				Coordinate dir[4] = { { 0,1 },{ 1,1 },{ 1,0 },{ 1,-1 } };
 				for (size_t i = 0; i < 4; i++)
 				{
-					Coordinate check_coord = coord;
+					UnsignedCoordinate check_coord = coord;
 					size_t count = 0;
 					while (_piece.is_legal_coordinate(check_coord) && piece(check_coord) == piece(coord))
 					{
-						check_coord -= dir[i];
+						check_coord = (check_coord.to_signed() - dir[i]).to_unsigned();
 					}
-					check_coord += dir[i];
+					check_coord = (check_coord.to_signed() + dir[i]).to_unsigned();
 					while (_piece.is_legal_coordinate(check_coord) && piece(check_coord) == piece(coord))
 					{
-						check_coord += dir[i];
+						check_coord = (check_coord.to_signed() + dir[i]).to_unsigned();
 						count++;
 						if (count >= _WIN_LENGTH)
 						{
@@ -245,7 +245,7 @@ namespace gadt
 			ActionList GetNearbyActions(AgentIndex player)
 			{
 				std::vector<Action> actions;
-				for (Coordinate coord : _state)
+				for (UnsignedCoordinate coord : _state)
 					if (_state.in_action_range(coord))
 						actions.push_back({ coord, player });
 				if (actions.size() == 0)
@@ -256,7 +256,7 @@ namespace gadt
 			ActionList GetAllActions(AgentIndex player)
 			{
 				ActionList actions;
-				for (Coordinate coord : _state)
+				for (UnsignedCoordinate coord : _state)
 					if (_state.piece(coord) == 0)
 						actions.push_back({ coord, player });
 				return actions;
