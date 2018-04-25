@@ -567,6 +567,37 @@ namespace gadt
 			alloc.flush();
 			GADT_ASSERT(alloc.is_empty(), true);
 		}
+		void TestStlElementMatrix()
+		{
+			stl::ElementMatrix<size_t> martix(4, 4);
+			for (auto coord : martix)
+				martix[coord] = coord.x * coord.y;
+			auto trans_func = [](size_t i)->std::string { return gadt::ToString(i); };
+			GADT_ASSERT(martix.element(3, 3), 9);
+			martix.IncreaseRow(5, 0);
+			GADT_ASSERT(martix.element(3, 8), 0);
+			GADT_ASSERT(martix.height(), 9);
+			martix.DecreaseRow(4);
+			GADT_ASSERT(martix.element(3, 4), 0);
+			GADT_ASSERT(martix.height(), 5);
+			martix.IncreaseColumn(3, 0);
+			GADT_ASSERT(martix.element(6, 3), 0);
+			GADT_ASSERT(martix.width(), 7);
+			martix.DecreaseColumn(4);
+			GADT_ASSERT(martix.width(), 3);
+			martix.DecreaseColumn(4);
+			GADT_ASSERT(martix.width(), 0);
+			martix.DecreaseRow(5);
+			GADT_ASSERT(martix.height(), 0);
+			martix.Resize(5, 5);
+			GADT_ASSERT(martix.element(4, 4), 0);
+			martix.Resize(4, 4);
+			GADT_ASSERT(martix.element(3, 3), 0);
+		}
+		void TestStlRectangeArray()
+		{
+
+		}
 		void TestTable()
 		{
 			std::ios::sync_with_stdio(false);
@@ -587,6 +618,7 @@ namespace gadt
 			GADT_ASSERT(table.get_cell(1, 2).str, "world");
 			//table.print();
 			//std::cout << table.output_string();
+
 		}
 		void TestMinimax()
 		{
@@ -647,20 +679,21 @@ namespace gadt
 		}
 
 		const std::vector<FuncPair> func_list = {
-			{ "coordinate"		,TestCoordinate		},
-			{ "bitboard"		,TestBitBoard		},
-			{ "file"			,TestFileLib		},
-			{ "index"			,TestIndex			},
-			{ "mcts_node"		,TestMctsNode		},
-			{ "mcts"			,TestMctsSearch		},
-			{ "visual_tree"		,TestVisualTree		},
-			{ "allocator"		,TestStlAllocator	},
-			{ "linear_alloc"	,TestStlLinearAlloc },
-			{ "list"			,TestStlList		},
-			{ "table"			,TestTable			},
-			{ "random_pool"		,TestRandomPool		},
-			{ "minimax"			,TestMinimax		},
-			{ "monte_carlo"		,TestMonteCarlo     }
+			{ "coordinate"		,TestCoordinate			},
+			{ "bitboard"		,TestBitBoard			},
+			{ "file"			,TestFileLib			},
+			{ "index"			,TestIndex				},
+			{ "mcts_node"		,TestMctsNode			},
+			{ "mcts"			,TestMctsSearch			},
+			{ "visual_tree"		,TestVisualTree			},
+			{ "allocator"		,TestStlAllocator		},
+			{ "linear_alloc"	,TestStlLinearAlloc		},
+			{ "list"			,TestStlList			},
+			{ "martix"			,TestStlElementMatrix	},
+			{ "table"			,TestTable				},
+			{ "random_pool"		,TestRandomPool			},
+			{ "minimax"			,TestMinimax			},
+			{ "monte_carlo"		,TestMonteCarlo			}
 		};
 		void RunTest(FuncPair func_pair)
 		{

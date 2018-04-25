@@ -359,8 +359,8 @@ namespace gadt
 
 		private:
 
-			const size_t		_width;
-			const size_t		_height;
+			size_t				_width;
+			size_t				_height;
 			ElementSet			_elements;
 			std::vector<Column> _column;
 			std::vector<Row>	_row;
@@ -399,39 +399,6 @@ namespace gadt
 			}
 
 		public:
-
-			//constructor function
-			ElementMatrix(size_t width, size_t height, const_reference elem = Element()) :
-				_width(width),
-				_height(height),
-				_elements(width, std::vector<T>(height, elem))
-			{
-				init_column_and_row();
-			}
-
-			//constructor function with initializer list.
-			template<typename ParamType>
-			ElementMatrix(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<ParamType>> list) :
-				_width(column_size),
-				_height(row_size),
-				_elements(column_size, std::vector<T>(row_size, Element()))
-			{
-				init_column_and_row();
-				size_t y = 0;
-				for (auto row : list)
-				{
-					size_t x = 0;
-					for (auto value : row)
-					{
-						if (x < _width && y < _height)
-						{
-							((_elements[x])[y]) = Element(value);
-						}
-						x++;
-					}
-					y++;
-				}
-			}
 
 			//get number of rows.
 			inline size_t height() const 
@@ -473,7 +440,7 @@ namespace gadt
 			}
 
 			//set element.
-			void set_element(const_reference elem)
+			inline void set_element(const_reference elem)
 			{
 				for (std::vector<Element>& row : _elements)
 					for (Element& e : row)
@@ -481,27 +448,27 @@ namespace gadt
 			}
 
 			//set element.
-			void set_element(const_reference elem, size_t x, size_t y)
+			inline void set_element(const_reference elem, size_t x, size_t y)
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x, y), "out of range.");
 				(_elements[x])[y] = elem;
 			}
 
 			//set element.
-			void set_element(const_reference elem, UnsignedCoordinate coord)
+			inline void set_element(const_reference elem, UnsignedCoordinate coord)
 			{
 				set_element(elem, coord.x, coord.y);
 			}
 
 			//set row as same element.
-			void set_row(size_t row_index, const_reference elem)
+			inline void set_row(size_t row_index, const_reference elem)
 			{
 				for (pointer elem_ptr : get_row(row_index))
 					*elem_ptr = elem;
 			}
 
 			//set row by init list.
-			void set_row(size_t row_index, InitList list)
+			inline void set_row(size_t row_index, InitList list)
 			{
 				size_t i = 0;
 				for (const_reference elem : list)
@@ -515,14 +482,14 @@ namespace gadt
 			}
 
 			//set column as same element.
-			void set_column(size_t column_index, const_reference elem)
+			inline void set_column(size_t column_index, const_reference elem)
 			{
 				for (pointer elem_ptr : get_column(column_index))
 					*elem_ptr = elem;
 			}
 
 			//set column bt init list.
-			void set_column(size_t column_index, InitList list)
+			inline void set_column(size_t column_index, InitList list)
 			{
 				size_t i = 0;
 				for (const_reference elem : list)
@@ -558,13 +525,13 @@ namespace gadt
 			}
 
 			//get iterator begin.
-			Iter begin() const
+			inline Iter begin() const
 			{
 				return Iter({ 0, 0 }, width(), height());
 			}
 
 			//get iterator end.
-			Iter end() const
+			inline Iter end() const
 			{
 				return Iter({ 0, height() }, width(), height());
 			}
@@ -574,6 +541,123 @@ namespace gadt
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(coord.x, coord.y), "out of row range.");
 				return (_elements[coord.x])[coord.y];
+			}
+
+		public:
+
+			//constructor function
+			ElementMatrix(size_t width, size_t height, const_reference elem = Element()) :
+				_width(width),
+				_height(height),
+				_elements(width, std::vector<T>(height, elem))
+			{
+				init_column_and_row();
+			}
+
+			//constructor function with initializer list.
+			template<typename ParamType>
+			ElementMatrix(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<ParamType>> list) :
+				_width(column_size),
+				_height(row_size),
+				_elements(column_size, std::vector<T>(row_size, Element()))
+			{
+				init_column_and_row();
+				size_t y = 0;
+				for (auto row : list)
+				{
+					size_t x = 0;
+					for (auto value : row)
+					{
+						if (x < _width && y < _height)
+						{
+							((_elements[x])[y]) = Element(value);
+						}
+						x++;
+					}
+					y++;
+				}
+			}
+
+			//increase rows.
+			void IncreaseRow(size_t row_num, Element elem = Element())
+			{
+				for (size_t i = 0; i < row_num; i++)
+				{
+					Row new_row;
+					for (std::vector<Element>& column : _elements)
+					{
+						column.push_back(elem);//add new element in the end of each column.
+						new_row.push_back(&column.back());
+					}
+					_row.push_back(new_row);
+					_height++;
+				}
+			}
+
+			//decrease rows.
+			void DecreaseRow(size_t row_num)
+			{
+				if (_height > row_num)
+					_height -= row_num;
+				else
+					_height = 0;
+				_row.resize(_height);
+				for (std::vector<Element>& column : _elements)
+					column.resize(_height);
+			}
+
+			//increase column
+			void IncreaseColumn(size_t column_num, Element elem = Element())
+			{
+				for (size_t i = 0; i < column_num; i++)
+				{
+					_elements.push_back(std::vector<Element>(_height, elem));
+					Column new_column;
+					for (size_t y = 0; y < _height; y++)
+						new_column.push_back(&_elements.back()[y]);
+					_column.push_back(new_column);
+					_width++;
+				}
+			}
+
+			//decrease column
+			void DecreaseColumn(size_t column_num)
+			{
+				if (_width > column_num)
+					_width -= column_num;
+				else
+					_width = 0;
+				_column.resize(_width);
+				_elements.resize(_width);
+			}
+
+			//resize the martix.
+			void Resize(size_t new_width, size_t new_height)
+			{
+				if (new_height > _height)
+					IncreaseRow(new_height - _height);
+				else if (_height > new_height)
+					DecreaseRow(_height - new_height);
+
+				if (new_width > _width)
+					IncreaseColumn(new_width - _width);
+				else if (new_width < _width)
+					DecreaseColumn(_width - new_width);
+			}
+
+			//print the martix as string.
+			void Print(std::function<std::string(const Element&)> trans_func) const
+			{
+				for (size_t y = 0; y < _height; y++)
+				{
+					for (size_t x = 0; x < _width; x++)
+					{
+						std::cout << trans_func(element(x, y));
+						std::cout << " ";
+					}
+					std::cout << std::endl;
+				}
+				std::cout << std::endl;
 			}
 		};
 

@@ -363,6 +363,9 @@ namespace gadt
 			}
 		};
 
+		//default width of each column of console table.
+		const size_t DEFAULT_TABLE_WIDTH = 2;
+
 		//console table
 		class ConsoleTable
 		{
@@ -493,29 +496,8 @@ namespace gadt
 			}
 
 		public:
-			//constructor function
-			ConsoleTable(size_t column_size, size_t row_size) :
-				_cells(column_size, row_size),
-				_column_width(column_size, 2),
-				_enable_title(false)
-			{
-			}
 
-			//constructor function with initializer list(cell).
-			ConsoleTable(size_t column_size, size_t row_size, std::initializer_list<InitList> list):
-				_cells(column_size, row_size, list),
-				_column_width(column_size, 2),
-				_enable_title(false)
-			{
-			}
-
-			//constructor function with initializer list(string).
-			ConsoleTable(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<std::string>> list) :
-				_cells(column_size, row_size, list),
-				_column_width(column_size, 2),
-				_enable_title(false)
-			{
-			}
+			
 
 			//get number of rows.
 			inline size_t number_of_rows() const
@@ -567,21 +549,21 @@ namespace gadt
 			}
 
 			//set width for all columns
-			void set_width(size_t width)
+			inline void set_width(size_t width)
 			{
 				for (auto& value : _column_width)
 					value = width;
 			}
 
 			//set width for appointed column
-			void set_width(size_t column, size_t width)
+			inline void set_width(size_t column, size_t width)
 			{
 				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, column >= number_of_columns(), "TABLE02: out of column range.");
 				_column_width[column] = width;
 			}
 
 			//set width by initializer list
-			void set_width(std::initializer_list<size_t> width_list)
+			inline void set_width(std::initializer_list<size_t> width_list)
 			{
 				size_t i = 0;
 				for (size_t width : width_list)
@@ -641,8 +623,48 @@ namespace gadt
 				return ss.str();
 			}
 
+			//get cell reference by coordinate
+			reference operator[](UnsignedCoordinate coord)
+			{
+				return _cells[coord];
+			}
+
+		public:
+
+			//default constructor.
+			ConsoleTable() :
+				_cells(0, 0),
+				_column_width(0, DEFAULT_TABLE_WIDTH),
+				_enable_title(false)
+			{
+			}
+
+			//constructor function
+			ConsoleTable(size_t column_size, size_t row_size) :
+				_cells(column_size, row_size),
+				_column_width(column_size, DEFAULT_TABLE_WIDTH),
+				_enable_title(false)
+			{
+			}
+
+			//constructor function with initializer list(cell).
+			ConsoleTable(size_t column_size, size_t row_size, std::initializer_list<InitList> list) :
+				_cells(column_size, row_size, list),
+				_column_width(column_size, DEFAULT_TABLE_WIDTH),
+				_enable_title(false)
+			{
+			}
+
+			//constructor function with initializer list(string).
+			ConsoleTable(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<std::string>> list) :
+				_cells(column_size, row_size, list),
+				_column_width(column_size, DEFAULT_TABLE_WIDTH),
+				_enable_title(false)
+			{
+			}
+
 			//print table.
-			void print(FrameMode frame_mode = ENABLE_FRAME, IndexMode index_mode = DISABLE_INDEX)
+			void Print(FrameMode frame_mode = ENABLE_FRAME, IndexMode index_mode = DISABLE_INDEX)
 			{
 				CellOutputFunc callback = [](const TableCell& c, size_t max_width, std::ostream& os)->void {
 					console::Cprintf(c.to_string(max_width), c.color);
@@ -650,10 +672,74 @@ namespace gadt
 				BasicOutput(std::cout, callback, frame_mode, index_mode);
 			}
 
-			//get cell reference by coordinate
-			reference operator[](UnsignedCoordinate coord)
+			//increase row
+			void IncreaseRow(size_t row_number)
 			{
-				return _cells[coord];
+				_cells.IncreaseRow(row_number);
+			}
+
+			//decrease row
+			void DecreaseRow(size_t row_number)
+			{
+				_cells.DecreaseRow(row_number);
+			}
+
+			//increase column
+			void IncreaseColumn(size_t column_number)
+			{
+				_cells.IncreaseColumn(column_number);
+			}
+
+			//decrease column
+			void DecreaseColumn(size_t column_number)
+			{
+				_cells.DecreaseColumn(column_number);
+			}
+
+			//resize the cells.
+			void Resize(size_t column_size, size_t row_size)
+			{
+				_cells.Resize(column_size, row_size);
+			}
+
+			//load from stl::RectangeArray
+			template<typename T, size_t WIDTH, size_t HEIGHT>
+			void LoadRectangularArray(const stl::RectangularArray<T, WIDTH, HEIGHT>& rec_array, std::function<std::string(const T&)> trans_func)
+			{
+				Resize(0, 0);
+				Resize(WIDTH, HEIGHT);
+				for (auto coord : rec_array)
+					_cells[coord] = TableCell(trans_func(rec_array[coord]));
+			}
+
+			//load from stl::RectangeArray
+			template<typename T, size_t WIDTH, size_t HEIGHT>
+			void LoadRectangularArray(const stl::RectangularArray<T, WIDTH, HEIGHT>& rec_array, std::function<TableCell(const T&)> trans_func)
+			{
+				Resize(0, 0);
+				Resize(WIDTH, HEIGHT);
+				for (auto coord : rec_array)
+					_cells[coord] = trans_func(rec_array[coord]);
+			}
+
+			//load from stl::RectangeArray
+			template<typename T>
+			void LoadElementMartix(const stl::ElementMatrix<T>& martix, std::function<std::string(const T&)> trans_func)
+			{
+				Resize(0, 0);
+				Resize(martix.width(), martix.height());
+				for (auto coord : martix)
+					_cells[coord] = TableCell(trans_func(martix[coord]));
+			}
+
+			//load from stl::RectangeArray
+			template<typename T>
+			void LoadElementMartix(const stl::ElementMatrix<T>& martix, std::function<TableCell(const T&)> trans_func)
+			{
+				Resize(0, 0);
+				Resize(martix.width(), martix.height());
+				for (auto coord : martix)
+					_cells[coord] = trans_func(martix[coord]);
 			}
 		};
 	}
