@@ -145,7 +145,7 @@ namespace gadt
 						table[coord] = { ToString((size_t)p + 1), console::RED, log::ALIGN_MIDDLE };
 				}
 			}
-			table.print(log::ENABLE_FRAME, log::INDEX_FROM_ZERO);
+			table.Print(log::ENABLE_FRAME, log::INDEX_FROM_ZERO);
 			std::cout << "    >> Roll = " << (int)roll_result() + 1 << std::endl;
 			std::cout << "    >> Piece Flag = " << _piece_flag.to_string().substr(52,12) << std::endl;
 		}

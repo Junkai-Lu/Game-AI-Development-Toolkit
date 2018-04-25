@@ -105,7 +105,7 @@ namespace gadt
 					tb.set_cell({ "+" }, coord);
 				}
 			}
-			tb.print(log::DISABLE_FRAME, log::INDEX_FROM_ZERO);
+			tb.Print(log::DISABLE_FRAME, log::INDEX_FROM_ZERO);
 		}
 
 		void PrintRenjuActions(const RenjuState& state, RenjuActionList action_list)
