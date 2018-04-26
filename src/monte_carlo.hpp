@@ -81,7 +81,7 @@ namespace gadt
 				tb.set_cell_in_row(index++, { { "enable_action_policy" },{ ToString(enable_action_policy) } });
 				tb.set_cell_in_row(index++, { { "no_winner_index" },{ ToString(no_winner_index) } });
 				tb.set_cell_in_row(index++, { { "simulation_warning_length" },{ ToString(simulation_warning_length) } });
-				return tb.output_string();
+				return tb.ConvertToString();
 			}
 		};
 
@@ -428,7 +428,7 @@ namespace gadt
 						{ ToString(root.win_time()) },
 						{ ToString(best_node_index) }
 					});
-					logger() << tb.output_string() << std::endl;
+					logger() << tb.ConvertToString() << std::endl;
 				}
 
 				return action_list[best_node_index];

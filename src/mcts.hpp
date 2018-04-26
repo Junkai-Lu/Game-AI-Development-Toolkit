@@ -82,7 +82,7 @@ namespace gadt
 				tb.set_cell_in_row(3, { { "max_node_per_thread" },		{ ToString(max_node_per_thread) } });
 				tb.set_cell_in_row(4, { { "no_winner_index" },			{ ToString(no_winner_index) } });
 				tb.set_cell_in_row(5, { { "simulation_warning_length" },{ ToString(simulation_warning_length) } });
-				return tb.output_string();
+				return tb.ConvertToString();
 			}
 		};
 
@@ -746,7 +746,7 @@ namespace gadt
 						{ ToString(total_tree_size) },
 						{ ToString(best_node_index) } 
 					});
-					logger() << tb.output_string() << std::endl;
+					logger() << tb.ConvertToString() << std::endl;
 				}
 
 				GADT_CHECK_WARNING(is_debug(), root_actions.size() == 0, "MCTS102: best value for root node equal to 0.");

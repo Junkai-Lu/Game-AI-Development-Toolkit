@@ -98,8 +98,8 @@ namespace gadt
 			};
 			for (size_t i = 0; i < 6; i++)
 			{
-				_board.set_element(red_coord[i], red[i] - 1);
-				_board.set_element(blue_coord[i], blue[i] + 5);
+				_board.set_element(red[i] - 1, red_coord[i]);
+				_board.set_element(blue[i] + 5, blue_coord[i]);
 				_piece_coord[i] = red_coord[i];
 				_piece_coord[i + 6] = blue_coord[i];
 			}

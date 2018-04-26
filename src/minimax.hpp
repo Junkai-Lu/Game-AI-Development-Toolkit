@@ -77,7 +77,7 @@ namespace gadt
 				tb.set_cell_in_row(2, { { "ab_prune_enabled" },	{ ToString(ab_prune_enabled) } });
 				tb.set_cell_in_row(3, { { "no_winner_index" },	{ ToString(no_winner_index) } });
 				tb.set_cell_in_row(4, { { "original_eval" },	{ ToString(original_eval) } });
-				return tb.output_string();
+				return tb.ConvertToString();
 			}
 		};
 
@@ -372,7 +372,7 @@ namespace gadt
 							{ i == best_action_index ? "Yes ":"  "}
 						});
 					}
-					logger() << tb.output_string(console::TABLE_FRAME_ENABLE, console::TABLE_INDEX_DISABLE) << std::endl;
+					logger() << tb.ConvertToString(console::TABLE_FRAME_ENABLE, console::TABLE_INDEX_DISABLE) << std::endl;
 				}
 
 				if (json_output_enabled())

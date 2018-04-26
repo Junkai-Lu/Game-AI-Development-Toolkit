@@ -21,6 +21,7 @@
 
 #include "gadtlib.h"
 #include "gadt_memory.hpp"
+#include "gadt_log.hpp"
 
 #pragma once
 
@@ -253,38 +254,7 @@ namespace gadt
 		};
 
 		/*
-		* RandomPoolElement the basic part of RandomPool.
-		*
-		* [T] is the type of element.
-		*/
-		template<typename T>
-		struct RandomPoolElement
-		{
-			//left is close and right is open. 
-			const size_t weight;
-			const size_t left;
-			const size_t right;
-			T data;
-
-			template<class... Types>
-			RandomPoolElement(size_t _weight, size_t _left, size_t _right, Types&&... args) :
-				weight(_weight),
-				left(_left),
-				right(_right),
-				data(std::forward<Types>(args)...)
-			{
-			}
-
-			std::string range() const
-			{
-				std::stringstream ss;
-				ss << "[ " << left << " , " << right << " )";
-				return ss.str();
-			}
-		};
-
-		/*
-		* RectangularArrayIter is the iterator of matrix container.
+		* MatrixIter is the iterator of matrix containers which include StaticMatrix and DynamicMatrix.
 		*/
 		class MatrixIter
 		{
@@ -323,12 +293,12 @@ namespace gadt
 		};
 
 		/*
-		* ElementMatrix is a flexiable matrix.
+		* DynamicMatrix is a flexiable matrix.
 		*
 		* [T] is the type of element.
 		*/
 		template<typename T>
-		class ElementMatrix
+		class DynamicMatrix
 		{
 		private:
 			using pointer = T*;
@@ -340,6 +310,13 @@ namespace gadt
 			using Column = Row;
 			using InitList = std::initializer_list<T>;
 			using Iter = MatrixIter;
+
+		public:
+
+			using ElementToJsonFunc = std::function<json11::Json(const_reference)>;
+			using ElementToStringFunc = std::function<std::string(const_reference)>;
+			using StringToElementFunc = std::function<Element(const std::string&)>;
+			using JsonToElementFunc = std::function<Element(const json11::Json)>;
 
 		private:
 
@@ -379,7 +356,7 @@ namespace gadt
 			//return true if the coordinate is legal
 			inline bool is_legal_coordinate(size_t x, size_t y) const
 			{
-				return x < _width && y < _height;
+				return (x < _width) && (y < _height);
 			}
 
 		public:
@@ -529,8 +506,18 @@ namespace gadt
 
 		public:
 
+			//default constructor function.
+			DynamicMatrix():
+				_width(0),
+				_height(0),
+				_elements(),
+				_column(),
+				_row()
+			{
+			}
+
 			//constructor function
-			ElementMatrix(size_t width, size_t height, const_reference elem = Element()) :
+			DynamicMatrix(size_t width, size_t height, const_reference elem = Element()) :
 				_width(width),
 				_height(height),
 				_elements(width, std::vector<T>(height, elem))
@@ -540,7 +527,7 @@ namespace gadt
 
 			//constructor function with initializer list.
 			template<typename ParamType>
-			ElementMatrix(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<ParamType>> list) :
+			DynamicMatrix(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<ParamType>> list) :
 				_width(column_size),
 				_height(row_size),
 				_elements(column_size, std::vector<T>(row_size, Element()))
@@ -615,7 +602,7 @@ namespace gadt
 				_elements.resize(_width);
 			}
 
-			//resize the martix.
+			//resize the matrix.
 			void Resize(size_t new_width, size_t new_height)
 			{
 				if (new_height > _height)
@@ -629,14 +616,14 @@ namespace gadt
 					DecreaseColumn(_width - new_width);
 			}
 
-			//print the martix as string.
-			void Print(std::function<std::string(const Element&)> trans_func) const
+			//print the matrix as string.
+			void Print(ElementToStringFunc ElemToString) const
 			{
 				for (size_t y = 0; y < _height; y++)
 				{
 					for (size_t x = 0; x < _width; x++)
 					{
-						std::cout << trans_func(element(x, y));
+						std::cout << ElemToString(element(x, y));
 						std::cout << " ";
 					}
 					std::cout << std::endl;
@@ -644,30 +631,134 @@ namespace gadt
 				std::cout << std::endl;
 			}
 
-			////convert to JSON object in which each element in the martix need to be convert to a string.
-			//json11::Json ConvertToJsonObj(std::function<std::string(const T&)> trans_func)
-			//{
-			//	
-			//}
+			//convert to JSON object in which each element in the matrix need to be convert to a JSON object.
+			json11::Json ConvertToJsonObj(ElementToJsonFunc ElemToJson) const
+			{
+				std::vector<json11::Json> json;
+				for (size_t row_index = 0; row_index < _height; row_index++)
+				{
+					std::vector<json11::Json> row_json;
+					for (size_t column_index = 0; column_index < _width; column_index++)
+						row_json.push_back(ElemToJson(element(column_index, row_index)));
+					json.push_back(json11::Json::array(row_json));
+				}
+				return json11::Json::array(json);
+			}
 
-			////convert to JSON object in which each element in the martix need to be convert to a JSON object.
-			//json11::Json ConvertToJsonObj(std::function<json11::Json(const T&) trans_func>)
-			//{
+			//convert to JSON object in which each element in the matrix need to be convert to a string.
+			json11::Json ConvertToJsonObj(ElementToStringFunc ElemToString) const
+			{
+				std::function<json11::Json(const_reference)> ElemaToJson = [&](const_reference value)->json11::Json {
+					return json11::Json{ ElemToString(value) };
+				};
+				return ConvertToJsonObj(ElemaToJson);
+			}
 
-			//}
+			//load from JSON string. return true if load success.
+			bool LoadFromJson(std::string json_str, JsonToElementFunc JsonToElem)
+			{
+				std::string err;
+				json11::Json json = json11::Json::parse(json_str, err);
+				if (err != "")
+					return false;
+				if (json.is_array())
+				{
+					if (json.array_items().size() > 0)
+					{
+						size_t row_count = json.array_items().size();
+						if (json.array_items()[0].is_array())
+						{
+							if (json.array_items()[0].array_items().size() > 0)
+							{
+								size_t column_count = json.array_items()[0].array_items().size();
+								DynamicMatrix<T> temp(column_count, row_count);
+								for (size_t row_index = 0; row_index < row_count; row_index++)
+								{
+									const json11::Json& row_json = json.array_items()[row_index];
 
-			
+									//return false if the json object is not array.
+									if (row_json.is_array() == false)
+										return false;
+									//return false if the size of the json array is incorrect. 
+									if (row_json.array_items().size() != column_count)
+										return false;
+									for (size_t column_index = 0; column_index < column_count; column_index++)
+									{
+										const json11::Json value_json = row_json.array_items()[column_index];
+										temp.set_element(JsonToElem(value_json), column_index, row_index);
+									}
+								}
+								*this = temp;
+								return true;
+							}
+						}
+					}
+					else
+					{
+						Resize(0, 0);//empty matrix.
+						return true;
+					}
+				}
+				return false;
+			}
+
+			//load from JSON string. return true if load success.
+			bool LoadFromJson(std::string json_str, StringToElementFunc StringToElem)
+			{
+				std::string err;
+				json11::Json json = json11::Json::parse(json_str, err);
+				if (err != "")
+					return false;
+				if (json.is_array())
+				{
+					if (json.array_items().size() > 0)
+					{
+						size_t row_count = json.array_items().size();
+						if (json.array_items()[0].is_array())
+						{
+							if (json.array_items()[0].array_items().size() > 0)
+							{
+								size_t column_count = json.array_items()[0].array_items().size();
+								DynamicMatrix<T> temp(column_count, row_count);
+								for (size_t row_index = 0; row_index < row_count; row_index++)
+								{
+									const json11::Json& row_json = json.array_items()[row_index];
+									if (row_json.is_array() == false)
+										return false;//return false if the json object is not array.
+									if (row_json.array_items().size() != column_count)
+										return false;//return false if the size of the json array is incorrect. 
+									for (size_t column_index = 0; column_index < column_count; column_index++)
+									{
+										const json11::Json value_json = row_json.array_items()[column_index];
+										if (value_json.is_string() == false)
+											return false;
+										temp.set_element(StringToElem(value_json.string_value()), column_index, row_index);
+									}
+								}
+								*this = temp;
+								return true;
+							}
+						}
+					}
+					else
+					{
+						Resize(0, 0);//empty matrix.
+						return true;
+					}
+				}
+				return false;
+			}
 		};
 
 		/*
-		* RectangularArray offers a two-dimensional array.
+		* StaticMatrix offers a two-dimensional array.
 		*
 		* [T] is the type of element.
 		* [_WIDTH] is the width of matrix.
 		* [_HEIGHT] is the height of matrix.
 		*/
-		template<typename T, size_t _WIDTH, size_t _HEIGHT>
-		class RectangularArray
+		template<typename T, size_t _WIDTH, size_t _HEIGHT, typename std::enable_if<(_WIDTH > 0 && _HEIGHT > 0), int>::type = 0>
+		class StaticMatrix
 		{
 		private:
 			using pointer = T*;
@@ -679,6 +770,13 @@ namespace gadt
 			using InitList = std::initializer_list<T>;
 			using Iter = MatrixIter;
 
+		public:
+
+			using ElementToJsonFunc = std::function<json11::Json(const_reference)>;
+			using ElementToStringFunc = std::function<std::string(const_reference)>;
+			using StringToElementFunc = std::function<Element(const std::string&)>;
+			using JsonToElementFunc = std::function<Element(const json11::Json)>;
+
 		private:
 
 			Element _elements[_WIDTH][_HEIGHT];
@@ -688,7 +786,7 @@ namespace gadt
 			//return true if the coordinate is legal.
 			inline bool is_legal_coordinate(size_t x, size_t y) const
 			{
-				return x < _WIDTH && y < _HEIGHT;
+				return (x < _WIDTH) && (y < _HEIGHT);
 			}
 
 			//return true if the coordinate is legal.
@@ -697,16 +795,7 @@ namespace gadt
 				return is_legal_coordinate(coord.x, coord.y);
 			}
 
-			//constructor function with default elements.
-			RectangularArray() = default;
-
-			//constructor function with appointed elements.
-			RectangularArray(Element elem)
-			{
-				for (auto coord : *this)
-					set_element(coord, elem);
-			}
-
+			
 			//get height, which is the number of rows. 
 			inline constexpr size_t height() const
 			{
@@ -745,16 +834,16 @@ namespace gadt
 			}
 
 			//set element
-			inline void set_element(size_t x, size_t y, const_reference elem)
+			inline void set_element(const_reference elem, size_t x, size_t y)
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x, y), "out of row range.");
 				_elements[x][y] = elem;
 			}
 
 			//set element
-			inline void set_element(UnsignedCoordinate coord, const_reference elem)
+			inline void set_element(const_reference elem, UnsignedCoordinate coord)
 			{
-				set_element(coord.x, coord.y, elem);
+				set_element(elem, coord.x, coord.y);
 			}
 
 			//return the Row which include pointers to elements in the row.
@@ -843,6 +932,190 @@ namespace gadt
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(coord.x, coord.y), "out of row range.");
 				return _elements[coord.x][coord.y];
+			}
+
+		public:
+
+			//constructor function with default elements.
+			StaticMatrix()
+			{
+			}
+
+			//constructor function with appointed elements.
+			StaticMatrix(Element elem)
+			{
+				for (auto coord : *this)
+					set_element(elem, coord);
+			}
+
+			//print the matrix as string.
+			void Print(ElementToStringFunc ElemToString) const
+			{
+				for (size_t y = 0; y < _HEIGHT; y++)
+				{
+					for (size_t x = 0; x < _WIDTH; x++)
+					{
+						std::cout << ElemToString(element(x, y));
+						std::cout << " ";
+					}
+					std::cout << std::endl;
+				}
+				std::cout << std::endl;
+			}
+
+			//convert to JSON object in which each element in the matrix need to be convert to a JSON object.
+			json11::Json ConvertToJsonObj(ElementToJsonFunc ElemToJson) const
+			{
+				std::vector<json11::Json> json;
+				for (size_t row_index = 0; row_index < _HEIGHT; row_index++)
+				{
+					std::vector<json11::Json> row_json;
+					for (size_t column_index = 0; column_index < _WIDTH; column_index++)
+						row_json.push_back(ElemToJson(element(column_index, row_index)));
+					json.push_back(json11::Json::array(row_json));
+				}
+				return json11::Json::array(json);
+			}
+
+			//convert to JSON object in which each element in the matrix need to be convert to a string.
+			json11::Json ConvertToJsonObj(ElementToStringFunc ElemToString) const
+			{
+				std::function<json11::Json(const_reference)> ElemaToJson = [&](const_reference value)->json11::Json {
+					return json11::Json{ ElemToString(value) };
+				};
+				return ConvertToJsonObj(ElemaToJson);
+			}
+
+			//load from JSON string. return true if load success.
+			bool LoadFromJson(std::string json_str, JsonToElementFunc JsonToElem)
+			{
+				std::string err;
+				json11::Json json = json11::Json::parse(json_str, err);
+				if (err != "")
+					return false;
+				if (json.is_array())
+				{
+					if (json.array_items().size() == _HEIGHT)
+					{
+						if (json.array_items()[0].is_array())
+						{
+							if (json.array_items()[0].array_items().size() > 0)
+							{
+								StaticMatrix<T, _WIDTH, _HEIGHT> temp;
+								for (size_t row_index = 0; row_index < _HEIGHT; row_index++)
+								{
+									const json11::Json& row_json = json.array_items()[row_index];
+									if (row_json.is_array() == false)
+										return false;//return false if the json object is not array.
+									if (row_json.array_items().size() != _WIDTH)
+										return false;//return false if the size of the json array is incorrect. 
+									for (size_t column_index = 0; column_index < _WIDTH; column_index++)
+									{
+										const json11::Json value_json = row_json.array_items()[column_index];
+										temp.set_element(JsonToElem(value_json), column_index, row_index);
+									}
+								}
+								*this = temp;
+								return true;
+							}
+						}
+					}
+				}
+				return false;
+			}
+
+			//load from JSON string. return true if load success.
+			bool LoadFromJson(std::string json_str, StringToElementFunc StringToElem)
+			{
+				std::string err;
+				json11::Json json = json11::Json::parse(json_str, err);
+				if (err != "")
+					return false;
+				if (json.is_array())
+				{
+					if (json.array_items().size() == _HEIGHT)
+					{
+						if (json.array_items()[0].is_array())
+						{
+							if (json.array_items()[0].array_items().size() > 0)
+							{
+								StaticMatrix<T, _WIDTH, _HEIGHT> temp;
+								for (size_t row_index = 0; row_index < _HEIGHT; row_index++)
+								{
+									const json11::Json& row_json = json.array_items()[row_index];
+									if (row_json.is_array() == false)
+										return false; //return false if the json object is not array.
+									if (row_json.array_items().size() != _WIDTH)
+										return false;//return false if the size of the json array is incorrect. 
+									for (size_t column_index = 0; column_index < _WIDTH; column_index++)
+									{
+										const json11::Json value_json = row_json.array_items()[column_index];
+										if (value_json.is_string() == false)
+											return false;
+										temp.set_element(StringToElem(value_json.string_value()), column_index, row_index);
+									}
+								}
+								*this = temp;
+								return true;
+							}
+						}
+					}
+				}
+				return false;
+			}
+
+			//convert to dynamic matrix.
+			DynamicMatrix<T> ToDynamic()
+			{
+				DynamicMatrix<T> matrix(_WIDTH, _HEIGHT, element(0, 0));
+				for (auto coord : *this)
+					matrix.set_element(element(coord), coord);
+				return matrix;
+			}
+
+			////return the submatrix of this matrix.
+			//template<size_t AREA_WIDTH, size_t AREA_HEIGHT, typename std::enable_if<((AREA_WIDTH <= _WIDTH) && (AREA_HEIGHT <= _HEIGHT)), int>::type = 0>
+			//StaticMatrix<T, AREA_WIDTH, AREA_HEIGHT> SubMatrix(size_t x, size_t y) const
+			//{
+			//	return StaticMatrix<T, AREA_WIDTH, AREA_HEIGHT>();
+			//}
+
+			////return the submatrix of this matrix.
+			//template<size_t AREA_WIDTH, size_t AREA_HEIGHT, typename std::enable_if<((AREA_WIDTH <= _WIDTH) && (AREA_HEIGHT <= _HEIGHT)), int>::type = 0>
+			//StaticMatrix<T, AREA_WIDTH, AREA_HEIGHT> SubMatrix(UnsignedCoordinate coord) const
+			//{
+			//	return SubArea(coord.x, coord.y);
+			//}
+		};
+
+		/*
+		* RandomPoolElement the basic part of RandomPool.
+		*
+		* [T] is the type of element.
+		*/
+		template<typename T>
+		struct RandomPoolElement
+		{
+			//left is close and right is open. 
+			const size_t weight;
+			const size_t left;
+			const size_t right;
+			T data;
+
+			template<class... Types>
+			RandomPoolElement(size_t _weight, size_t _left, size_t _right, Types&&... args) :
+				weight(_weight),
+				left(_left),
+				right(_right),
+				data(std::forward<Types>(args)...)
+			{
+			}
+
+			std::string range() const
+			{
+				std::stringstream ss;
+				ss << "[ " << left << " , " << right << " )";
+				return ss.str();
 			}
 		};
 

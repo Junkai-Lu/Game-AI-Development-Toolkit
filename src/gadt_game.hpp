@@ -117,8 +117,8 @@ namespace gadt
 			using Iter = stl::MatrixIter;
 
 		private:
-			stl::RectangularArray<AgentIndex, _WIDTH, _HEIGHT> _piece;
-			stl::RectangularArray<bool, _WIDTH, _HEIGHT> _action_range;
+			stl::StaticMatrix<AgentIndex, _WIDTH, _HEIGHT> _piece;
+			stl::StaticMatrix<bool, _WIDTH, _HEIGHT> _action_range;
 			AgentIndex _winner;
 			AgentIndex _next_player;
 			size_t _piece_count;
@@ -184,10 +184,10 @@ namespace gadt
 
 			void TakeAction(const MnkGameAction& action)
 			{
-				_piece.set_element(action.coord, action.piece);
+				_piece.set_element(action.piece, action.coord);
 				_next_player = AgentIndex(-action.piece);
 				_winner = JudgeWinnerFromPiece(action.coord);
-				_action_range.set_element(action.coord, false);
+				_action_range.set_element(false, action.coord);
 				_piece_count++;
 				SetActionRange(action.coord);
 			}

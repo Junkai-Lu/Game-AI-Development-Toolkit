@@ -567,36 +567,116 @@ namespace gadt
 			alloc.flush();
 			GADT_ASSERT(alloc.is_empty(), true);
 		}
-		void TestStlElementMatrix()
+		void TestStlDynamicMatrix()
 		{
-			stl::ElementMatrix<size_t> martix(4, 4);
-			for (auto coord : martix)
-				martix[coord] = coord.x * coord.y;
-			auto trans_func = [](size_t i)->std::string { return gadt::ToString(i); };
-			GADT_ASSERT(martix.element(3, 3), 9);
-			martix.IncreaseRow(5, 0);
-			GADT_ASSERT(martix.element(3, 8), 0);
-			GADT_ASSERT(martix.height(), 9);
-			martix.DecreaseRow(4);
-			GADT_ASSERT(martix.element(3, 4), 0);
-			GADT_ASSERT(martix.height(), 5);
-			martix.IncreaseColumn(3, 0);
-			GADT_ASSERT(martix.element(6, 3), 0);
-			GADT_ASSERT(martix.width(), 7);
-			martix.DecreaseColumn(4);
-			GADT_ASSERT(martix.width(), 3);
-			martix.DecreaseColumn(4);
-			GADT_ASSERT(martix.width(), 0);
-			martix.DecreaseRow(5);
-			GADT_ASSERT(martix.height(), 0);
-			martix.Resize(5, 5);
-			GADT_ASSERT(martix.element(4, 4), 0);
-			martix.Resize(4, 4);
-			GADT_ASSERT(martix.element(3, 3), 0);
+			stl::DynamicMatrix<size_t> matrix(4, 4);
+			for (auto coord : matrix)
+				matrix[coord] = coord.x * coord.y;
+			stl::DynamicMatrix<size_t>::ElementToStringFunc ElemToString = [](const size_t& i)->std::string { 
+				return gadt::ToString(i); 
+			};
+			stl::DynamicMatrix<size_t>::StringToElementFunc StringToElem = [](const std::string& str)->size_t { 
+				return (size_t)gadt::ToInt(str); 
+			};
+			stl::DynamicMatrix<size_t>::ElementToJsonFunc ElemToJson = [](const size_t& i)->json11::Json {
+				return json11::Json{ (int)i };
+			};
+			stl::DynamicMatrix<size_t>::JsonToElementFunc JsonToElem = [](const json11::Json& json)->size_t {
+				return (size_t)json.int_value();
+			};
+			std::string str_json = matrix.ConvertToJsonObj(ElemToString).dump();
+			//std::cout << str_json << std::endl;
+			matrix.IncreaseRow(1);
+			//matrix.Print(ElemToString);
+			GADT_ASSERT(matrix.LoadFromJson(str_json, StringToElem), true);
+			//matrix.Print(ElemToString);
+			std::string int_json = matrix.ConvertToJsonObj(ElemToJson).dump();
+			//std::cout << int_json << std::endl;
+			matrix.IncreaseRow(1);
+			//matrix.Print(ElemToString);
+			GADT_ASSERT(matrix.LoadFromJson(int_json, JsonToElem), true);
+			//matrix.Print(ElemToString);
+			GADT_ASSERT(matrix.element(3, 3), 9);
+			matrix.IncreaseRow(5, 0);
+			GADT_ASSERT(matrix.element(3, 8), 0);
+			GADT_ASSERT(matrix.height(), 9);
+			matrix.DecreaseRow(4);
+			GADT_ASSERT(matrix.element(3, 4), 0);
+			GADT_ASSERT(matrix.height(), 5);
+			matrix.IncreaseColumn(3, 0);
+			GADT_ASSERT(matrix.element(6, 3), 0);
+			GADT_ASSERT(matrix.width(), 7);
+			matrix.DecreaseColumn(4);
+			GADT_ASSERT(matrix.width(), 3);
+			matrix.DecreaseColumn(4);
+			GADT_ASSERT(matrix.width(), 0);
+			matrix.DecreaseRow(5);
+			GADT_ASSERT(matrix.height(), 0);
+			matrix.Resize(5, 5);
+			GADT_ASSERT(matrix.element(4, 4), 0);
+			matrix.Resize(4, 4);
+			GADT_ASSERT(matrix.element(3, 3), 0);
+			matrix.Resize(0, 0);
+			std::string json = matrix.ConvertToJsonObj(ElemToString).dump();
+			//std::cout << json << std::endl;
+			GADT_ASSERT(matrix.LoadFromJson(json, StringToElem), true);
+			matrix.Resize(5, 0);
+			json = matrix.ConvertToJsonObj(ElemToString).dump();
+			//std::cout << json << std::endl;
+			GADT_ASSERT(matrix.LoadFromJson(json, StringToElem), true);
+			matrix.Resize(0, 0);
+			json = matrix.ConvertToJsonObj(ElemToString).dump();
+			//std::cout << json << std::endl;
+			GADT_ASSERT(matrix.LoadFromJson(json, StringToElem), true);
+			matrix.Resize(5, 5);
+			GADT_ASSERT(matrix.LoadFromJson("[1]", StringToElem), false);
+			GADT_ASSERT(matrix.LoadFromJson("[[1]]", StringToElem), false);
+			GADT_ASSERT(matrix.LoadFromJson("[[\"1\"]]", StringToElem), true);
+			//matrix.Print(ElemToString);
+			GADT_ASSERT(matrix.width(), 1);
 		}
-		void TestStlRectangeArray()
+		void TestStlStaticMatrix()
 		{
+			using Matrix = stl::StaticMatrix<size_t, 4, 4>;
+			Matrix matrix;
+			for (auto coord : matrix)
+				matrix[coord] = coord.x * coord.y;
+			typename Matrix::ElementToStringFunc ElemToString = [](const size_t& i)->std::string {
+				return gadt::ToString(i);
+			};
+			typename Matrix::StringToElementFunc StringToElem = [](const std::string& str)->size_t {
+				return (size_t)gadt::ToInt(str);
+			};
+			typename Matrix::ElementToJsonFunc ElemToJson = [](const size_t& i)->json11::Json {
+				return json11::Json{ (int)i };
+			};
+			typename Matrix::JsonToElementFunc JsonToElem = [](const json11::Json& json)->size_t {
+				return (size_t)json.int_value();
+			};
+			std::string str_json = matrix.ConvertToJsonObj(ElemToString).dump();
+			//std::cout << str_json << std::endl;
+			//matrix.Print(ElemToString);
+			GADT_ASSERT(matrix.LoadFromJson(str_json, StringToElem), true);
+			//matrix.Print(ElemToString);
+			std::string int_json = matrix.ConvertToJsonObj(ElemToJson).dump();
+			//std::cout << int_json << std::endl;
+			//matrix.Print(ElemToString);
+			GADT_ASSERT(matrix.LoadFromJson(int_json, JsonToElem), true);
+			GADT_ASSERT(matrix.LoadFromJson("[1]", StringToElem), false);
+			GADT_ASSERT(matrix.LoadFromJson("[[1]]", StringToElem), false);
+			GADT_ASSERT(matrix.LoadFromJson("[[\"1\"]]", StringToElem), false);
+			GADT_ASSERT(matrix.LoadFromJson("[[\"1\"],[\"1\"],[\"1\"],[\"1\"]]", StringToElem), false);
+			//matrix.Print(ElemToString);
+			GADT_ASSERT(matrix.width(), 4);
 
+			stl::StaticMatrix<size_t, 1, 4> matrix14;
+			std::string json = matrix14.ConvertToJsonObj(ElemToString).dump();
+			GADT_ASSERT(matrix.LoadFromJson(json, StringToElem), false);
+
+			stl::StaticMatrix<size_t, 4, 1> matrix41;
+			json = matrix41.ConvertToJsonObj(ElemToString).dump();
+			GADT_ASSERT(matrix.LoadFromJson(json, StringToElem), false);
+			
 		}
 		void TestTable()
 		{
@@ -617,7 +697,7 @@ namespace gadt
 			GADT_ASSERT(table.get_cell(2, 0).str, "hello");
 			GADT_ASSERT(table.get_cell(1, 2).str, "world");
 			//table.print();
-			//std::cout << table.output_string();
+			//std::cout << table.ConvertToString();
 
 		}
 		void TestMinimax()
@@ -689,7 +769,8 @@ namespace gadt
 			{ "allocator"		,TestStlAllocator		},
 			{ "linear_alloc"	,TestStlLinearAlloc		},
 			{ "list"			,TestStlList			},
-			{ "martix"			,TestStlElementMatrix	},
+			{ "static_matrix"	,TestStlStaticMatrix	},
+			{ "dynamic_matrix"	,TestStlDynamicMatrix	},
 			{ "table"			,TestTable				},
 			{ "random_pool"		,TestRandomPool			},
 			{ "minimax"			,TestMinimax			},

@@ -63,7 +63,7 @@ namespace gadt
 		class BtState
 		{
 		private:
-			using Board = stl::RectangularArray<BtPlayer, g_BT_WIDTH, g_BT_HEIGHT>;
+			using Board = stl::StaticMatrix<BtPlayer, g_BT_WIDTH, g_BT_HEIGHT>;
 
 		private:
 			Board _board;
