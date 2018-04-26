@@ -69,7 +69,7 @@ namespace gadt
 
 			std::string info() const override
 			{
-				log::ConsoleTable tb(2, 5);
+				console::Table tb(2, 5);
 				tb.set_width({ 12,6 });
 				tb.enable_title({ "MINIMAX SETTING" });
 				tb.set_cell_in_row(0, { { "timeout" },			{ ToString(timeout) } });
@@ -359,7 +359,7 @@ namespace gadt
 
 				if (log_enabled())
 				{
-					log::ConsoleTable tb(4, root.action_list().size() + 1);
+					console::Table tb(4, root.action_list().size() + 1);
 					tb.enable_title({ "MINIMAX RESULT" });
 					tb.set_cell_in_row(0, { {"Index" }, {"Action"},{"Eval"},{"Is Best"} });
 					tb.set_width({ 3,10,4,4 });
@@ -372,7 +372,7 @@ namespace gadt
 							{ i == best_action_index ? "Yes ":"  "}
 						});
 					}
-					logger() << tb.output_string(log::ENABLE_FRAME, log::DISABLE_INDEX) << std::endl;
+					logger() << tb.output_string(console::TABLE_FRAME_ENABLE, console::TABLE_INDEX_DISABLE) << std::endl;
 				}
 
 				if (json_output_enabled())

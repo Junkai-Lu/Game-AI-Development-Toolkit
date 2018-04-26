@@ -133,19 +133,19 @@ namespace gadt
 
 		void EwnState::Print() const
 		{
-			log::ConsoleTable table(g_WIDTH, g_HEIGHT);
+			console::Table table(g_WIDTH, g_HEIGHT);
 			for (auto coord : _board)
 			{
 				EwnPiece p = piece(coord);
 				if (p >= 0)
 				{
 					if (p >= 6)//blue
-						table[coord] = { ToString((size_t)p - 5), console::BLUE, log::ALIGN_MIDDLE };
+						table[coord] = { ToString((size_t)p - 5), console::COLOR_BLUE, console::TABLE_ALIGN_MIDDLE };
 					else
-						table[coord] = { ToString((size_t)p + 1), console::RED, log::ALIGN_MIDDLE };
+						table[coord] = { ToString((size_t)p + 1), console::COLOR_RED, console::TABLE_ALIGN_MIDDLE };
 				}
 			}
-			table.Print(log::ENABLE_FRAME, log::INDEX_FROM_ZERO);
+			table.Print(console::TABLE_FRAME_ENABLE, console::TABLE_INDEX_FROM_ZERO);
 			std::cout << "    >> Roll = " << (int)roll_result() + 1 << std::endl;
 			std::cout << "    >> Piece Flag = " << _piece_flag.to_string().substr(52,12) << std::endl;
 		}
@@ -250,10 +250,10 @@ namespace gadt
 					std::cout << "NO PLAYER" << std::endl;
 					break;
 				case gadt::ewn::RED:
-					console::Cprintf("RED\n", console::RED);
+					console::Cprintf("RED\n", console::COLOR_RED);
 					break;
 				case gadt::ewn::BLUE:
-					console::Cprintf("BLUE\n", console::BLUE);
+					console::Cprintf("BLUE\n", console::COLOR_BLUE);
 					break;
 				default:
 					break;

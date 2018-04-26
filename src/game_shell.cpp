@@ -174,9 +174,9 @@ namespace gadt
 		void GameShell::PrintDir() const
 		{
 			//print shell name.
-			console::Cprintf(GameShell::focus_game()->name(), console::PURPLE);
+			console::Cprintf(GameShell::focus_game()->name(), console::COLOR_PURPLE);
 			std::cout << " @ ";
-			//console::Cprintf(_name, console::YELLOW);
+			//console::Cprintf(_name, console::COLOR_YELLOW);
 
 			//print dir
 			bool is_first = false;
@@ -185,11 +185,11 @@ namespace gadt
 				if (is_first == true)
 				{
 					std::cout << "/";
-					console::Cprintf(page_name, console::GREEN);
+					console::Cprintf(page_name, console::COLOR_GREEN);
 				}
 				else
 				{
-					console::Cprintf(page_name, console::YELLOW);
+					console::Cprintf(page_name, console::COLOR_YELLOW);
 					is_first = true;
 				}
 			}
@@ -206,12 +206,12 @@ namespace gadt
 				{
 					std::cout << "/";
 				}
-				console::Cprintf(tip, console::GREEN);
+				console::Cprintf(tip, console::COLOR_GREEN);
 				std::cout << ": >> ";
 			}
 			else
 			{
-				console::Cprintf("ERROR: focus game not exist", console::PURPLE);
+				console::Cprintf("ERROR: focus game not exist", console::COLOR_PURPLE);
 			}
 		}
 
@@ -230,11 +230,11 @@ namespace gadt
 			console::SystemClear();
 			focus_page()->_info_func();
 			std::cout << ">> ";
-			console::Cprintf("[ Shell ", console::DEEP_YELLOW);
-			console::Cprintf("<" + focus_page()->_name + ">", console::YELLOW);
-			console::Cprintf(" ]\n", console::DEEP_YELLOW);
+			console::Cprintf("[ Shell ", console::COLOR_DEEP_YELLOW);
+			console::Cprintf("<" + focus_page()->_name + ">", console::COLOR_YELLOW);
+			console::Cprintf(" ]\n", console::COLOR_DEEP_YELLOW);
 			std::cout << ">> ";
-			console::Cprintf(std::string("use '") + std::string(define::g_HELP_COMMAND_NAME) + std::string("' to get more command\n\n"), console::DEEP_GREEN);
+			console::Cprintf(std::string("use '") + std::string(define::g_HELP_COMMAND_NAME) + std::string("' to get more command\n\n"), console::COLOR_DEEP_GREEN);
 		}
 
 		//initialize shell commands.

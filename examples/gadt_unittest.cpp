@@ -601,7 +601,7 @@ namespace gadt
 		void TestTable()
 		{
 			std::ios::sync_with_stdio(false);
-			log::ConsoleTable table(3, 5,{
+			console::Table table(3, 5,{
 				{ "1","2","3" },
 				{ "4","5","6" },
 				{ "7","8","9" },
@@ -611,8 +611,8 @@ namespace gadt
 			GADT_ASSERT(table.get_row(0).size(), 3);
 			GADT_ASSERT(table.get_column(0).size(), 5);
 			GADT_ASSERT(table.get_cell(1,0).str, "2");
-			table.set_cell_in_row(0, { "hello", console::BLUE, log::ALIGN_RIGHT });
-			table.set_cell_in_column(1, { "world", console::RED, log::ALIGN_MIDDLE });
+			table.set_cell_in_row(0, { "hello", console::COLOR_BLUE, console::TABLE_ALIGN_RIGHT });
+			table.set_cell_in_column(1, { "world", console::COLOR_RED, console::TABLE_ALIGN_MIDDLE });
 			GADT_ASSERT(table.get_cell(0, 0).str, "hello");
 			GADT_ASSERT(table.get_cell(2, 0).str, "hello");
 			GADT_ASSERT(table.get_cell(1, 2).str, "world");
@@ -698,12 +698,12 @@ namespace gadt
 		void RunTest(FuncPair func_pair)
 		{
 			cout << endl << ">> test start, target = ";
-			console::Cprintf(func_pair.first, console::GREEN);
+			console::Cprintf(func_pair.first, console::COLOR_GREEN);
 			auto t = timer::GetClock();
 			cout << endl;
 			func_pair.second();
 			cout << ">> test complete, time = ";
-			console::Cprintf(timer::GetTimeDifference(t), console::RED);
+			console::Cprintf(timer::GetTimeDifference(t), console::COLOR_RED);
 			cout << endl;
 		}
 	}

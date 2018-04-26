@@ -124,22 +124,22 @@ namespace gadt
 
 			void Print() const
 			{
-				log::ConsoleTable table(g_BT_WIDTH, g_BT_HEIGHT);
+				console::Table table(g_BT_WIDTH, g_BT_HEIGHT);
 				for (auto coord : _board)
 				{
 					switch (_board.element(coord))
 					{
 					case WHITE:
-						table.set_cell({ "W " , console::RED, log::ALIGN_MIDDLE}, coord);
+						table.set_cell({ "W " , console::COLOR_RED, console::TABLE_ALIGN_MIDDLE}, coord);
 						break;
 					case BLACK:
-						table.set_cell({ "B " , console::BLUE, log::ALIGN_MIDDLE}, coord);
+						table.set_cell({ "B " , console::COLOR_BLUE, console::TABLE_ALIGN_MIDDLE}, coord);
 						break;
 					default:
 						break;
 					}
 				}
-				table.Print(log::ENABLE_FRAME, log::INDEX_FROM_ZERO);
+				table.Print(console::TABLE_FRAME_ENABLE, console::TABLE_INDEX_FROM_ZERO);
 			}
 
 			BtPlayer Winner() const

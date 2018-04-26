@@ -44,10 +44,10 @@ void ShellDefine()
 
 	//Define Root Page.
 	gadt.SetDefaultInfoFunc([]()->void{
-		console::Cprintf("=============================================\n", console::GRAY);
-		console::Cprintf("       Game AI Development Toolkit\n", console::YELLOW);
-		console::Cprintf("       Copyright @ Junkai-Lu 2018\n", console::YELLOW);
-		console::Cprintf("=============================================", console::GRAY);
+		console::Cprintf("=============================================\n", console::COLOR_GRAY);
+		console::Cprintf("       Game AI Development Toolkit\n", console::COLOR_YELLOW);
+		console::Cprintf("       Copyright @ Junkai-Lu 2018\n", console::COLOR_YELLOW);
+		console::Cprintf("=============================================", console::COLOR_GRAY);
 		std::cout << endl << endl;
 	});
 

@@ -322,22 +322,6 @@ namespace gadt
 			}
 		};
 
-		/*template<typename T>
-		class MatrixBase
-		{
-			//get number of rows.
-			virtual size_t height() const = 0;
-
-			//get number of columns.
-			virtual size_t width() const = 0;
-
-			//get element
-			virtual const T& element(Coordinate coord) const = 0;
-
-			//get element
-			virtual const T& element(size_t x, size_t y) const = 0;
-		};*/
-
 		/*
 		* ElementMatrix is a flexiable matrix.
 		*
@@ -659,6 +643,20 @@ namespace gadt
 				}
 				std::cout << std::endl;
 			}
+
+			////convert to JSON object in which each element in the martix need to be convert to a string.
+			//json11::Json ConvertToJsonObj(std::function<std::string(const T&)> trans_func)
+			//{
+			//	
+			//}
+
+			////convert to JSON object in which each element in the martix need to be convert to a JSON object.
+			//json11::Json ConvertToJsonObj(std::function<json11::Json(const T&) trans_func>)
+			//{
+
+			//}
+
+			
 		};
 
 		/*
@@ -975,5 +973,6 @@ namespace gadt
 				return get_element(index);
 			}
 		};
+
 	}
 }

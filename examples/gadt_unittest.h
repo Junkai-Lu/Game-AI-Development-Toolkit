@@ -27,6 +27,7 @@
 #include "../src/gadt_memory.hpp"
 #include "../src/gadt_algorithm.hpp"
 #include "../src/gadt_log.hpp"
+#include "../src/gadt_table.h"
 #include "../src/monte_carlo.hpp"
 #include "../src/minimax.hpp"
 #include "../src/mcts.hpp"

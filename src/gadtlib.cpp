@@ -30,7 +30,7 @@ namespace gadt
 	namespace console
 	{
 		//set global console color.
-		ConsoleColor costream::_current_color = DEFAULT;
+		ConsoleColor costream::_current_color = COLOR_DEFAULT;
 
 		//change_color
 		void costream::change_color(ConsoleColor color)
@@ -68,9 +68,9 @@ namespace gadt
 		void ShowError(std::string reason)
 		{
 			//std::cout << std::endl;
-			Cprintf(">> ERROR", PURPLE);
+			Cprintf(">> ERROR", COLOR_PURPLE);
 			std::cout << ": ";
-			Cprintf(reason, RED);
+			Cprintf(reason, COLOR_RED);
 			std::cout << std::endl << std::endl;
 		}
 
@@ -78,7 +78,7 @@ namespace gadt
 		void ShowMessage(std::string message)
 		{
 			std::cout << ">> ";
-			Cprintf(message, WHITE);
+			Cprintf(message, COLOR_WHITE);
 			std::cout << std::endl << std::endl;
 		}
 
@@ -88,14 +88,14 @@ namespace gadt
 			if (condition)
 			{
 				std::cout << std::endl << std::endl;
-				Cprintf(">> WARNING: ", PURPLE);
-				Cprintf(reason, RED);
+				Cprintf(">> WARNING: ", COLOR_PURPLE);
+				Cprintf(reason, COLOR_RED);
 				std::cout << std::endl;
-				Cprintf("[File]: " + file, GRAY);
+				Cprintf("[File]: " + file, COLOR_GRAY);
 				std::cout << std::endl;
-				Cprintf("[Line]: " + ToString(line), GRAY);
+				Cprintf("[Line]: " + ToString(line), COLOR_GRAY);
 				std::cout << std::endl;
-				Cprintf("[Func]: " + function, GRAY);
+				Cprintf("[Func]: " + function, COLOR_GRAY);
 				std::cout << std::endl;
 				console::SystemPause();
 			}

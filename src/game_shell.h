@@ -20,7 +20,7 @@
 */
 
 #include "gadtlib.h"
-#include "gadt_log.hpp"
+#include "gadt_table.h"
 
 #pragma once
 
@@ -447,9 +447,9 @@ namespace gadt
 							if (_cmd_name_list[i].size() > 0)
 							{
 								std::cout << ">> ";
-								console::Cprintf("[" + define::GetCommandTypeName(i) + "]", console::YELLOW);
+								console::Cprintf("[" + define::GetCommandTypeName(i) + "]", console::COLOR_YELLOW);
 								std::cout << std::endl;
-								log::ConsoleTable tb(3, _cmd_name_list[i].size());
+								console::Table tb(3, _cmd_name_list[i].size());
 								tb.set_width({ SYMBOL_WIDTH,NAME_WIDTH,DESC_WIDTH });
 								for (size_t n = 0; n < _cmd_name_list[i].size(); n++)
 								{
@@ -457,12 +457,12 @@ namespace gadt
 									std::string type = define::GetCommandTypeSymbol(i);
 									std::string desc = _command_list.at(name)->desc();
 									tb.set_cell_in_row(n,{
-										{ type,console::GRAY },
-										{ name,console::RED },
-										{ desc,console::WHITE }
+										{ type,console::COLOR_GRAY },
+										{ name,console::COLOR_RED },
+										{ desc,console::COLOR_WHITE }
 									});
 								}
-								tb.Print(log::HALF_EMPTY_FRAME, log::DISABLE_INDEX);
+								tb.Print(console::TABLE_FRAME_HALF_EMPTY, console::TABLE_INDEX_DISABLE);
 								std::cout << std::endl;
 							}
 						}
@@ -470,9 +470,9 @@ namespace gadt
 					else//-n
 					{
 						std::cout << ">> ";
-						console::Cprintf("[ COMMANDS ]", console::YELLOW);
+						console::Cprintf("[ COMMANDS ]", console::COLOR_YELLOW);
 						std::cout << std::endl;
-						log::ConsoleTable tb(3, _command_list.size());
+						console::Table tb(3, _command_list.size());
 						tb.set_width({ SYMBOL_WIDTH,NAME_WIDTH,DESC_WIDTH });
 						size_t n = 0;
 						for (const auto& pair: _command_list)
@@ -481,13 +481,13 @@ namespace gadt
 							std::string desc = pair.second.get()->desc();
 							std::string type = define::GetCommandTypeSymbol(pair.second.get()->type());
 							tb.set_cell_in_row(n, {
-								{ type,console::GRAY },
-								{ name,console::RED },
-								{ desc,console::WHITE }
+								{ type,console::COLOR_GRAY },
+								{ name,console::COLOR_RED },
+								{ desc,console::COLOR_WHITE }
 							});
 							n++;
 						}
-						tb.Print(log::HALF_EMPTY_FRAME, log::DISABLE_INDEX);
+						tb.Print(console::TABLE_FRAME_HALF_EMPTY, console::TABLE_INDEX_DISABLE);
 						std::cout << std::endl;
 					}
 				}

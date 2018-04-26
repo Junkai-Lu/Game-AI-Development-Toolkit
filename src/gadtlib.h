@@ -19,6 +19,10 @@
 * THE SOFTWARE.
 */
 
+
+//include some extra libaries.
+#include "../lib/json11/json11.hpp"
+
 // exclude unsupported compilers and define some marco by compiler.
 #ifdef _MSC_VER
 	#define __GADT_MSVC
@@ -355,22 +359,22 @@ namespace gadt
 		//console color type
 		enum ConsoleColor
 		{
-			DEFAULT = 7,
-			DEEP_BLUE = 1,
-			DEEP_GREEN = 2,
-			DEEP_CYAN = 3,
-			BROWN = 4,
-			PURPLE = 5,
-			DEEP_YELLOW = 6,
-			DEEP_WHITE = 7,
-			GRAY = 8,
-			BLUE = 9,
-			GREEN = 10,
-			CYAN = 11,
-			RED = 12,
-			PINK = 13,
-			YELLOW = 14,
-			WHITE = 15
+			COLOR_DEFAULT = 7,
+			COLOR_DEEP_BLUE = 1,
+			COLOR_DEEP_GREEN = 2,
+			COLOR_DEEP_CYAN = 3,
+			COLOR_BROWN = 4,
+			COLOR_PURPLE = 5,
+			COLOR_DEEP_YELLOW = 6,
+			COLOR_DEEP_WHITE = 7,
+			COLOR_GRAY = 8,
+			COLOR_BLUE = 9,
+			COLOR_GREEN = 10,
+			COLOR_CYAN = 11,
+			COLOR_RED = 12,
+			COLOR_PINK = 13,
+			COLOR_YELLOW = 14,
+			COLOR_WHITE = 15
 		};
 
 		//color ostream.
