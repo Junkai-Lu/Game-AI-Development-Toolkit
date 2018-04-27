@@ -36,4 +36,4 @@ SET(SRC_LIST
 		./lib/json11/json11.cpp
         )
  
-ADD_EXECUTABLE(Paradoxes ${SRC_LIST})
+ADD_EXECUTABLE(Paradoxes.sh ${SRC_LIST})

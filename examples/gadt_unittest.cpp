@@ -569,14 +569,11 @@ namespace gadt
 		}
 		void TestStlDynamicMatrix()
 		{
-			stl::DynamicMatrix<size_t> matrix(4, 4);
-			for (auto coord : matrix)
-				matrix[coord] = coord.x * coord.y;
-			stl::DynamicMatrix<size_t>::ElementToStringFunc ElemToString = [](const size_t& i)->std::string { 
-				return gadt::ToString(i); 
+			stl::DynamicMatrix<size_t>::ElementToStringFunc ElemToString = [](const size_t& i)->std::string {
+				return gadt::ToString(i);
 			};
-			stl::DynamicMatrix<size_t>::StringToElementFunc StringToElem = [](const std::string& str)->size_t { 
-				return (size_t)gadt::ToInt(str); 
+			stl::DynamicMatrix<size_t>::StringToElementFunc StringToElem = [](const std::string& str)->size_t {
+				return (size_t)gadt::ToInt(str);
 			};
 			stl::DynamicMatrix<size_t>::ElementToJsonFunc ElemToJson = [](const size_t& i)->json11::Json {
 				return json11::Json{ (int)i };
@@ -584,6 +581,16 @@ namespace gadt
 			stl::DynamicMatrix<size_t>::JsonToElementFunc JsonToElem = [](const json11::Json& json)->size_t {
 				return (size_t)json.int_value();
 			};
+			stl::DynamicMatrix<size_t> init_matrix(4, 4, { { 1 }, { 1, 2 }, { 1,2,3 }, { 1,2,3,4,5 }, {6,6} });
+			//init_matrix.Print(ElemToString);
+			GADT_ASSERT(init_matrix.element(0, 0), 1);
+			GADT_ASSERT(init_matrix.element(3, 0), 0);
+			GADT_ASSERT(init_matrix.element(3, 3), 4);
+			
+			stl::DynamicMatrix<size_t> matrix(4, 4);
+			for (auto coord : matrix)
+				matrix[coord] = coord.x * coord.y;
+			
 			std::string str_json = matrix.ConvertToJsonObj(ElemToString).dump();
 			//std::cout << str_json << std::endl;
 			matrix.IncreaseRow(1);
@@ -641,6 +648,7 @@ namespace gadt
 			Matrix matrix;
 			for (auto coord : matrix)
 				matrix[coord] = coord.x * coord.y;
+			auto sub = matrix.SubMatrix<3, 3>(0, 0);
 			typename Matrix::ElementToStringFunc ElemToString = [](const size_t& i)->std::string {
 				return gadt::ToString(i);
 			};
@@ -653,6 +661,14 @@ namespace gadt
 			typename Matrix::JsonToElementFunc JsonToElem = [](const json11::Json& json)->size_t {
 				return (size_t)json.int_value();
 			};
+			GADT_ASSERT(sub.element(1, 1), 1);
+			GADT_ASSERT(sub.element(2, 2), 4);
+			sub = matrix.SubMatrix<3, 3>(3, 3);
+			GADT_ASSERT(sub.element(0, 0), 9);
+			GADT_ASSERT(sub.element(2, 2), 0);
+			sub = matrix.SubMatrix<3, 3>(4, 4);
+			GADT_ASSERT(sub.element(0, 0), 0);
+			GADT_ASSERT(sub.element(2, 2), 0);
 			std::string str_json = matrix.ConvertToJsonObj(ElemToString).dump();
 			//std::cout << str_json << std::endl;
 			//matrix.Print(ElemToString);
@@ -676,6 +692,7 @@ namespace gadt
 			stl::StaticMatrix<size_t, 4, 1> matrix41;
 			json = matrix41.ConvertToJsonObj(ElemToString).dump();
 			GADT_ASSERT(matrix.LoadFromJson(json, StringToElem), false);
+			
 			
 		}
 		void TestTable()

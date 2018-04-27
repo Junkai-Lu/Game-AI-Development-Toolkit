@@ -174,42 +174,90 @@ namespace gadt
 
 	namespace file
 	{
-		bool DirExist(std::string path)
+		//return true if the folder exists.
+		bool DirExist(std::string dir_path)
 		{
 #ifdef __GADT_GNUC
-			return (access(path.c_str(), 0) != -1);
+			return (access(dir_path.c_str(), 0) != -1);
 #elif defined(__GADT_MSVC)
-			return (_access(path.c_str(), 0) != -1);
+			return (_access(dir_path.c_str(), 0) != -1);
 #endif
 		}
 
-		bool MakeDir(std::string path)
+		//create dir and return true if create successfully.
+		bool MakeDir(std::string dir_path)
 		{
-			if (DirExist(path))
+			if (DirExist(dir_path))
 			{
 				return true;
 			}
 #ifdef __GADT_GNUC
-			return mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != -1;
+			return mkdir(dir_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != -1;
 			//return false;
 #elif defined(__GADT_MSVC)
-			return _mkdir(path.c_str()) != -1;
+			return _mkdir(dir_path.c_str()) != -1;
 #endif
 		}
 
-		bool RemoveDir(std::string path)
+		//remove dir and return true if remove successfully. 
+		bool RemoveDir(std::string dir_path)
 		{
-			if (!DirExist(path))
+			if (!DirExist(dir_path))
 			{
 				return false;
 			}
 #ifdef __GADT_GNUC
-			return rmdir(path.c_str()) != -1;
+			return rmdir(dir_path.c_str()) != -1;
 			//return false;
 #elif defined(__GADT_MSVC)
-			return _rmdir(path.c_str()) != -1;
+			return _rmdir(dir_path.c_str()) != -1;
 #endif
 		}
+
+		//return true if the file exists.
+		bool FileExist(std::string file_path)
+		{
+			std::ifstream ifs(file_path, std::ios::in);
+			return ifs.operator bool();
+		}
+
+		//remove file and return true if remove successfully.
+		bool RemoveFile(std::string file_path)
+		{
+			if (remove(file_path.c_str()) == 0)
+				return true;
+			return false;
+		}
+
+		//convert a file to string. return "" if convert failed.
+		std::string FileToString(std::string file_path)
+		{
+			std::filebuf *pbuf;
+			std::ifstream filestr;
+			long size;
+			char * buffer;
+			filestr.open(file_path, std::ios::binary);
+			pbuf = filestr.rdbuf();
+			size = (long)pbuf->pubseekoff(0, std::ios::end, std::ios::in);
+			pbuf->pubseekpos(0, std::ios::in);
+			buffer = new char[size];
+			pbuf->sgetn(buffer, size);
+			filestr.close();
+			cout.write(buffer, size);
+			delete[] buffer;
+			return std::string(buffer);
+		}
+
+		//convert a string to file.
+		bool StringToFile(std::string str, std::string file_path)
+		{
+			std::ofstream ofs(file_path, std::ios::trunc);
+			if (!ofs)
+				return false;
+			ofs << str;
+			return true;
+		}
+
 	}
 
 	namespace func

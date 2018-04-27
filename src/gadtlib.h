@@ -58,6 +58,7 @@
 	#define GADT_CHECK_WARNING(enable, condition, reason)
 #endif
 
+#include <cstdio>
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
@@ -484,13 +485,25 @@ namespace gadt
 	namespace file
 	{
 		//return true if the folder exists.
-		bool DirExist(std::string path);
+		bool DirExist(std::string dir_path);
 		
 		//create dir and return true if create successfully.
-		bool MakeDir(std::string path);
+		bool MakeDir(std::string dir_path);
 
 		//remove dir and return true if remove successfully. 
-		bool RemoveDir(std::string path);
+		bool RemoveDir(std::string dir_path);
+
+		//return true if the file exists.
+		bool FileExist(std::string file_path);
+
+		//remove file and return true if remove successfully.
+		bool RemoveFile(std::string file_path);
+
+		//convert a file to string. return "" if convert failed.
+		std::string FileToString(std::string file_path);
+
+		//convert a string to file.
+		bool StringToFile(std::string str, std::string file_path);
 	}
 
 	namespace func

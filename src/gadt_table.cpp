@@ -21,8 +21,6 @@
 
 #include "gadt_table.h"
 
-#pragma once
-
 namespace gadt
 {
 	namespace console

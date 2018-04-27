@@ -437,9 +437,11 @@ namespace gadt
 					if (i < get_row(row_index).size())
 						*get_row(row_index)[i] = elem;
 					else
-						break;
+						return;
 					i++;
 				}
+				for (; i < _width; i++)
+					*get_row(row_index)[i] = Element();
 			}
 
 			//set column as same element.
@@ -461,6 +463,8 @@ namespace gadt
 						break;
 					i++;
 				}
+				for (; i < _width; i++)
+					*get_column(column_index)[i] = Element();
 			}
 
 			//return true if element exist.
@@ -540,13 +544,18 @@ namespace gadt
 					for (auto value : row)
 					{
 						if (x < _width && y < _height)
-						{
-							((_elements[x])[y]) = Element(value);
-						}
+							set_element(Element(value), x, y);
 						x++;
 					}
+					for (; x < _width; x++)
+						set_element(Element(), x, y);
 					y++;
+					if (y >= _height)
+						return;
 				}
+				for (; y < _height; y++)
+					for(size_t  x = 0;x < _width; x++)
+						set_element(Element(), x, y);
 			}
 
 			//increase rows.
@@ -765,13 +774,13 @@ namespace gadt
 			using reference = T&;
 			using const_reference = const T&;
 			using Element = T;
-			using Row = std::vector<pointer>;
-			using Column = Row;
 			using InitList = std::initializer_list<T>;
 			using Iter = MatrixIter;
 
 		public:
 
+			using Row = StaticMatrix<T, _WIDTH, 1>;
+			using Column = StaticMatrix<T, 1, _HEIGHT>;
 			using ElementToJsonFunc = std::function<json11::Json(const_reference)>;
 			using ElementToStringFunc = std::function<std::string(const_reference)>;
 			using StringToElementFunc = std::function<Element(const std::string&)>;
@@ -779,7 +788,14 @@ namespace gadt
 
 		private:
 
-			Element _elements[_WIDTH][_HEIGHT];
+			Element _elements[_WIDTH * _HEIGHT];
+
+		private:
+
+			inline size_t get_index(size_t x, size_t y) const
+			{
+				return ( x * _WIDTH ) + y;
+			}
 
 		public:
 
@@ -795,7 +811,6 @@ namespace gadt
 				return is_legal_coordinate(coord.x, coord.y);
 			}
 
-			
 			//get height, which is the number of rows. 
 			inline constexpr size_t height() const
 			{
@@ -808,14 +823,20 @@ namespace gadt
 				return _WIDTH;
 			}
 
+			//return the total number of elements in this matrix.
+			inline constexpr size_t element_count() const
+			{
+				return _WIDTH * _HEIGHT;
+			}
+
 			//get iterator begin
-			Iter begin() const
+			inline Iter begin() const
 			{
 				return Iter({ 0, 0 }, _WIDTH, _HEIGHT);
 			}
 
 			//get iterator end
-			Iter end() const
+			inline Iter end() const
 			{
 				return Iter({ 0, _HEIGHT }, _WIDTH, _HEIGHT);
 			}
@@ -824,7 +845,7 @@ namespace gadt
 			inline const_reference element(size_t x, size_t y) const
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x, y), "out of row range.");
-				return _elements[x][y];
+				return _elements[get_index(x, y)];
 			}
 
 			//get element
@@ -837,73 +858,13 @@ namespace gadt
 			inline void set_element(const_reference elem, size_t x, size_t y)
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x, y), "out of row range.");
-				_elements[x][y] = elem;
+				_elements[get_index(x, y)] = elem;
 			}
 
 			//set element
 			inline void set_element(const_reference elem, UnsignedCoordinate coord)
 			{
 				set_element(elem, coord.x, coord.y);
-			}
-
-			//return the Row which include pointers to elements in the row.
-			Row get_row(size_t row_index)
-			{
-				Row row(width());
-				for (size_t i = 0; i < width(); i++)
-					row[i] = &_elements[i][row_index];
-				return row;
-			}
-
-			//return the Column which include pointers to elements in the column.
-			Column get_column(size_t column_index)
-			{
-				Row column(height());
-				for (size_t i = 0; i < height(); i++)
-					column[i] = &_elements[column_index][i];
-				return column;
-			}
-
-			//set row as same element.
-			void set_row(size_t row_index, const_reference elem)
-			{
-				for (pointer elem_ptr : get_row(row_index))
-					*elem_ptr = elem;
-			}
-
-			//set row by init list.
-			void set_row(size_t row_index, InitList list)
-			{
-				size_t i = 0;
-				for (const_reference elem : list)
-				{
-					if (i < get_row(row_index).size())
-						*get_row(row_index)[i] = elem;
-					else
-						break;
-					i++;
-				}
-			}
-
-			//set column as same element.
-			void set_column(size_t column_index, const_reference elem)
-			{
-				for (pointer elem_ptr : get_column(column_index))
-					*elem_ptr = elem;
-			}
-
-			//set column bt init list.
-			void set_column(size_t column_index, InitList list)
-			{
-				size_t i = 0;
-				for (const_reference elem : list)
-				{
-					if (i < get_column(column_index).size())
-						*get_column(column_index)[i] = elem;
-					else
-						break;
-					i++;
-				}
 			}
 
 			//return true if any element exist in the matrix.
@@ -931,7 +892,7 @@ namespace gadt
 			inline reference operator[](UnsignedCoordinate coord)
 			{
 				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(coord.x, coord.y), "out of row range.");
-				return _elements[coord.x][coord.y];
+				return _elements[get_index(coord.x, coord.y)];
 			}
 
 		public:
@@ -939,13 +900,79 @@ namespace gadt
 			//constructor function with default elements.
 			StaticMatrix()
 			{
+				for (size_t i = 0; i < element_count(); i++)
+					_elements[i] = Element();
 			}
 
 			//constructor function with appointed elements.
 			StaticMatrix(Element elem)
 			{
-				for (auto coord : *this)
-					set_element(elem, coord);
+				for (size_t i = 0; i < element_count(); i++)
+					_elements[i] = elem;
+			}
+
+			//return the Row which include pointers to elements in the row.
+			Row get_row(size_t row_index)
+			{
+				Row row;
+				for (size_t i = 0; i < width(); i++)
+					row.set_element(element(i, row_index), i, 1);
+				return row;
+			}
+
+			//return the Column which include pointers to elements in the column.
+			Column get_column(size_t column_index)
+			{
+				Row column;
+				for (size_t i = 0; i < height(); i++)
+					column.set_element(element(column_index, i), 1, i);
+				return column;
+			}
+
+			//set row as same element.
+			void set_row(size_t row_index, const_reference elem)
+			{
+				for (size_t i = 0; i < _WIDTH; i++)
+					set_element(elem, i, row_index);
+			}
+
+			//set row by init list.
+			void set_row(size_t row_index, InitList list)
+			{
+				size_t i = 0;
+				for (const_reference elem : list)
+				{
+					if (i < _WIDTH)
+						set_element(elem, i, row_index);//set elements in list.
+					else
+						return;
+					i++;
+				}
+				for (; i < _WIDTH; i++)
+					set_element(Element(), i, row_index);//set default.
+			}
+
+			//set column as same element.
+			void set_column(size_t column_index, const_reference elem)
+			{
+				for (size_t i = 0; i < _WIDTH; i++)
+					set_element(elem, column_index, i);
+			}
+
+			//set column bt init list.
+			void set_column(size_t column_index, InitList list)
+			{
+				size_t i = 0;
+				for (const_reference elem : list)
+				{
+					if (i < _WIDTH)
+						set_element(elem, column_index, i);//set elements in list.
+					else
+						return;
+					i++;
+				}
+				for (; i < _WIDTH; i++)
+					set_element(Element(), column_index, i);//set default.
 			}
 
 			//print the matrix as string.
@@ -1073,19 +1100,26 @@ namespace gadt
 				return matrix;
 			}
 
-			////return the submatrix of this matrix.
-			//template<size_t AREA_WIDTH, size_t AREA_HEIGHT, typename std::enable_if<((AREA_WIDTH <= _WIDTH) && (AREA_HEIGHT <= _HEIGHT)), int>::type = 0>
-			//StaticMatrix<T, AREA_WIDTH, AREA_HEIGHT> SubMatrix(size_t x, size_t y) const
-			//{
-			//	return StaticMatrix<T, AREA_WIDTH, AREA_HEIGHT>();
-			//}
+			//return the submatrix of this matrix.
+			template<size_t AREA_WIDTH, size_t AREA_HEIGHT, typename std::enable_if<((AREA_WIDTH <= _WIDTH) && (AREA_HEIGHT <= _HEIGHT)), int>::type = 0>
+			StaticMatrix<T, AREA_WIDTH, AREA_HEIGHT> SubMatrix(UnsignedCoordinate coord) const
+			{
+				StaticMatrix<T, AREA_WIDTH, AREA_HEIGHT> submatrix;
+				for (auto sub_coord : submatrix)
+				{
+					auto pos = coord + sub_coord;
+					if (is_legal_coordinate(pos))
+						submatrix[sub_coord] = element(pos);
+				}
+				return submatrix;
+			}
 
-			////return the submatrix of this matrix.
-			//template<size_t AREA_WIDTH, size_t AREA_HEIGHT, typename std::enable_if<((AREA_WIDTH <= _WIDTH) && (AREA_HEIGHT <= _HEIGHT)), int>::type = 0>
-			//StaticMatrix<T, AREA_WIDTH, AREA_HEIGHT> SubMatrix(UnsignedCoordinate coord) const
-			//{
-			//	return SubArea(coord.x, coord.y);
-			//}
+			//return the submatrix of this matrix.
+			template<size_t AREA_WIDTH, size_t AREA_HEIGHT, typename std::enable_if<((AREA_WIDTH <= _WIDTH) && (AREA_HEIGHT <= _HEIGHT)), int>::type = 0>
+			StaticMatrix<T, AREA_WIDTH, AREA_HEIGHT> SubMatrix(size_t x, size_t y) const
+			{
+				return SubMatrix<AREA_WIDTH, AREA_HEIGHT>(UnsignedCoordinate{ x,y });
+			}
 		};
 
 		/*
