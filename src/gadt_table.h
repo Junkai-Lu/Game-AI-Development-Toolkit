@@ -336,42 +336,46 @@ namespace gadt
 
 			//load from stl::StaticMatrix
 			template<typename T, size_t WIDTH, size_t HEIGHT>
-			void LoadStaticMatrix(const stl::StaticMatrix<T, WIDTH, HEIGHT>& rec_array, std::function<std::string(const T&)> trans_func)
+			void LoadFromStaticMatrix(const stl::StaticMatrix<T, WIDTH, HEIGHT>& matrix, std::function<TableCell(const T&)> ElemToCell)
 			{
-				Resize(0, 0);
-				Resize(WIDTH, HEIGHT);
-				for (auto coord : rec_array)
-					_cells[coord] = TableCell(trans_func(rec_array[coord]));
+				stl::DynamicMatrix<TableCell> new_cells(WIDTH, HEIGHT);
+				for (auto coord : matrix)
+					new_cells.set_element(ElemToCell(matrix.element(coord)), coord);
+				std::vector<size_t> new_column_width(WIDTH, TABLE_DEFAULT_WIDTH);
+				_cells = new_cells;
+				_column_width = new_column_width;
 			}
 
 			//load from stl::StaticMatrix
 			template<typename T, size_t WIDTH, size_t HEIGHT>
-			void LoadStaticMatrix(const stl::StaticMatrix<T, WIDTH, HEIGHT>& rec_array, std::function<TableCell(const T&)> trans_func)
+			void LoadFromStaticMatrix(const stl::StaticMatrix<T, WIDTH, HEIGHT>& matrix, std::function<std::string(const T&)> ElemToString)
 			{
-				Resize(0, 0);
-				Resize(WIDTH, HEIGHT);
-				for (auto coord : rec_array)
-					_cells[coord] = trans_func(rec_array[coord]);
+				std::function<TableCell(const T&)> ElemToCell = [&](const T& elem)->TableCell {
+					return TableCell(ElemToString(elem));
+				};
+				LoadFromStaticMatrix<T, WIDTH, HEIGHT>(matrix, ElemToCell);
 			}
 
 			//load from stl::DynamicMatrix
 			template<typename T>
-			void LoadDynamicMatrix(const stl::DynamicMatrix<T>& matrix, std::function<std::string(const T&)> trans_func)
+			void LoadFromDynamicMatrix(const stl::DynamicMatrix<T>& matrix, std::function<TableCell(const T&)> ElemToCell)
 			{
-				Resize(0, 0);
-				Resize(matrix.width(), matrix.height());
+				stl::DynamicMatrix<TableCell> new_cells(matrix.width(), matrix.height());
 				for (auto coord : matrix)
-					_cells[coord] = TableCell(trans_func(matrix[coord]));
+					new_cells.set_element(ElemToCell(matrix.element(coord)), coord);
+				std::vector<size_t> new_column_width(matrix.width(), TABLE_DEFAULT_WIDTH);
+				_cells = new_cells;
+				_column_width = new_column_width;
 			}
 
 			//load from stl::DynamicMatrix
 			template<typename T>
-			void LoadDynamicMatrix(const stl::DynamicMatrix<T>& matrix, std::function<TableCell(const T&)> trans_func)
+			void LoadFromDynamicMatrix(const stl::DynamicMatrix<T>& matrix, std::function<std::string(const T&)> ElemToString)
 			{
-				Resize(0, 0);
-				Resize(matrix.width(), matrix.height());
-				for (auto coord : matrix)
-					_cells[coord] = trans_func(matrix[coord]);
+				std::function<TableCell(const T&)> ElemToCell = [&](const T& elem)->TableCell {
+					return TableCell(ElemToString(elem));
+				};
+				LoadFromDynamicMatrix<T>(matrix, ElemToCell);
 			}
 		};
 	}

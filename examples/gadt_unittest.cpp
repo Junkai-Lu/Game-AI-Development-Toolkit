@@ -715,7 +715,17 @@ namespace gadt
 			GADT_ASSERT(table.get_cell(1, 2).str, "world");
 			//table.print();
 			//std::cout << table.ConvertToString();
-
+			stl::StaticMatrix<size_t, 5, 5>::ElementToStringFunc ElemToString = [](const size_t& elem)->std::string {
+				return gadt::ToString(elem);
+			};
+			stl::StaticMatrix<size_t, 5, 5> static_matrix(20);
+			table.LoadFromStaticMatrix<size_t, 5, 5>(static_matrix, ElemToString);
+			GADT_ASSERT(table.get_cell(4, 4).str, "20");
+			//table.Print();
+			stl::DynamicMatrix<size_t> dynamic_matrix(6, 6, 25);
+			table.LoadFromDynamicMatrix<size_t>(dynamic_matrix, ElemToString);
+			GADT_ASSERT(table.get_cell(5, 5).str, "25");
+			//table.Print();
 		}
 		void TestMinimax()
 		{

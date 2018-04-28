@@ -292,6 +292,10 @@ namespace gadt
 			}
 		};
 
+		//Declear Static Matrix.
+		template<typename T, size_t _WIDTH, size_t _HEIGHT, typename std::enable_if<(_WIDTH > 0 && _HEIGHT > 0), int>::type = 0>
+		class StaticMatrix;
+
 		/*
 		* DynamicMatrix is a flexiable matrix.
 		*
@@ -353,13 +357,19 @@ namespace gadt
 				}
 			}
 
+		public:
+
 			//return true if the coordinate is legal
 			inline bool is_legal_coordinate(size_t x, size_t y) const
 			{
 				return (x < _width) && (y < _height);
 			}
 
-		public:
+			//return true if the coordinate is legal
+			inline bool is_legal_coordinate(UnsignedCoordinate coord) const
+			{
+				return is_legal_coordinate(coord.x, coord.y);
+			}
 
 			//get number of rows.
 			inline size_t height() const 
@@ -766,7 +776,7 @@ namespace gadt
 		* [_WIDTH] is the width of matrix.
 		* [_HEIGHT] is the height of matrix.
 		*/
-		template<typename T, size_t _WIDTH, size_t _HEIGHT, typename std::enable_if<(_WIDTH > 0 && _HEIGHT > 0), int>::type = 0>
+		template<typename T, size_t _WIDTH, size_t _HEIGHT, typename std::enable_if<(_WIDTH > 0 && _HEIGHT > 0), int>::type>
 		class StaticMatrix
 		{
 		private:
