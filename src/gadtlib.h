@@ -82,13 +82,19 @@
 
 namespace gadt
 {
+#ifdef GADT_WARNING
 	constexpr const bool GADT_STL_ENABLE_WARNING = true;
-	constexpr const bool GADT_TABLE_ENABLE_WARNING = true;
+#else
+	constexpr const bool GADT_STL_ENABLE_WARNING = false;
+#endif
 
 	using AgentIndex = int8_t;//AgentIndex is the index of each player, default is int8_t. 0 is the default no-winner index.
 	using UcbValue = double;
 	using EvalValue = double;
 
+	/*
+	* extern BasicUnsignedCoordinate.
+	*/
 	template<typename IntType = uint64_t, typename std::enable_if<std::is_unsigned<IntType>::value, int>::type = 0>
 	struct BasicUnsignedCoordinate;
 
@@ -357,6 +363,11 @@ namespace gadt
 
 	namespace console
 	{
+		//various delimiter string
+		const std::string DELIMITER_STR_TAB = "	";
+		const std::string DELIMITER_STR_SPACE = " ";
+		const std::string DELIMITER_STR_EMPTY = "";
+
 		//console color type
 		enum ConsoleColor
 		{
@@ -410,6 +421,14 @@ namespace gadt
 				change_color(temp_color);
 			}
 		};
+
+		//print endline.
+		template<size_t COUNT = 1>
+		inline void EndLine()
+		{
+			for (size_t i = 0; i < COUNT; i++)
+				std::cout << std::endl;
+		}
 
 		//colorful print.
 		template<typename T>

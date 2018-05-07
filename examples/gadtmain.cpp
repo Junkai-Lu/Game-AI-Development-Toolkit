@@ -48,7 +48,7 @@ void ShellDefine()
 		console::Cprintf("       Game AI Development Toolkit\n", console::COLOR_YELLOW);
 		console::Cprintf("       Copyright @ Junkai-Lu 2018\n", console::COLOR_YELLOW);
 		console::Cprintf("=============================================", console::COLOR_GRAY);
-		std::cout << endl << endl;
+		console::EndLine<2>();
 	});
 
 	auto* root = gadt.CreateShellPage("root");

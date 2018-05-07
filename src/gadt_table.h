@@ -29,6 +29,13 @@ namespace gadt
 {
 	namespace console
 	{
+
+#ifdef GADT_WARNING
+		constexpr const bool GADT_TABLE_ENABLE_WARNING = true;
+#else
+		constexpr const bool GADT_TABLE_ENABLE_WARNING = false;
+#endif
+
 		//align mode of cell
 		enum AlignMode : int8_t
 		{

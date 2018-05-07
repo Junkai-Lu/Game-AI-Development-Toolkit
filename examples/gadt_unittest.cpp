@@ -374,7 +374,16 @@ namespace gadt
 				GADT_ASSERT(true, file::DirExist(path));
 				GADT_ASSERT(true, file::RemoveDir(path));
 				GADT_ASSERT(false, file::DirExist(path));
+				GADT_ASSERT(true, file::MakeDir(path));
+				std::string file_path = path + "/test_file.dat";
+				std::ofstream ofs(file_path, std::ios::trunc);
+				ofs << "line1" << std::endl << "line2" << std::endl << "line3" << std::endl;
+				std::string str = file::FileToString(file_path);
+				//std::cout << str;
+				GADT_ASSERT(true, file::RemoveFile(file_path));
+				GADT_ASSERT(true, file::RemoveDir(path));
 			}
+			
 		}
 		void TestIndex()
 		{

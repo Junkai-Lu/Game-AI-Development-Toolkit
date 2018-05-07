@@ -27,8 +27,12 @@ namespace gadt
 {
 	namespace bitboard
 	{
-		//allow check warning if it is true.
-		constexpr const bool g_BITBOARD_ENABLE_WARNING = true;
+
+#ifdef GADT_WARNING
+		constexpr const bool g_BITBOARD_ENABLE_WARNING = true;//enable warning
+#else
+		constexpr const bool g_BITBOARD_ENABLE_WARNING = false;//enable warning
+#endif
 
 		using gadt_int64 = uint64_t;
 

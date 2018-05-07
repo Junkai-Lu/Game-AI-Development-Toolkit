@@ -1000,6 +1000,21 @@ namespace gadt
 				std::cout << std::endl;
 			}
 
+			//convert to string format.
+			std::string ConvertToString(ElementToStringFunc ElemToString, std::string delimiter = console::DELIMITER_STR_SPACE) const
+			{
+				std::stringstream ss;
+				for (size_t y = 0; y < height(); y++)
+				{
+					for (size_t x = 0; x < width(); x++)
+					{
+						ss << ElemToString(element(x, y)) << delimiter;
+					}
+					ss << std::endl;
+				}
+				return ss.str();
+			}
+
 			//convert to JSON object in which each element in the matrix need to be convert to a JSON object.
 			json11::Json ConvertToJsonObj(ElementToJsonFunc ElemToJson) const
 			{

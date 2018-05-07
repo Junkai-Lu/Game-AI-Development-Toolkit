@@ -27,8 +27,12 @@ namespace gadt
 {
 	namespace visual_tree
 	{
-		//allow check warning if it is true.
-		constexpr const bool g_VISUAL_TREE_ENABLE_WARNING = true;
+		
+#ifdef GADT_WARNING
+		constexpr const bool g_VISUAL_TREE_ENABLE_WARNING = true;	//enable warning in visual tree.
+#else
+		constexpr const bool g_VISUAL_TREE_ENABLE_WARNING = false;	//disable warning in visual tree.
+#endif
 
 		extern const char* g_VISUAL_TREE_CHILD_KEY;
 		extern const char* g_VISUAL_TREE_COUNT_KEY;

@@ -206,12 +206,19 @@ namespace gadt
 			{
 				return false;
 			}
-#ifdef __GADT_GNUC
-			return rmdir(dir_path.c_str()) != -1;
-			//return false;
-#elif defined(__GADT_MSVC)
-			return _rmdir(dir_path.c_str()) != -1;
+#ifdef __GADT_MSVC
+			if (_rmdir(dir_path.c_str()) == 0)
+#else
+			if (rmdir(dir_path.c_str()) == 0)
 #endif
+				return true;
+			std::cout << "[ERROR]: RemoveDir failed, ";
+#ifdef __GADT_MSVC
+			perror("rmdir");
+#else
+			perror("rmdir");
+#endif
+			return true;
 		}
 
 		//return true if the file exists.
@@ -226,6 +233,8 @@ namespace gadt
 		{
 			if (remove(file_path.c_str()) == 0)
 				return true;
+			std::cout << "[ERROR]: RemoveFile failed, ";
+			perror("remove");
 			return false;
 		}
 
@@ -243,9 +252,10 @@ namespace gadt
 			buffer = new char[size];
 			pbuf->sgetn(buffer, size);
 			filestr.close();
-			cout.write(buffer, size);
+			//cout.write(buffer, size);
+			std::string temp(buffer, size);
 			delete[] buffer;
-			return std::string(buffer);
+			return temp;
 		}
 
 		//convert a string to file.
