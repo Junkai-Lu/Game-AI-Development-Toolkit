@@ -479,29 +479,31 @@ namespace gadt
 			}
 
 			//return true if target is subset of this.
-			bool exist_subset(const BitBoard64& target)
+			bool exist_subset(const BitBoard64& target) const
 			{
-				for (size_t i = 0; i < target.upper_bound(); i++)
+				return (_data | target._data) == _data;
+				/*for (size_t i = 0; i < target.upper_bound(); i++)
 				{
 					if (target[i] == true && get(i) == false)
 					{
 						return false;
 					}
 				}
-				return true;
+				return true;*/
 			}
 
 			//return true if this is a subset of target.
 			bool is_subset_of(const BitBoard64& target) const
 			{
-				for (size_t i = 0; i < upper_bound(); i++)
+				return target.exist_subset(*this);
+				/*for (size_t i = 0; i < upper_bound(); i++)
 				{
 					if (get(i) == true && target[i] == false)
 					{
 						return false;
 					}
 				}
-				return true;
+				return true;*/
 			}
 
 			//get value

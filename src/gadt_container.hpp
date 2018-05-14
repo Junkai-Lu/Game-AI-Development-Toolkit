@@ -473,7 +473,7 @@ namespace gadt
 						break;
 					i++;
 				}
-				for (; i < _width; i++)
+				for (; i < _height; i++)
 					*get_column(column_index)[i] = Element();
 			}
 
