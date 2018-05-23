@@ -247,5 +247,92 @@ namespace gadt
 
 		};
 
+		//a lightweight string logger
+		class StringLogger
+		{
+		private:
+
+			bool _print_enabled;
+			bool _file_enabled;
+			bool _mem_enabled;
+
+			std::string _file_path;
+			std::stringstream _oss;
+			std::ofstream _ofs;
+
+		public:
+
+			//return true if print enabled.
+			inline bool print_enabled() const
+			{
+				return _print_enabled;
+			}
+
+			//return true if file enabled.
+			inline bool file_enabled() const
+			{
+				return _file_enabled;
+			}
+
+			//return true if memory enabled.
+			inline bool mem_enabled() const
+			{
+				return _mem_enabled;
+			}
+
+			//operator<<
+			template<typename T>
+			inline StringLogger& operator<<(T content)
+			{
+				if (_print_enabled)
+					std::cout << content;
+				if (_file_enabled)
+					_ofs << content;
+				if (_mem_enabled)
+					_ofs << content;
+				return *this;
+			}
+
+			//get string from string stream in memory
+			inline std::string mem_string() const
+			{
+				return _oss.str();
+			}
+
+			//get file path.
+			inline std::string file_path() const
+			{
+				return _file_path;
+			}
+
+		public:
+
+			//constructor.
+			StringLogger();
+
+			//copy constructor.
+			StringLogger(const StringLogger& target);
+
+			//enable print log.
+			void EnablePrint();
+
+			//enable file log
+			bool EnableFile(std::string file_path);
+
+			//enable log memory.
+			void EnableMem();
+
+			//disable print log.
+			void DisablePrint();
+
+			//disable file log
+			void DisableFile();
+
+			//disable log memory.
+			void DisableMem();
+
+			//disable all log
+			void Disable();
+		};
 	}
 }
