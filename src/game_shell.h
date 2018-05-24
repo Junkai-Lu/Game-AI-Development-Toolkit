@@ -438,7 +438,7 @@ namespace gadt
 				//print command list
 				void PrintCommandList(std::string param) const override
 				{
-					constexpr size_t SYMBOL_WIDTH = 2;
+					constexpr size_t SYMBOL_WIDTH = 3;
 					constexpr size_t NAME_WIDTH = (define::g_MAX_COMMAND_LENGTH + 1) / 2;
 					constexpr size_t DESC_WIDTH = (define::g_MAX_COMMAND_LENGTH + 1);
 
@@ -466,7 +466,7 @@ namespace gadt
 										{ desc,console::COLOR_WHITE }
 									});
 								}
-								tb.Print(console::TABLE_FRAME_HALF_EMPTY, console::TABLE_INDEX_DISABLE);
+								tb.Print(console::TABLE_FRAME_CIRCLE_TIGHT, console::TABLE_INDEX_DISABLE);
 								std::cout << std::endl;
 							}
 						}
@@ -491,7 +491,7 @@ namespace gadt
 							});
 							n++;
 						}
-						tb.Print(console::TABLE_FRAME_HALF_EMPTY, console::TABLE_INDEX_DISABLE);
+						tb.Print(console::TABLE_FRAME_CIRCLE_TIGHT, console::TABLE_INDEX_DISABLE);
 						std::cout << std::endl;
 					}
 				}

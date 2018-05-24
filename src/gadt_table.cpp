@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@ namespace gadt
 {
 	namespace console
 	{
+
 		//get string from table cell.
 		std::string TableCell::to_string(size_t max_length) const
 
@@ -59,42 +60,140 @@ namespace gadt
 			return temp;
 		}
 
-		//basic output function.
-		void Table::BasicOutput(std::ostream & os, CellOutputFunc CellCallback, FrameMode frame_mode, IndexMode index_mode)
-
+		//default constructor.
+		Table::Table() :
+			_cells(0, 0),
+			_column_width(0, TABLE_DEFAULT_WIDTH),
+			_enable_title(false),
+			_title_cell(),
+			_table_color(COLOR_GRAY)
 		{
-			char frame[3];
-			bool enable_index = (index_mode != TABLE_INDEX_DISABLE);
-			switch (frame_mode)
+		}
+
+		//constructor function
+		Table::Table(size_t column_size, size_t row_size) :
+			_cells(column_size, row_size),
+			_column_width(column_size, TABLE_DEFAULT_WIDTH),
+			_enable_title(false),
+			_title_cell(),
+			_table_color(COLOR_GRAY)
+		{
+		}
+
+		//constructor function with initializer list(cell).
+		Table::Table(size_t column_size, size_t row_size, std::initializer_list<InitList> list) :
+			_cells(column_size, row_size, list),
+			_column_width(column_size, TABLE_DEFAULT_WIDTH),
+			_enable_title(false),
+			_title_cell(),
+			_table_color(COLOR_GRAY)
+		{
+		}
+
+		//constructor function with initializer list(string).
+		Table::Table(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<std::string>> list) :
+			_cells(column_size, row_size, list),
+			_column_width(column_size, TABLE_DEFAULT_WIDTH),
+			_enable_title(false),
+			_title_cell(),
+			_table_color(COLOR_GRAY)
+		{
+		}
+
+		//print table
+		void Table::Print(FrameMode frame_mode, IndexMode index_mode)
+		{
+			/*
+			* Frame String Index
+			* 0: outer horizon line
+			* 1: outer vectical line
+			* 2: center dot
+			* 3: left dot
+			* 4: right dot
+			* 5: top dot
+			* 6: bottom dot
+			* 7: left top corner
+			* 8: right top corner
+			* 9: left bottom corner
+			*10: right bottom corner
+			*11: inner horizon line
+			*12: inner vectical line
+			*/
+
+			std::vector<std::string> FRAME;
+			
+			if (frame_mode == TABLE_FRAME_DISABLE || frame_mode == TABLE_FRAME_DISABLE_TIGHT)
 			{
-			case gadt::console::TABLE_FRAME_DISABLE:
-				frame[0] = 0; frame[1] = 0; frame[2] = 0;
-				break;
-			case gadt::console::TABLE_FRAME_ENABLE:
-				frame[0] = '+'; frame[1] = '-'; frame[2] = '|';
-				break;
-			default:
-				frame[0] = ' '; frame[1] = ' '; frame[2] = ' ';
-				break;
+				FRAME = std::vector<std::string>(13, " ");
 			}
-			//std::string frame = enable_frame ? "+-|" : "   ";
+			else if (frame_mode == TABLE_FRAME_BASIC)
+			{
+				FRAME = std::vector<std::string>{
+					"-",	//0: outer horizon line
+					"|",	//1: outer vectical line
+					"+",	//2: center dot
+					"+",	//3: left dot
+					"+",	//4: right dot
+					"+",	//5: top dot
+					"+",	//6: bottom dot
+					"+",	//7: left top corner
+					"+",	//8: right top corner
+					"+",	//9: left bottom corner
+					"+",	//10: right bottom corner
+					"-",	//11: inner horizon line
+					"|",	//12: inner vectical line
+				};
+			}
+			else if (frame_mode == TABLE_FRAME_CIRCLE || frame_mode == TABLE_FRAME_CIRCLE_TIGHT)
+			{
+				FRAME = std::vector<std::string>{
+					"─",	//0: outer horizon line
+					"│",	//1: outer vectical line
+					" ",	//2: center dot
+					"│",	//3: left dot
+					"│",	//4: right dot
+					"─",	//5: top dot
+					"─",	//6: bottom dot
+					"┌",	//7: left top corner
+					"┐",	//8: right top corner
+					"└",	//9: left bottom corner
+					"┘",	//10: right bottom corner
+					" ",	//11: inner horizon line
+					" ",	//12: inner vectical line
+				};
+			}
+			else
+			{
+				FRAME = std::vector<std::string>{
+					"─",	//0: outer horizon line
+					"│",	//1: outer vectical line
+					"┼",	//2: center dot
+					"├",	//3: left dot
+					"┤",	//4: right dot
+					"┬",	//5: top dot
+					"┴",	//6: bottom dot
+					"┌",	//7: left top corner
+					"┐",	//8: right top corner
+					"└",	//9: left bottom corner
+					"┘",	//10: right bottom corner
+					"─",	//11: inner horizon line
+					"│",	//12: inner vectical line
+				};
+			}
+
+			bool enable_index = (index_mode != TABLE_INDEX_DISABLE);
 			const size_t space_before_line_size = 4;
 			std::string space_before_line(space_before_line_size, ' ');
-
-			os << std::endl;
-
+			EndLine();
 			//print indexs upper the table.
 
 			if (enable_index)
 			{
-				os << space_before_line;
-				size_t extra = frame_mode == TABLE_FRAME_DISABLE ? 0 : 1;
+				print_frame(std::string(space_before_line_size + 1, ' '));
+				size_t extra = 1;//frame_mode == TABLE_FRAME_DISABLE ? 0 : 1;
 				for (size_t column = 0; column < this->number_of_columns(); column++)
-				{
-					std::string index = gadt::ToString(column + index_mode);
-					os << index << std::string((_column_width[column] * 2) - index.length() + extra, ' ');
-				}
-				os << std::endl;
+					print_index(column + index_mode, _column_width[column] * 2);
+				EndLine();
 			}
 
 			//print title
@@ -103,25 +202,49 @@ namespace gadt
 				size_t str_width = 1;
 				for (auto w : _column_width) { str_width += (w * 2 + 1); }
 				str_width -= 2;
-				os << space_before_line << frame[0];
-				os << std::string(str_width, frame[1]);
-				os << frame[0] << std::endl;
-
-				os << space_before_line << frame[2];
-				CellCallback(_title_cell, str_width, os);
-				os << frame[2] << std::endl;
+				print_frame(space_before_line + FRAME[7]);
+				for (size_t i = 0; i < str_width; i++)
+					print_frame(FRAME[0]);//outer hor line
+				print_frame(FRAME[8]);
+				EndLine(); 
+				print_frame(space_before_line + FRAME[1]);
+				print_cell(_title_cell, str_width);
+				print_frame(FRAME[1]);
+				EndLine();
 			}
 
 			//print upper line of the table.
 			if (frame_mode != TABLE_FRAME_DISABLE)
 			{
-				os << space_before_line << frame[0];
+				if (_enable_title)
+					print_frame(space_before_line + FRAME[3]);//left dot
+				else
+					print_frame(space_before_line + FRAME[7]);//left top corner
+				
 				for (size_t column = 0; column < this->number_of_columns(); column++)
 				{
-					os << std::string(_column_width[column] * 2, frame[1]) << frame[0];
-					if (column == this->number_of_columns() - 1)
+					if (_enable_title)
 					{
-						os << std::endl;
+						for (size_t i = 0; i < _column_width[column] * 2; i++)
+							print_frame(FRAME[11]);//inner line
+					}
+					else
+					{
+						for (size_t i = 0; i < _column_width[column] * 2; i++)
+							print_frame(FRAME[0]);//outer line
+					}
+					
+					if (column != this->number_of_columns() - 1)
+					{
+						print_frame(FRAME[5]);//top dot
+					}
+					else
+					{
+						if(_enable_title)
+							print_frame(FRAME[4]);//right dot
+						else
+							print_frame(FRAME[8]);//top right corner
+						EndLine();
 					}
 				}
 			}
@@ -130,60 +253,66 @@ namespace gadt
 			{
 				//print first line , include value and space.
 				if (enable_index)
-				{
-					std::string index = gadt::ToString(row + index_mode);
-					os << ' ' << index << std::string(space_before_line_size - index.length() - 1, ' ');
-				}
+					print_index(row + index_mode, space_before_line_size - 1);
 				else
-				{
-					os << space_before_line;
-				}
-				os << frame[2];
+					print_frame(space_before_line);
+				print_frame(FRAME[1]);//outer vec line
 				for (size_t column = 0; column < this->number_of_columns(); column++)
 				{
 					const size_t width = _column_width[column] * 2;
 					const TableCell& c = get_cell(column, row);
-					CellCallback(c, width, os);
-
-					if (frame_mode != TABLE_FRAME_DISABLE) { os << frame[2]; }
-					if (column == this->number_of_columns() - 1) { os << std::endl; }
+					print_cell(c, width);
+					if (column == this->number_of_columns() - 1)//last column
+					{
+						print_frame(FRAME[1]); //outer vec line
+						EndLine();
+					}
+					else
+					{
+						print_frame(FRAME[12]);//inner vec line.
+					}
 				}
 
 				//print second line
-				if (frame_mode != TABLE_FRAME_DISABLE && frame_mode != TABLE_FRAME_HALF_EMPTY)
+				if (row == this->number_of_rows() - 1 || (frame_mode != TABLE_FRAME_DISABLE_TIGHT && frame_mode != TABLE_FRAME_CIRCLE_TIGHT))
 				{
-					os << space_before_line << frame[0];
+					if (row == this->number_of_rows() - 1)//last row
+						print_frame(space_before_line + FRAME[9]);//left bottom corner
+					else
+						print_frame(space_before_line + FRAME[3]);//left dot
 					for (size_t column = 0; column < this->number_of_columns(); column++)
 					{
-						os << std::string(_column_width[column] * 2, frame[1]);
-						os << frame[0];
-						if (column == this->number_of_columns() - 1)
+						if (row == this->number_of_rows() - 1)//last row
 						{
-							os << std::endl;
+							for (size_t i = 0; i < _column_width[column] * 2; i++)
+								print_frame(FRAME[0]);//outer hor line
+							if (column == this->number_of_columns() - 1)
+							{
+								print_frame(FRAME[10]);//right bottom corner
+								EndLine();
+							}
+							else
+							{
+								print_frame(FRAME[6]);//bottom dot
+							}
+						}
+						else
+						{
+							for (size_t i = 0; i < _column_width[column] * 2; i++)
+								print_frame(FRAME[11]);//inner hor line
+							if (column == this->number_of_columns() - 1)
+							{
+								print_frame(FRAME[4]);//right dot
+								EndLine();
+							}
+							else
+							{
+								print_frame(FRAME[2]);
+							}
 						}
 					}
 				}
 			}
-		}
-
-		//convert the table to string.
-		std::string Table::ConvertToString(FrameMode frame_mode, IndexMode index_mode)
-		{
-			CellOutputFunc cell_cb = [](const TableCell& c, size_t max_width, std::ostream& os)->void {
-				os << c.to_string(max_width);
-			};
-			std::stringstream ss;
-			BasicOutput(ss, cell_cb, frame_mode, index_mode);
-			return ss.str();
-		}
-
-		//print table.
-		void Table::Print(FrameMode frame_mode, IndexMode index_mode)
-		{
-			CellOutputFunc callback = [](const TableCell& c, size_t max_width, std::ostream& os)->void {
-				console::Cprintf(c.to_string(max_width), c.color);
-			};
-			BasicOutput(std::cout, callback, frame_mode, index_mode);
 		}
 
 		//increase row
