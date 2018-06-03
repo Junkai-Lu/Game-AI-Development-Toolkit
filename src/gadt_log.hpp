@@ -336,5 +336,120 @@ namespace gadt
 			//disable all log
 			void Disable();
 		};
+
+		//JsonLoader is used to load json file.
+		class JsonLoader
+		{
+		private:
+			
+			ErrorLog _err_log;
+
+		public:
+
+			//return true if error exist
+			inline bool error_exist() const
+			{
+				return _err_log.is_empty() == false;
+			}
+
+			//return true if no error
+			inline bool no_error() const
+			{
+				return _err_log.is_empty();
+			}
+
+			//get errors as string format.
+			inline std::string get_error() const
+			{
+				return _err_log.output();
+			}
+
+		public:
+
+			//convert json to int
+			int JsonToInt(const json11::Json& json, std::string err_tag = "Int");
+
+			//convert json to size_t
+			size_t JsonToUInt(const json11::Json& json, std::string err_tag = "UInt");
+
+			//convert json to string
+			std::string JsonToString(const json11::Json& json, std::string err_tag = "String");
+
+			//convert json to boolean
+			bool JsonToBoolean(const json11::Json& json, std::string err_tag = "Boolean");
+
+			//convert json to float
+			float JsonToFloat(const json11::Json& json, std::string err_tag = "Float");
+
+			//convert json to double
+			double JsonToDouble(const json11::Json& json, std::string err_tag = "Double");
+
+			//convert json to int vector
+			inline std::vector<int> JsonToIntVector(const json11::Json& json, std::string err_tag = "IntVector")
+			{
+				std::string ele_err_tag = "Element in " + err_tag;
+				return JsonToVector<int>(json, [&](const json11::Json& ele_json)->int {
+					return JsonToInt(ele_json, ele_err_tag);
+				}, err_tag);
+			}
+
+			//convert json to size vector
+			inline std::vector<size_t> JsonToUIntVector(const json11::Json& json, std::string err_tag = "UintVector")
+			{
+				std::string ele_err_tag = "Element in " + err_tag;
+				return JsonToVector<size_t>(json, [&](const json11::Json& ele_json)->size_t {
+					return JsonToUInt(ele_json, ele_err_tag);
+				}, err_tag);
+			}
+
+			//convert json to string vector
+			inline std::vector<std::string> JsonToStringVector(const json11::Json& json, std::string err_tag = "StringVector")
+			{
+				std::string ele_err_tag = "Element in " + err_tag;
+				return JsonToVector<std::string>(json, [&](const json11::Json& ele_json)->std::string {
+					return JsonToString(ele_json, ele_err_tag);
+				}, err_tag);
+			}
+
+			//convert json to bool vector
+			inline std::vector<bool> JsonToBooleanVector(const json11::Json& json, std::string err_tag = "BooleanVector")
+			{
+				std::string ele_err_tag = "Element in " + err_tag;
+				return JsonToVector<bool>(json, [&](const json11::Json& ele_json)->bool {
+					return JsonToBoolean(ele_json, ele_err_tag);
+				}, err_tag);
+			}
+
+			//convert json to float vector
+			inline std::vector<float> JsonToFloatVector(const json11::Json& json, std::string err_tag = "FloatVector")
+			{
+				std::string ele_err_tag = "Element in " + err_tag;
+				return JsonToVector<float>(json, [&](const json11::Json& ele_json)->float {
+					return JsonToFloat(ele_json, ele_err_tag);
+				}, err_tag);
+			}
+
+			//convert json to double vector
+			inline std::vector<double> JsonToDoubleVector(const json11::Json& json, std::string err_tag = "DoubleVector")
+			{
+				std::string ele_err_tag = "Element in " + err_tag;
+				return JsonToVector<double>(json, [&](const json11::Json& ele_json)->double {
+					return JsonToDouble(ele_json, ele_err_tag);
+				}, err_tag);
+			}
+
+			//convert json to array.
+			template<typename T>
+			std::vector<T> JsonToVector(const json11::Json& json, std::function<T(const json11::Json&)> JsonToElement, std::string err_tag = "Vector")
+			{
+				std::vector<T> vec;
+				if (json.is_array())
+					for (const json11::Json& ele_json : json.array_items())
+						vec.push_back(JsonToElement(ele_json));
+				else
+					_err_log.add("[VECTOR] " + err_tag);
+				return vec;
+			}
+		};
 	}
 }

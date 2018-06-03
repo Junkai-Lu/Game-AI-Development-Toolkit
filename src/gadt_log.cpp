@@ -94,5 +94,59 @@ namespace gadt
 			DisableFile();
 			DisableMem();
 		}
+
+		//convert json to int
+		int JsonLoader::JsonToInt(const json11::Json & json, std::string err_tag)
+		{
+			if (json.is_number())
+				return json.int_value();
+			_err_log.add("[INT] " + err_tag);
+			return 0;
+		}
+
+		//convert json to size_t
+		size_t JsonLoader::JsonToUInt(const json11::Json & json, std::string err_tag)
+		{
+			if (json.is_number())
+				return static_cast<size_t>(json.int_value());
+			_err_log.add("[SIZE_T] " + err_tag);
+			return size_t();
+		}
+
+		//convert json to string
+		std::string JsonLoader::JsonToString(const json11::Json & json, std::string err_tag)
+		{
+			if (json.is_string())
+				return json.string_value();
+			_err_log.add("[STRING] " + err_tag);
+			return std::string();
+		}
+
+		//convert json to boolean
+		bool JsonLoader::JsonToBoolean(const json11::Json & json, std::string err_tag)
+		{
+			if (json.is_bool())
+				return json.bool_value();
+			_err_log.add("[BOOL] " + err_tag);
+			return false;
+		}
+
+		//convert json to float
+		float JsonLoader::JsonToFloat(const json11::Json & json, std::string err_tag)
+		{
+			if (json.is_number())
+				return static_cast<float>(json.number_value());
+			_err_log.add("[FLOAT] " + err_tag);
+			return 0.0f;
+		}
+
+		//convert json to double
+		double JsonLoader::JsonToDouble(const json11::Json & json, std::string err_tag)
+		{
+			if (json.is_number())
+				return json.number_value();
+			_err_log.add("[DOUBLE] " + err_tag);
+			return 0.0;
+		}
 	}
 }
