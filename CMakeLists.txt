@@ -16,6 +16,7 @@ SET(SRC_LIST
 		./src/gadt_container.hpp
 		./src/gadt_game.hpp
 		./src/gadt_log.hpp
+		./src/gadt_log.cpp
 		./src/gadt_table.h
 		./src/gadt_table.cpp
 		./src/gadt_memory.hpp

@@ -41,7 +41,9 @@ namespace gadt
 			{
 				_file_enabled = true;
 				_file_path = file_path;
+				return true;
 			}
+			return false;
 		}
 
 		//enable log memory.

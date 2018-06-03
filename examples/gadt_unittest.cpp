@@ -734,7 +734,19 @@ namespace gadt
 			stl::DynamicMatrix<size_t> dynamic_matrix(6, 6, 25);
 			table.LoadFromDynamicMatrix<size_t>(dynamic_matrix, ElemToString);
 			GADT_ASSERT(table.get_cell(5, 5).str, "25");
-			//table.Print();
+			table.set_width({ 5,4,3,2,3 });
+			/*table.Print(console::TABLE_FRAME_DISABLE, console::TABLE_INDEX_DISABLE);
+			table.Print(console::TABLE_FRAME_DISABLE, console::TABLE_INDEX_FROM_ZERO);
+			table.Print(console::TABLE_FRAME_DISABLE_TIGHT, console::TABLE_INDEX_DISABLE);
+			table.Print(console::TABLE_FRAME_DISABLE_TIGHT, console::TABLE_INDEX_FROM_ZERO);
+			table.Print(console::TABLE_FRAME_BASIC, console::TABLE_INDEX_DISABLE);
+			table.Print(console::TABLE_FRAME_BASIC, console::TABLE_INDEX_FROM_ZERO);
+			table.Print(console::TABLE_FRAME_CIRCLE, console::TABLE_INDEX_DISABLE);
+			table.Print(console::TABLE_FRAME_CIRCLE, console::TABLE_INDEX_FROM_ZERO);
+			table.Print(console::TABLE_FRAME_CIRCLE_TIGHT, console::TABLE_INDEX_DISABLE);
+			table.Print(console::TABLE_FRAME_CIRCLE_TIGHT, console::TABLE_INDEX_FROM_ZERO);
+			table.Print(console::TABLE_FRAME_ENABLE, console::TABLE_INDEX_DISABLE);
+			table.Print(console::TABLE_FRAME_ENABLE, console::TABLE_INDEX_FROM_ZERO);*/
 		}
 		void TestMinimax()
 		{

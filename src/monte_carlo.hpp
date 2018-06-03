@@ -70,7 +70,7 @@ namespace gadt
 			}
 
 			//output print with str behind each line.
-			std::string info() const override
+			void PrintInfo() const override
 			{
 				size_t index = 0;
 				console::Table tb(2, 5);
@@ -81,7 +81,7 @@ namespace gadt
 				tb.set_cell_in_row(index++, { { "enable_action_policy" },{ ToString(enable_action_policy) } });
 				tb.set_cell_in_row(index++, { { "no_winner_index" },{ ToString(no_winner_index) } });
 				tb.set_cell_in_row(index++, { { "simulation_warning_length" },{ ToString(simulation_warning_length) } });
-				return tb.ConvertToString();
+				tb.Print();
 			}
 		};
 
@@ -345,7 +345,7 @@ namespace gadt
 				if (log_enabled())
 				{
 					logger() << "[ Monte Carlo Simulation ]" << std::endl;
-					logger() << _setting.info();
+					_setting.PrintInfo();
 					logger() << std::endl << ">> Executing Monte Carlo Simulation......" << std::endl;
 				}
 
@@ -428,7 +428,7 @@ namespace gadt
 						{ ToString(root.win_time()) },
 						{ ToString(best_node_index) }
 					});
-					logger() << tb.ConvertToString() << std::endl;
+					tb.Print();
 				}
 
 				return action_list[best_node_index];

@@ -55,7 +55,7 @@ namespace gadt
 		{
 		}
 
-		virtual std::string info() const = 0;
+		virtual void PrintInfo() const = 0;
 	};
 
 	/*

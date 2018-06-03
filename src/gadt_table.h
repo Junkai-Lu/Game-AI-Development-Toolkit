@@ -48,9 +48,11 @@ namespace gadt
 		enum FrameMode : int8_t
 		{
 			TABLE_FRAME_DISABLE = 0,
-			TABLE_FRAME_EMPTY = 1,
-			TABLE_FRAME_HALF_EMPTY = 2,
-			TABLE_FRAME_ENABLE = 3
+			TABLE_FRAME_BASIC = 1,
+			TABLE_FRAME_CIRCLE = 2,
+			TABLE_FRAME_ENABLE = 3,
+			TABLE_FRAME_DISABLE_TIGHT = 10,
+			TABLE_FRAME_CIRCLE_TIGHT = 12,
 		};
 
 		//index type of table
@@ -144,6 +146,8 @@ namespace gadt
 		class Table
 		{
 		private:
+
+			//define function type
 			using pointer = TableCell*;
 			using reference = TableCell&;
 			using const_reference = const TableCell&;
@@ -160,10 +164,28 @@ namespace gadt
 			bool _enable_title;
 			TableCell _title_cell;
 
+			//color
+			ConsoleColor _table_color;
+
 		private:
 
-			//basic output function.
-			void BasicOutput(std::ostream & os, CellOutputFunc CellCallback, FrameMode frame_mode, IndexMode index_mode);
+			inline void print_index(size_t index, size_t max_width)
+			{
+				std::string index_str = gadt::ToString(index);
+				Cprintf(index_str + std::string(max_width - index_str.length() + 1, ' '), _table_color);
+			}
+
+			//print cell
+			inline void print_frame(std::string str)
+			{
+				Cprintf(str, _table_color);
+			}
+
+			//print cell
+			inline void print_cell(const TableCell& c, size_t max_width)
+			{
+				console::Cprintf(c.to_string(max_width), c.color);
+			}
 
 		public:
 
@@ -280,6 +302,12 @@ namespace gadt
 				_cells.set_column(column, cell_list);
 			}
 
+			//set table color.
+			inline void set_table_color(ConsoleColor color)
+			{
+				_table_color = color;
+			}
+
 			//get cell reference by coordinate
 			reference operator[](UnsignedCoordinate coord)
 			{
@@ -289,39 +317,16 @@ namespace gadt
 		public:
 
 			//default constructor.
-			Table() :
-				_cells(0, 0),
-				_column_width(0, TABLE_DEFAULT_WIDTH),
-				_enable_title(false)
-			{
-			}
+			Table();
 
 			//constructor function
-			Table(size_t column_size, size_t row_size) :
-				_cells(column_size, row_size),
-				_column_width(column_size, TABLE_DEFAULT_WIDTH),
-				_enable_title(false)
-			{
-			}
+			Table(size_t column_size, size_t row_size);
 
 			//constructor function with initializer list(cell).
-			Table(size_t column_size, size_t row_size, std::initializer_list<InitList> list) :
-				_cells(column_size, row_size, list),
-				_column_width(column_size, TABLE_DEFAULT_WIDTH),
-				_enable_title(false)
-			{
-			}
+			Table(size_t column_size, size_t row_size, std::initializer_list<InitList> list);
 
 			//constructor function with initializer list(string).
-			Table(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<std::string>> list) :
-				_cells(column_size, row_size, list),
-				_column_width(column_size, TABLE_DEFAULT_WIDTH),
-				_enable_title(false)
-			{
-			}
-
-			//convert the table to string.
-			std::string ConvertToString(FrameMode frame_mode = TABLE_FRAME_ENABLE, IndexMode index_mode = TABLE_INDEX_DISABLE);
+			Table(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<std::string>> list);
 
 			//print table.
 			void Print(FrameMode frame_mode = TABLE_FRAME_ENABLE, IndexMode index_mode = TABLE_INDEX_DISABLE);
