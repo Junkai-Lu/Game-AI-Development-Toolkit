@@ -50,18 +50,35 @@ namespace gadt
 				string("\e[0;40;35m"),		//purple = 5,
 				string("\e[0;40;33m"),		//deep_yellow = 6,
 				string("\e[0m"),			//deep_white = 7,
-				string("\e[0;40;37m"),		//gray = 8,
-				string("\e[0;40;34m"),		//blue = 9,
-				string("\e[0;40;32m"),		//green = 10,
-				string("\e[0;40;36m"),		//cyan = 11,
-				string("\e[0;40;31m"),		//red = 12,
-				string("\e[0;40;35m"),		//pink = 13,
-				string("\e[0;40;33m"),		//yellow = 14,
+				string("\e[1;40;30m"),		//gray = 8,
+				string("\e[1;40;34m"),		//blue = 9,
+				string("\e[1;40;32m"),		//green = 10,
+				string("\e[1;40;36m"),		//cyan = 11,
+				string("\e[1;40;31m"),		//red = 12,
+				string("\e[1;40;35m"),		//pink = 13,
+				string("\e[1;40;33m"),		//yellow = 14,
 				string("\e[0;40;37m")		//white = 15
 											//string("\e[0;40;37m")		//white = 15
 			};
 			std::cout << color_str[color];
 #endif
+		}
+
+		//get user confirm(Y/N or y/n)
+		bool GetUserConfirm(std::string tip)
+		{
+			std::cout << ">> ";
+			Cprintf(tip + "(y/n):", COLOR_GRAY);
+			for (;;)
+			{
+				std::string input = GetInput(">>");
+				if (input == "Y" || input == "y")
+					return true;
+				if (input == "N" || input == "n")
+					return false;
+				ShowError("invaild input, please input 'y' or 'n'.");
+			}
+			return false;
 		}
 
 		//show error
@@ -116,8 +133,7 @@ namespace gadt
 		void SystemClear()
 		{
 #ifdef __GADT_GNUC
-			if (!system("clear"))
-				std::cout << "clear failed" <<std::endl;
+			std::cout << "\33[2J";
 #elif defined(__GADT_MSVC)
 			system("cls");
 #endif

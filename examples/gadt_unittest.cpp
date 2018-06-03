@@ -155,6 +155,50 @@ namespace gadt
 			}
 		}
 
+		void TestConvertFunc()
+		{
+			int t = 0;
+			GADT_ASSERT(ToString(t), "0");
+			t = INT_MAX;
+			t = ToInt(ToString(t));
+			GADT_ASSERT(t, INT_MAX);
+
+			size_t st = UINT64_MAX;
+			st = ToSizeT(ToString(st));
+			GADT_ASSERT(st, UINT64_MAX);
+
+			int8_t t8 = INT8_MAX;
+			t8 = ToInt8(ToString(t8));
+			GADT_ASSERT(t8, INT8_MAX);
+
+			int16_t t16 = INT16_MAX;
+			t16 = ToInt16(ToString(t16));
+			GADT_ASSERT(t16, INT16_MAX);
+
+			int32_t t32 = INT32_MAX;
+			t32 = ToInt32(ToString(t32));
+			GADT_ASSERT(t32, INT32_MAX);
+
+			int64_t t64 = INT64_MAX;
+			t64 = ToInt64(ToString(t64));
+			GADT_ASSERT(t64, INT64_MAX);
+
+			uint8_t ut8 = UINT8_MAX;
+			ut8 = ToUInt8(ToString(ut8));
+			GADT_ASSERT(ut8, UINT8_MAX);
+
+			uint16_t ut16 = UINT16_MAX;
+			ut16 = ToUInt16(ToString(ut16));
+			GADT_ASSERT(ut16, UINT16_MAX);
+
+			uint32_t ut32 = UINT32_MAX;
+			ut32 = ToUInt32(ToString(ut32));
+			GADT_ASSERT(ut32, UINT32_MAX);
+
+			uint64_t ut64 = UINT64_MAX;
+			ut64 = ToUInt64(ToString(ut64));
+			GADT_ASSERT(ut64, UINT64_MAX);
+		}
 		void TestCoordinate()
 		{
 			//test signed coordinate
@@ -795,6 +839,7 @@ namespace gadt
 		}
 
 		const std::vector<FuncPair> func_list = {
+			{ "convert"			,TestConvertFunc		},
 			{ "coordinate"		,TestCoordinate			},
 			{ "bitboard"		,TestBitBoard			},
 			{ "file"			,TestFileLib			},

@@ -4,6 +4,21 @@ namespace gadt
 {
 	namespace log
 	{
+		void StringLogger::operator=(const StringLogger & target)
+		{
+			_print_enabled = target._print_enabled;
+			_file_enabled = target._file_enabled;
+			_mem_enabled = target._mem_enabled;
+			_file_path = target._file_path;
+			if (file_enabled())
+				_ofs.open(_file_path);
+			if (mem_enabled())
+			{
+				_oss.clear();
+				_oss << target._oss.str();
+			}
+		}
+
 		StringLogger::StringLogger() :
 			_print_enabled(false),
 			_file_enabled(false),
@@ -41,7 +56,9 @@ namespace gadt
 			{
 				_file_enabled = true;
 				_file_path = file_path;
+				return true;
 			}
+			return false;
 		}
 
 		//enable log memory.

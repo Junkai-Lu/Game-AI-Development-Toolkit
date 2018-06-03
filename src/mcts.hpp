@@ -71,7 +71,7 @@ namespace gadt
 			}
 
 			//output print with str behind each line.
-			std::string info() const override
+			void PrintInfo() const override
 			{
 				console::Table tb(2, 6);
 				tb.set_width({ 12,6 });
@@ -82,7 +82,7 @@ namespace gadt
 				tb.set_cell_in_row(3, { { "max_node_per_thread" },		{ ToString(max_node_per_thread) } });
 				tb.set_cell_in_row(4, { { "no_winner_index" },			{ ToString(no_winner_index) } });
 				tb.set_cell_in_row(5, { { "simulation_warning_length" },{ ToString(simulation_warning_length) } });
-				return tb.ConvertToString();
+				tb.Print();
 			}
 		};
 
@@ -125,6 +125,7 @@ namespace gadt
 			pointer			_brother_node;		//pointer to breother node.
 
 		public:
+
 			const State&        state()               const { return _state; }
 			const ActionList&   action_list()         const { return _action_list; }
 			const Action&       action(size_t i)      const { return _action_list[i]; }
@@ -193,9 +194,10 @@ namespace gadt
 			}
 
 		public:
+
 			MctsNode(const State& state, pointer parent_node, const FuncPackage& func, const MctsSetting& setting) :
 				_state(state),
-				_winner_index(func.DetemineWinner(state)),
+				_winner_index(func.DetermineWinner(state)),
 				_visited_time(1),
 				_win_time(0),
 				_parent_node(parent_node),
@@ -245,7 +247,7 @@ namespace gadt
 					GADT_CHECK_WARNING(is_debug(), i > setting.simulation_warning_length, "MCTS103: out of default policy process max length.");
 
 					//detemine winner
-					AgentIndex winner = func.DetemineWinner(state);
+					AgentIndex winner = func.DetermineWinner(state);
 
 					//return result if exist.
 					if (winner != setting.no_winner_index)
@@ -413,6 +415,26 @@ namespace gadt
 				return count;
 			}
 
+			//get list of all childs
+			std::vector<Node*> child_ptr_set() const
+			{
+				std::vector<Node*> child_list;
+				pointer child = fir_child_node();
+				for (;;)
+				{
+					if (child != nullptr)
+					{
+						child_list.push_back(child);
+						child = child->brother_node();
+					}
+					else
+					{
+						return child_list;
+					}
+				}
+				return child_list;
+			}
+
 			//return the value of _is_debug.
 			constexpr inline bool is_debug() const
 			{
@@ -433,16 +455,22 @@ namespace gadt
 			using ActionList = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::ActionList;
 			using UpdateStateFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::UpdateStateFunc;
 			using MakeActionFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::MakeActionFunc;
-			using DetemineWinnerFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetemineWinnerFunc;
+			using DetermineWinnerFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetermineWinnerFunc;
 			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::is_debug;
+#else
+			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::ActionList;
+			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::UpdateStateFunc;
+			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::MakeActionFunc;
+			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetermineWinnerFunc;
 #endif
 			using Node					= MctsNode<State, Action, Result, _is_debug>;
+			using NodePtrList			= std::vector<Node*>;
 			using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;
 			using AllowUpdateValueFunc	= std::function<bool(const State&, const Result&)>;
 			using TreePolicyValueFunc	= std::function<UcbValue(const Node&, const Node&)>;
 			using DefaultPolicyFunc		= std::function<const Action&(const ActionList&)>;
 			using AllowExtendFunc		= std::function<bool(const Node&)>;
-			using ValueForRootNodeFunc	= std::function<UcbValue(const Node&, const Node&)>;
+			using RootSelectionFunc		= std::function<size_t(const NodePtrList&)>;
 
 		public:
 			//necessary functions.
@@ -453,38 +481,38 @@ namespace gadt
 			TreePolicyValueFunc			TreePolicyValue;	//value of child node in selection process. the highest would be seleced.
 			DefaultPolicyFunc			DefaultPolicy;		//the default policy to select action.
 			AllowExtendFunc				AllowExtend;		//allow node to extend child node.
-			ValueForRootNodeFunc		ValueForRootNode;	//select best action of root node after iterations finished.
+			RootSelectionFunc			RootSelection;		//select best action of root node after iterations finished.
 
 		public:
 			explicit MctsFuncPackage(
 				UpdateStateFunc			_UpdateState,
 				MakeActionFunc			_MakeAction,
-				DetemineWinnerFunc		_DetemineWinner,
+				DetermineWinnerFunc		_DetermineWinner,
 				StateToResultFunc		_StateToResult,
 				AllowUpdateValueFunc	_AllowUpdateValue,
 				TreePolicyValueFunc		_TreePolicyValue,
 				DefaultPolicyFunc		_DefaultPolicy,
 				AllowExtendFunc			_AllowExtend,
-				ValueForRootNodeFunc	_ValueForRootNode
+				RootSelectionFunc		_RootSelection
 			) :
-				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetemineWinner),
+				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetermineWinner),
 				StateToResult(_StateToResult),
 				AllowUpdateValue(_AllowUpdateValue),
 				TreePolicyValue(_TreePolicyValue),
 				DefaultPolicy(_DefaultPolicy),
 				AllowExtend(_AllowExtend),
-				ValueForRootNode(_ValueForRootNode)
+				RootSelection(_RootSelection)
 			{
 			}
 
 			explicit MctsFuncPackage(
 				UpdateStateFunc			_UpdateState,
 				MakeActionFunc			_MakeAction,
-				DetemineWinnerFunc		_DetemineWinner,
+				DetermineWinnerFunc		_DetermineWinner,
 				StateToResultFunc		_StateToResult,
 				AllowUpdateValueFunc	_AllowUpdateValue
 			) :
-				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetemineWinner),
+				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetermineWinner),
 				StateToResult(_StateToResult),
 				AllowUpdateValue(_AllowUpdateValue),
 				TreePolicyValue([](const Node& parent, const Node& child)->UcbValue {
@@ -498,8 +526,18 @@ namespace gadt
 				AllowExtend([](const Node& node)->bool {
 					return true;
 				}),
-				ValueForRootNode([](const Node& parent, const Node& child)->UcbValue {
-					return static_cast<UcbValue>(child.visited_time());
+				RootSelection([](const NodePtrList& node_ptr_set)->size_t{
+					size_t best_visit = node_ptr_set[0]->visited_time();
+					size_t best_index = 0;
+					for (size_t i = 0; i < node_ptr_set.size(); i++)
+					{
+						if (node_ptr_set[i]->visited_time() > best_visit)
+						{
+							best_visit = node_ptr_set[i]->visited_time();
+							best_index = i;
+						}
+					}
+					return best_index;
 				})
 			{
 			}
@@ -593,7 +631,7 @@ namespace gadt
 		template<typename State, typename Action, typename Result = AgentIndex, bool _is_debug = false>
 		class MonteCarloTreeSearch final : public GameAlgorithmBase<State,Action,Result,_is_debug>
 		{
-#ifdef __GADT_GNUC
+//#ifdef __GADT_GNUC
 		private:
 			using GameAlgorithmBase<State, Action, Result, _is_debug>::_algorithm_name;
 			using GameAlgorithmBase<State, Action, Result, _is_debug>::_log_controller;
@@ -610,7 +648,7 @@ namespace gadt
 			using GameAlgorithmBase<State, Action, Result, _is_debug>::DisableLog;
 			using GameAlgorithmBase<State, Action, Result, _is_debug>::EnableJsonOutput;
 			using GameAlgorithmBase<State, Action, Result, _is_debug>::DisableJsonOutput;
-#endif
+//#endif
 
 		public:
 			using Node			= MctsNode<State, Action, Result, _is_debug>;			//searcg node.	
@@ -637,7 +675,7 @@ namespace gadt
 				if (log_enabled())
 				{
 					logger() << "[ Monte Carlo Tree Search ]" << std::endl;
-					logger() << _setting.info();
+					_setting.PrintInfo();
 					logger() << std::endl << ">> Executing MCTS......" << std::endl;
 				}
 
@@ -691,16 +729,8 @@ namespace gadt
 
 				//select best action.
 				GADT_CHECK_WARNING(is_debug(), root_node.fir_child_node() == nullptr, "MCTS107: empty child node under root node.");
-				Node* child_ptr = root_node.fir_child_node();
-				std::vector<Node*> child_ptr_set;
-				std::vector<UcbValue> child_value_set;
-				while(child_ptr != nullptr)
-				{
-					child_ptr_set.push_back(child_ptr);
-					child_value_set.push_back(_func_package.ValueForRootNode(root_node, *child_ptr));
-					child_ptr = child_ptr->brother_node();
-				}
-				size_t best_node_index = func::GetMaxElement(child_value_set);
+				auto child_nodes = root_node.child_ptr_set();
+				size_t best_child_index = _func_package.RootSelection(child_nodes);
 
 				if (log_enabled())
 				{
@@ -710,48 +740,46 @@ namespace gadt
 					size_t total_tree_size = 0;
 					size_t total_visit_time = 0;
 					size_t total_win_time = 0;
-					for (size_t i = 0; i < child_ptr_set.size(); i++)
+					for (size_t i = 0; i < child_nodes.size(); i++)
 					{
-						tree_size_set[i] = child_ptr_set[i]->subtree_size();
-						visit_time_set[i] = child_ptr_set[i]->visited_time();
-						win_time_set[i] = child_ptr_set[i]->win_time();
+						tree_size_set[i] = child_nodes[i]->subtree_size();
+						visit_time_set[i] = child_nodes[i]->visited_time();
+						win_time_set[i] = child_nodes[i]->win_time();
 						total_tree_size += tree_size_set[i];
 						total_visit_time += visit_time_set[i];
 						total_win_time += win_time_set[i];
 					}
 
 					//MCTS RESULT
-					console::Table tb(7, root_node.action_list().size() + 2);
+					console::Table tb(6, root_node.action_list().size() + 2);
 					tb.enable_title({ "MCTS RESULT: TIME = [ " + ToString(tp_mcts_start.time_since_created()) + "s ]" });
-					tb.set_cell_in_row(0, { { "Index" },{ "Action" },{ "Value" },{ "Visit" },{ "Win" },{ "Size" },{ "Best" } });
+					tb.set_cell_in_row(0, { { "Index" },{ "Action" },{ "Visit" },{ "Win" },{ "Size" },{ "Best" } });
 					tb.set_width({ 3,10,4,4,4,4,2 });
 					for (size_t i = 0; i < root_node.action_list().size(); i++)
 					{
 						tb.set_cell_in_row(i + 1, {
 							{ ToString(i) },
 							{ _log_controller.action_to_str_func()(root_node.action_list()[i]) },
-							{ ToString(child_value_set[i]) },
 							{ ToString(visit_time_set[i])},
 							{ ToString(win_time_set[i]) },
 							{ ToString(tree_size_set[i]) },
-							{ i == best_node_index ? "Yes " : "  " }
+							{ i == best_child_index ? "Yes " : "  " }
 						});
 					}
 					tb.set_cell_in_row(root_node.action_list().size()+1, { 
 						{ "Total" },
 						{ "" },
-						{ "" },
 						{ ToString(total_visit_time) },
 						{ ToString(total_win_time) },
 						{ ToString(total_tree_size) },
-						{ ToString(best_node_index) } 
+						{ ToString(best_child_index) } 
 					});
-					logger() << tb.ConvertToString() << std::endl;
+					tb.Print();
 				}
 
 				GADT_CHECK_WARNING(is_debug(), root_actions.size() == 0, "MCTS102: best value for root node equal to 0.");
 
-				return root_actions[best_node_index];
+				return root_actions[best_child_index];
 			}
 
 		public:
@@ -759,12 +787,12 @@ namespace gadt
 			MonteCarloTreeSearch(
 				typename FuncPackage::UpdateStateFunc		_UpdateState,
 				typename FuncPackage::MakeActionFunc		_MakeAction,
-				typename FuncPackage::DetemineWinnerFunc	_DetemineWinner,
+				typename FuncPackage::DetermineWinnerFunc	_DetermineWinner,
 				typename FuncPackage::StateToResultFunc		_StateToResult,
 				typename FuncPackage::AllowUpdateValueFunc	_AllowUpdateValue
 			):
 				GameAlgorithmBase<State, Action, Result, _is_debug>("MCTS"),
-				_func_package( _UpdateState, _MakeAction, _DetemineWinner, _StateToResult, _AllowUpdateValue),
+				_func_package( _UpdateState, _MakeAction, _DetermineWinner, _StateToResult, _AllowUpdateValue),
 				_setting()
 			{
 			}
