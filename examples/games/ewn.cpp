@@ -219,10 +219,8 @@ namespace gadt
 		void DefineEwnShell(shell::GameShell& shell)
 		{
 			auto ewn = shell.CreateShellPage<EwnState>("ewn", Formation{ 1,2,3,4,5,6 }, Formation{ 1,2,3,4,5,6 });
-
 			ewn->AddFunction("print", "print state", [](EwnState& state)->void {state.Print(); });
-
-			ewn->AddFunction("actions", "show actions", [](EwnState& state)->void{
+			ewn->AddFunction("actions", "show actions", [](EwnState& state, const shell::ParamsList& params) {
 				state.Print();
 				EwnActionGenerator generator(state);
 				auto actions = generator.GetAllActions();
@@ -237,16 +235,14 @@ namespace gadt
 					state.Print();
 				}
 			});
-
-			ewn->AddFunction("random", "random action", [](EwnState& state)->void{
+			ewn->AddFunction("random", "random action", [](EwnState& state) {
 				auto actions = EwnActionGenerator(state).GetAllActions();
 				auto act = func::GetRandomElement(actions);
 				UpdateState(state, act);
 				std::cout << "take action = " << act.to_string() << std::endl;
 				state.Print();
 			});
-
-			ewn->AddFunction("winner", "get winner", [](EwnState& state)->void{
+			ewn->AddFunction("winner", "get winner", [](EwnState& state) {
 				auto winner = DetemineWinner(state);
 				switch (winner)
 				{

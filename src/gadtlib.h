@@ -92,11 +92,15 @@ namespace gadt
 	using UcbValue = double;
 	using EvalValue = double;
 
-	//extern BasicUnsignedCoordinate.
+	/*
+	* extern BasicUnsignedCoordinate.
+	*/
 	template<typename IntType = uint64_t, typename std::enable_if<std::is_unsigned<IntType>::value, int>::type = 0>
 	struct BasicUnsignedCoordinate;
 
-	//struct BasicCoordinate is used to express a plane coordinate of signed integer.
+	/*
+	* struct BasicCoordinate is used to express a plane coordinate of signed integer.
+	*/
 	template<typename IntType = int64_t, typename std::enable_if<std::is_signed<IntType>::value, int>::type = 0>
 	struct BasicCoordinate
 	{
@@ -212,7 +216,9 @@ namespace gadt
 		}
 	};
 
-	//struct BasicUnsignedCoordinate is used to express a plane coordinate of unsigned integer.
+	/*
+	* struct BasicUnsignedCoordinate is used to express a plane coordinate of unsigned integer.
+	*/
 	template<typename IntType, typename std::enable_if<std::is_unsigned<IntType>::value, int>::type>
 	struct BasicUnsignedCoordinate
 	{
@@ -335,77 +341,9 @@ namespace gadt
 	using UnsignedCoordinate = BasicUnsignedCoordinate<size_t>;
 
 	//srting to interger.
-	template<typename T, typename ReturnType = int, typename std::enable_if<std::is_integral<ReturnType>::value, int>::type = 0>
-	inline ReturnType ToInt(const T& data)
+	inline int ToInt(std::string str)
 	{
-		std::stringstream ss;
-		ss << data;
-		ReturnType res = 0;
-		ss >> res;
-		return res;
-	}
-
-	//convert to int8_t
-	template<typename T>
-	inline int8_t ToInt8(const T& data)
-	{
-		return ToInt<T, int8_t>(data);
-	}
-
-	//convert to int16_t
-	template<typename T>
-	inline int16_t ToInt16(const T& data)
-	{
-		return ToInt<T, int16_t>(data);
-	}
-
-	//convert to int32_t
-	template<typename T>
-	inline int32_t ToInt32(const T& data)
-	{
-		return ToInt<T, int32_t>(data);
-	}
-
-	//convert to int64_t
-	template<typename T>
-	inline int64_t ToInt64(const T& data)
-	{
-		return ToInt<T, int64_t>(data);
-	}
-
-	//convert to uint8_t
-	template<typename T>
-	inline uint8_t ToUInt8(const T& data)
-	{
-		return ToInt<T, uint8_t>(data);
-	}
-
-	//convert to uint16_t
-	template<typename T>
-	inline uint16_t ToUInt16(const T& data)
-	{
-		return ToInt<T, uint16_t>(data);
-	}
-
-	//convert to uint32_t
-	template<typename T>
-	inline uint32_t ToUInt32(const T& data)
-	{
-		return ToInt<T, uint32_t>(data);
-	}
-
-	//convert to uint64_t
-	template<typename T>
-	inline uint64_t ToUInt64(const T& data)
-	{
-		return ToInt<T, uint64_t>(data);
-	}
-
-	//convert to size_t
-	template<typename T>
-	inline size_t ToSizeT(const T& data)
-	{
-		return ToInt<T, size_t>(data);
+		return atoi(str.c_str());
 	}
 
 	//bool convert to string.
@@ -433,13 +371,14 @@ namespace gadt
 		//console color type
 		enum ConsoleColor
 		{
+			COLOR_DEFAULT = 7,
 			COLOR_DEEP_BLUE = 1,
 			COLOR_DEEP_GREEN = 2,
 			COLOR_DEEP_CYAN = 3,
 			COLOR_BROWN = 4,
 			COLOR_PURPLE = 5,
 			COLOR_DEEP_YELLOW = 6,
-			COLOR_DEFAULT = 7,
+			COLOR_DEEP_WHITE = 7,
 			COLOR_GRAY = 8,
 			COLOR_BLUE = 9,
 			COLOR_GREEN = 10,
@@ -483,132 +422,6 @@ namespace gadt
 			}
 		};
 
-		//color allocator is a class that can allocate different colors.
-		class ColorAllocator
-		{
-		private:
-
-			size_t _index;
-
-		private:
-
-			//to next index
-			inline void to_next()
-			{
-				_index++;
-				if (_index == 7)
-					_index = 9;//pass white and gray.
-				if (_index >= 16)
-					_index = 1;
-			}
-
-			//return true if current color is tint
-			inline bool is_tint() const
-			{
-				return _index >= COLOR_BLUE && _index <= COLOR_YELLOW;
-			}
-
-			//return true if current color is deep
-			inline bool is_deep() const
-			{
-				return _index >= COLOR_DEEP_BLUE && _index <= COLOR_DEEP_YELLOW;
-			}
-
-			//convert index to color.
-			inline ConsoleColor get_color(size_t index) const
-			{
-				return static_cast<ConsoleColor>(index);
-			}
-
-			//get current color
-			inline ConsoleColor current_color() const
-			{
-				return get_color(_index);
-			}
-
-		public:
-
-			//default constructor.
-			inline ColorAllocator() :
-				_index(16)
-			{
-			}
-
-			//get next tint color
-			inline ConsoleColor GetTint()
-			{
-				to_next();
-				while (is_tint() == false)
-					to_next();
-				return current_color();
-			}
-
-			//get next deep color
-			inline ConsoleColor GetDeep()
-			{
-				to_next();
-				while (is_deep() == false)
-					to_next();
-				return current_color();
-			}
-
-			//get next any color but white and gray.
-			inline ConsoleColor GetAny()
-			{
-				to_next();
-				return current_color();
-			}
-
-			//get random tint color
-			inline ConsoleColor GetRandomTint() const
-			{
-				size_t rnd = rand() % 6;
-				return get_color(COLOR_BLUE + rnd);
-			}
-
-			//get random deep color
-			inline ConsoleColor GetRandomDeep() const
-			{
-				size_t rnd = rand() % 6;
-				return get_color(COLOR_DEEP_BLUE + rnd);
-			}
-
-			//get random any color
-			inline ConsoleColor GetRandomAny() const
-			{
-				size_t rnd = rand() % 12;
-				if (rnd >= 6)
-					rnd += 2;
-				return get_color(COLOR_DEEP_BLUE + rnd);
-			}
-
-			//get tint color by index.
-			template<typename Index, typename std::enable_if<std::is_integral<Index>::value ,int>::type = 0>
-			inline ConsoleColor GetTintByIndex(Index index) const
-			{
-				size_t remain = static_cast<size_t>(index) % 6;
-				return get_color(COLOR_BLUE + remain);
-			}
-
-			//get deep color by index.
-			template<typename Index, typename std::enable_if<std::is_integral<Index>::value, int>::type = 0>
-			inline ConsoleColor GetDeepByIndex(Index index) const
-			{
-				size_t remain = static_cast<size_t>(index) % 6;
-				return get_color(COLOR_DEEP_BLUE + remain);
-			}
-
-			//get any color by index.
-			template<typename Index, typename std::enable_if<std::is_integral<Index>::value, int>::type = 0>
-			inline ConsoleColor GetAnyByIndex(Index index) const
-			{
-				size_t remain = static_cast<size_t>(index) % 12;
-				if (remain >= 6)
-					remain += 2;
-				return get_color(COLOR_DEEP_BLUE + remain);
-			}
-		};
-
 		//print endline.
 		template<size_t COUNT = 1>
 		inline void EndLine()
@@ -635,9 +448,6 @@ namespace gadt
 			std::cin >> input;
 			return input;
 		}
-
-		//get user confirm(Y/N or y/n)
-		bool GetUserConfirm(std::string tip);
 
 		//show error in terminal.
 		void ShowError(std::string reason);

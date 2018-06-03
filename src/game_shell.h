@@ -43,7 +43,7 @@ namespace gadt
 #else
 			constexpr const bool   g_SHELL_ENABLE_WARNING = false;	//disable warning.
 #endif
-			constexpr const size_t g_COMMAND_TYPE_NUMBER = 7;		//command type number.
+			constexpr const size_t g_COMMAND_TYPE_NUMBER = 5;		//command type number.
 			constexpr const size_t g_MAX_COMMAND_LENGTH = 15;		//max length of the command. 
 
 			//list command, default is 'ls'
@@ -95,9 +95,7 @@ namespace gadt
 				DATA_COMMAND = 1,
 				PARAMS_COMMAND = 2,
 				DATA_AND_PARAMS_COMMAND = 3,
-				BOOL_PARAMS_COMMAND = 4,
-				BOOL_DATA_AND_PARAMS_COMMAND = 5,
-				CHILD_PAGE_COMMAND = 6
+				CHILD_PAGE_COMMAND = 4
 			};
 
 			//Command Parser.
@@ -242,13 +240,10 @@ namespace gadt
 			class CommandBase
 			{
 			public:
-
 				using DefaultCommandFunc = std::function<void()>;
 				using DataCommandFunc = std::function<void(DataType&)>;
 				using ParamsCommandFunc = std::function<void(const ParamsList&)>;
 				using DataAndParamsCommandFunc = std::function<void(DataType&, const ParamsList&)>;
-				using BoolParamsCommandFunc = std::function<bool(const ParamsList&)>;
-				using BoolDataAndParamsCommandFunc = std::function<bool(DataType&, const ParamsList&)>;
 
 			private:
 
@@ -319,17 +314,9 @@ namespace gadt
 			template<typename DataType>
 			class DataAndParamsCommand;
 
-			//default func command with boolean return value record.
-			template<typename DataType>
-			class BoolParamsCommand;
-
-			//data and params command with boolean return value record.
-			template<typename DataType>
-			class BoolDataAndParamsCommand;
-
-			//child page record.
 			template<typename DataType>
 			class ChildPageCommand;
+
 		}
 
 		//shell pages class
@@ -428,21 +415,17 @@ namespace gadt
 			private:
 				friend class ::gadt::shell::GameShell;
 
-				using CommandBase					= command::CommandBase<DataType>;
-				using DefaultCommand				= command::DefaultCommand<DataType>;
-				using DataCommand					= command::DataCommand<DataType>;
-				using ParamsCommand					= command::ParamsCommand<DataType>;
-				using DataAndParamsCommand			= command::DataAndParamsCommand<DataType>;
-				using BoolParamsCommand				= command::BoolParamsCommand<DataType>;
-				using BoolDataAndParamsCommand		= command::BoolDataAndParamsCommand<DataType>;
-				using ChildPageCommand				= command::ChildPageCommand<DataType>;
-				using CommandPtr					= std::unique_ptr<CommandBase>;
-				using DefaultCommandFunc			= typename CommandBase::DefaultCommandFunc;
-				using DataCommandFunc				= typename CommandBase::DataCommandFunc;
-				using ParamsCommandFunc				= typename CommandBase::ParamsCommandFunc;
-				using DataAndParamsCommandFunc		= typename CommandBase::DataAndParamsCommandFunc;
-				using BoolParamsCommandFunc			= typename CommandBase::BoolParamsCommandFunc;
-				using BoolDataAndParamsCommandFunc	= typename CommandBase::BoolDataAndParamsCommandFunc;
+				using CommandBase				= command::CommandBase<DataType>;
+				using DefaultCommand			= command::DefaultCommand<DataType>;
+				using DataCommand				= command::DataCommand<DataType>;
+				using ParamsCommand				= command::ParamsCommand<DataType>;
+				using DataAndParamsCommand		= command::DataAndParamsCommand<DataType>;
+				using ChildPageCommand			= command::ChildPageCommand<DataType>;
+				using CommandPtr				= std::unique_ptr<CommandBase>;
+				using DefaultCommandFunc		= typename CommandBase::DefaultCommandFunc;
+				using DataCommandFunc			= typename CommandBase::DataCommandFunc;
+				using ParamsCommandFunc			= typename CommandBase::ParamsCommandFunc;
+				using DataAndParamsCommandFunc	= typename CommandBase::DataAndParamsCommandFunc;
 				
 			private:
 
@@ -455,7 +438,7 @@ namespace gadt
 				//print command list
 				void PrintCommandList(std::string param) const override
 				{
-					constexpr size_t SYMBOL_WIDTH = 3;
+					constexpr size_t SYMBOL_WIDTH = 2;
 					constexpr size_t NAME_WIDTH = (define::g_MAX_COMMAND_LENGTH + 1) / 2;
 					constexpr size_t DESC_WIDTH = (define::g_MAX_COMMAND_LENGTH + 1);
 
@@ -474,16 +457,16 @@ namespace gadt
 								tb.set_width({ SYMBOL_WIDTH,NAME_WIDTH,DESC_WIDTH });
 								for (size_t n = 0; n < _cmd_name_list[i].size(); n++)
 								{
-									std::string type = define::GetCommandTypeSymbol(i);
 									std::string name = _cmd_name_list[i].at(n);
+									std::string type = define::GetCommandTypeSymbol(i);
 									std::string desc = _command_list.at(name)->desc();
 									tb.set_cell_in_row(n,{
-										{ type,console::COLOR_GRAY, console::TABLE_ALIGN_MIDDLE },
-										{ name,console::COLOR_RED, console::TABLE_ALIGN_LEFT },
-										{ desc,console::COLOR_WHITE, console::TABLE_ALIGN_LEFT }
+										{ type,console::COLOR_GRAY },
+										{ name,console::COLOR_RED },
+										{ desc,console::COLOR_WHITE }
 									});
 								}
-								tb.Print(console::TABLE_FRAME_CIRCLE_TIGHT, console::TABLE_INDEX_DISABLE);
+								tb.Print(console::TABLE_FRAME_HALF_EMPTY, console::TABLE_INDEX_DISABLE);
 								std::cout << std::endl;
 							}
 						}
@@ -508,7 +491,7 @@ namespace gadt
 							});
 							n++;
 						}
-						tb.Print(console::TABLE_FRAME_CIRCLE_TIGHT, console::TABLE_INDEX_DISABLE);
+						tb.Print(console::TABLE_FRAME_HALF_EMPTY, console::TABLE_INDEX_DISABLE);
 						std::cout << std::endl;
 					}
 				}
@@ -666,7 +649,7 @@ namespace gadt
 				* [desc] is description of the command.
 				* [check] is the parameters check function, type = bool(const ParamsList&)
 				*/
-				void AddFunction(std::string name, std::string desc, ParamsCommandFunc func, ParamsCheckFunc check)
+				void AddFunction(std::string name, std::string desc, ParamsCommandFunc func, ParamsCheckFunc check = define::DefaultParamsCheck)
 				{
 					if (CheckCommandNameLegality(name))
 					{
@@ -684,47 +667,11 @@ namespace gadt
 				* [desc] is description of the command.
 				* [check] is the parameters check function, type = bool(const ParamsList&)
 				*/
-				void AddFunction(std::string name, std::string desc,DataAndParamsCommandFunc func, ParamsCheckFunc check)
+				void AddFunction(std::string name, std::string desc, DataAndParamsCommandFunc func, ParamsCheckFunc check = define::DefaultParamsCheck)
 				{
 					if (CheckCommandNameLegality(name))
 					{
 						auto command_ptr = CommandPtr(new DataAndParamsCommand(name, desc, func, check));
-						InsertCommand(name, command_ptr);
-					}
-				}
-
-				/*
-				* overloaded AddFunction.
-				* add BoolParamsCommand which allows to be executed with parameters with a boolean return value.
-				*
-				* [name] is the name of command.
-				* [func] is the added function, type = bool(const ParamsList&)
-				* [desc] is description of the command.
-				* [check] is the parameters check function, type = bool(const ParamsList&)
-				*/
-				void AddFunction(std::string name, std::string desc, BoolParamsCommandFunc func)
-				{
-					if (CheckCommandNameLegality(name))
-					{
-						auto command_ptr = CommandPtr(new BoolParamsCommand(name, desc, func));
-						InsertCommand(name, command_ptr);
-					}
-				}
-
-				/*
-				* overloaded AddFunction.
-				* add BoolDataAndParamsCommand which allows to operator binded data with parameters with a boolean return value.
-				*
-				* [name] is the name of command.
-				* [func] is the added function, type = bool(DataType&, const ParamsList&)
-				* [desc] is description of the command.
-				* [check] is the parameters check function, type = bool(const ParamsList&)
-				*/
-				void AddFunction(std::string name, std::string desc, BoolDataAndParamsCommandFunc func)
-				{
-					if (CheckCommandNameLegality(name))
-					{
-						auto command_ptr = CommandPtr(new BoolDataAndParamsCommand(name, desc, func));
 						InsertCommand(name, command_ptr);
 					}
 				}
@@ -994,61 +941,6 @@ namespace gadt
 				void Run(DataType& data, const ParamsList& params) override
 				{
 					_data_params_command_func(data, params);
-				}
-			};
-
-			//default func command record.
-			template<typename DataType>
-			class BoolParamsCommand :public CommandBase<DataType>
-			{
-			public:
-				using CommandFunc = typename CommandBase<DataType>::BoolParamsCommandFunc;
-
-			private:
-				CommandFunc _bool_params_command_func;
-
-			public:
-
-				BoolParamsCommand(std::string name, std::string desc, CommandFunc bool_params_command_func) :
-					CommandBase<DataType>(BOOL_PARAMS_COMMAND, name, desc, define::DefaultParamsCheck),
-					_bool_params_command_func(bool_params_command_func)
-				{
-				}
-
-				void Run(DataType& data, const ParamsList& params) override
-				{
-					bool result = _bool_params_command_func(params);
-					if (result == false)
-					{
-						gadt::console::ShowError("run " + this->name() + " failed.");
-					}
-				}
-			};
-
-			//data and params command record.
-			template<typename DataType>
-			class BoolDataAndParamsCommand :public CommandBase<DataType>
-			{
-			public:
-				using CommandFunc = typename CommandBase<DataType>::BoolDataAndParamsCommandFunc;
-
-			private:
-				CommandFunc _bool_data_params_command_func;
-
-			public:
-				BoolDataAndParamsCommand(std::string name, std::string desc, CommandFunc bool_data_params_command_func) :
-					CommandBase<DataType>(BOOL_DATA_AND_PARAMS_COMMAND, name, desc, define::DefaultParamsCheck),
-					_bool_data_params_command_func(bool_data_params_command_func)
-				{
-				}
-
-				void Run(DataType& data, const ParamsList& params) override
-				{
-					bool result = _bool_data_params_command_func(data, params);
-					if (result == false)
-					{
-						console::ShowError("run " + this->name() + " failed.");
-					}
 				}
 			};
 

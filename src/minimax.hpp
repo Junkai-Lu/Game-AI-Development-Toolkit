@@ -67,7 +67,7 @@ namespace gadt
 			{
 			}
 
-			void PrintInfo() const override
+			std::string info() const override
 			{
 				console::Table tb(2, 5);
 				tb.set_width({ 12,6 });
@@ -77,7 +77,7 @@ namespace gadt
 				tb.set_cell_in_row(2, { { "ab_prune_enabled" },	{ ToString(ab_prune_enabled) } });
 				tb.set_cell_in_row(3, { { "no_winner_index" },	{ ToString(no_winner_index) } });
 				tb.set_cell_in_row(4, { { "original_eval" },	{ ToString(original_eval) } });
-				tb.Print();
+				return tb.ConvertToString();
 			}
 		};
 
@@ -89,13 +89,8 @@ namespace gadt
 			using ActionList = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::ActionList;
 			using UpdateStateFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::UpdateStateFunc;
 			using MakeActionFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::MakeActionFunc;
-			using DetermineWinnerFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetermineWinnerFunc;
+			using DetemineWinnerFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetemineWinnerFunc;
 			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::is_debug;
-#else 
-			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::ActionList;
-			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::UpdateStateFunc;
-			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::MakeActionFunc;
-			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetermineWinnerFunc;
 #endif
 			using EvalForParentFunc = std::function<EvalValue(const State&, const AgentIndex)>;
 
@@ -107,10 +102,10 @@ namespace gadt
 			MinimaxFuncPackage(
 				UpdateStateFunc			_UpdateState,
 				MakeActionFunc			_MakeAction,
-				DetermineWinnerFunc		_DetermineWinner,
+				DetemineWinnerFunc		_DetemineWinner,
 				EvalForParentFunc		_EvalForParent
 			) :
-				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetermineWinner),
+				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetemineWinner),
 				EvalForParent(_EvalForParent)
 			{
 			}
@@ -144,7 +139,7 @@ namespace gadt
 			//node initialize
 			inline void NodeInit(const FuncPackage& func_package)
 			{
-				_winner = func_package.DetermineWinner(_state);
+				_winner = func_package.DetemineWinner(_state);
 				func_package.MakeAction(_state, _action_list);
 			}
 
@@ -303,11 +298,11 @@ namespace gadt
 			MinimaxSearch(
 				typename FuncPackage::UpdateStateFunc		UpdateState,
 				typename FuncPackage::MakeActionFunc		MakeAction,
-				typename FuncPackage::DetermineWinnerFunc	DetermineWinner,
+				typename FuncPackage::DetemineWinnerFunc	DetemineWinner,
 				typename FuncPackage::EvalForParentFunc		EvalForParent
 			):
 				GameAlgorithmBase<State, Action, AgentIndex, _is_debug>("Minimax"),
-				_func_package(UpdateState,MakeAction,DetermineWinner,EvalForParent),
+				_func_package(UpdateState,MakeAction,DetemineWinner,EvalForParent),
 				_setting()
 			{
 			}
@@ -324,7 +319,7 @@ namespace gadt
 				if (log_enabled())
 				{
 					logger() << "[ Minimax Search ]" << std::endl;
-					_setting.PrintInfo();
+					logger() << _setting.info();
 					logger() << std::endl << ">> Executing Minimax Search......" << std::endl;
 				}
 
@@ -377,7 +372,7 @@ namespace gadt
 							{ i == best_action_index ? "Yes ":"  "}
 						});
 					}
-					tb.Print();
+					logger() << tb.ConvertToString(console::TABLE_FRAME_ENABLE, console::TABLE_INDEX_DISABLE) << std::endl;
 				}
 
 				if (json_output_enabled())

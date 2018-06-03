@@ -70,7 +70,7 @@ namespace gadt
 			}
 
 			//output print with str behind each line.
-			void PrintInfo() const override
+			std::string info() const override
 			{
 				size_t index = 0;
 				console::Table tb(2, 5);
@@ -81,7 +81,7 @@ namespace gadt
 				tb.set_cell_in_row(index++, { { "enable_action_policy" },{ ToString(enable_action_policy) } });
 				tb.set_cell_in_row(index++, { { "no_winner_index" },{ ToString(no_winner_index) } });
 				tb.set_cell_in_row(index++, { { "simulation_warning_length" },{ ToString(simulation_warning_length) } });
-				tb.Print();
+				return tb.ConvertToString();
 			}
 		};
 
@@ -92,7 +92,7 @@ namespace gadt
 		*
 		* 1. GetNewStateFunc      = std::function<State(const State&, const Action&)>;
 		* 2. MakeActionFunc       = std::function<void(const State&, ActionSet&)>;
-		* 3. DetermineWinnerFunc   = std::function<AgentIndex(const State&)>;
+		* 3. DetemineWinnerFunc   = std::function<AgentIndex(const State&)>;
 		* 4. StateToResultFunc    = std::function<Result(const State&, AgentIndex)>;
 		* 5. AllowUpdateValueFunc = std::function<bool(const State&, const Result&)>;
 		*
@@ -149,7 +149,7 @@ namespace gadt
 			//constructor
 			MonteCarloNode(const State& state, const FuncPackage& func_package):
 				_state(state),
-				_winner_index(func_package.DetermineWinner(_state)),
+				_winner_index(func_package.DetemineWinner(_state)),
 				_visited_time(1),
 				_win_time(0)
 			{
@@ -163,7 +163,7 @@ namespace gadt
 		*
 		* 1. GetNewStateFunc      = std::function<State(const State&, const Action&)>;
 		* 2. MakeActionFunc       = std::function<void(const State&, ActionSet&)>;
-		* 3. DetermineWinnerFunc   = std::function<AgentIndex(const State&)>;
+		* 3. DetemineWinnerFunc   = std::function<AgentIndex(const State&)>;
 		* 4. StateToResultFunc    = std::function<Result(const State&, AgentIndex)>;
 		* 5. AllowUpdateValueFunc = std::function<bool(const State&, const Result&)>;
 		*
@@ -177,13 +177,8 @@ namespace gadt
 			using ActionList = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::ActionList;
 			using UpdateStateFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::UpdateStateFunc;
 			using MakeActionFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::MakeActionFunc;
-			using DetermineWinnerFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetermineWinnerFunc;
+			using DetemineWinnerFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetemineWinnerFunc;
 			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::is_debug;
-#else
-			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::ActionList;
-			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::UpdateStateFunc;
-			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::MakeActionFunc;
-			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetermineWinnerFunc;
 #endif
 			using Node					= MonteCarloNode<State, Action, Result, _is_debug>;
 			using StateToResultFunc		= std::function<Result(const State&, AgentIndex)>;
@@ -203,11 +198,11 @@ namespace gadt
 			MonteCarloFuncPackage(
 				UpdateStateFunc			_UpdateState,
 				MakeActionFunc			_MakeAction,
-				DetermineWinnerFunc		_DetermineWinner,
+				DetemineWinnerFunc		_DetemineWinner,
 				StateToResultFunc		_StateToResult,
 				AllowUpdateValueFunc	_AllowUpdateValue
 			) :
-				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetermineWinner),
+				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetemineWinner),
 				StateToResult(_StateToResult),
 				AllowUpdateValue(_AllowUpdateValue),
 				ActionPolicy([](const Node& parent, const Node& child)->UcbValue {
@@ -272,7 +267,7 @@ namespace gadt
 					GADT_CHECK_WARNING(is_debug(), i > _setting.simulation_warning_length, "out of default policy process max length.");
 
 					//detemine winner
-					AgentIndex winner = _func_package.DetermineWinner(state);
+					AgentIndex winner = _func_package.DetemineWinner(state);
 
 					//return result if exist.
 					if (winner != _setting.no_winner_index)
@@ -350,7 +345,7 @@ namespace gadt
 				if (log_enabled())
 				{
 					logger() << "[ Monte Carlo Simulation ]" << std::endl;
-					_setting.PrintInfo();
+					logger() << _setting.info();
 					logger() << std::endl << ">> Executing Monte Carlo Simulation......" << std::endl;
 				}
 
@@ -433,7 +428,7 @@ namespace gadt
 						{ ToString(root.win_time()) },
 						{ ToString(best_node_index) }
 					});
-					tb.Print();
+					logger() << tb.ConvertToString() << std::endl;
 				}
 
 				return action_list[best_node_index];
@@ -444,12 +439,12 @@ namespace gadt
 			MonteCarloSimulation(
 				typename FuncPackage::UpdateStateFunc		_UpdateState,
 				typename FuncPackage::MakeActionFunc		_MakeAction,
-				typename FuncPackage::DetermineWinnerFunc	_DetermineWinner,
+				typename FuncPackage::DetemineWinnerFunc	_DetemineWinner,
 				typename FuncPackage::StateToResultFunc		_StateToResult,
 				typename FuncPackage::AllowUpdateValueFunc	_AllowUpdateValue
 			):
 				GameAlgorithmBase<State, Action, Result, _is_debug>("Monte Carlo"),
-				_func_package(_UpdateState, _MakeAction, _DetermineWinner, _StateToResult, _AllowUpdateValue),
+				_func_package(_UpdateState, _MakeAction, _DetemineWinner, _StateToResult, _AllowUpdateValue),
 				_setting()
 			{
 			}

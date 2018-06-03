@@ -54,7 +54,7 @@ void ShellDefine()
 	auto* root = gadt.CreateShellPage("root");
 	auto* test = gadt.CreateShellPage("test");
 	auto* game = gadt.CreateShellPage("game");
-	auto* doc  = gadt.CreateShellPage("doc");
+	auto* doc = gadt.CreateShellPage("doc");
 	auto* mcts = gadt.CreateShellPage("mcts");
 
 
@@ -87,15 +87,6 @@ void ShellDefine()
 	test->AddChildPage("mcts", "monte carlo tree search test");
 	mcts->AddFunction("node", "node part", [](){unittest::TestMctsNode(); });
 	mcts->AddFunction("search","search part", [](){unittest::TestMctsSearch(); });
-
-	root->AddFunction("true", "test func", [](const gadt::shell::ParamsList& params)->bool{
-		if (params.size() == 1)
-		{
-			std::cout << "YES!!!" << std::endl;
-			return true;
-		}
-		return false;
-		});
 
 	//Start Shell
 	gadt.StartFromPage("root","test/");

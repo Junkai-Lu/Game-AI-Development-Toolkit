@@ -36,8 +36,6 @@ namespace gadt
 					"DATA COMMAND",
 					"PARAMS COMMAND",
 					"DATA_AND_PARAMS_COMMAND",
-					"BOOL_PARAMS COMMAND",
-					"BOOL_DATA_AND_PARAMS_COMMAND",
 					"CHILD_PAGE"
 				};
 				return std::string(type_name[i]);
@@ -47,8 +45,6 @@ namespace gadt
 			std::string GetCommandTypeSymbol(size_t i)
 			{
 				static const char* type_symbol[g_COMMAND_TYPE_NUMBER] = {
-					"[F]",
-					"[F]",
 					"[F]",
 					"[F]",
 					"[F]",
