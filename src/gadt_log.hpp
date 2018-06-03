@@ -305,6 +305,8 @@ namespace gadt
 				return _file_path;
 			}
 
+			void operator=(const StringLogger& target);
+
 		public:
 
 			//constructor.

@@ -66,7 +66,7 @@ namespace gadt
 	*
 	* 1. UpdateStateFunc    = std::function<void(State&, const Action&)>;
 	* 2. MakeActionFunc     = std::function<void(const State&, ActionSet&)>;
-	* 3. DetemineWinnerFunc = std::function<AgentIndex(const State&)>;
+	* 3. DetermineWinnerFunc = std::function<AgentIndex(const State&)>;
 	*
 	* more details, see document.
 	*/
@@ -77,22 +77,22 @@ namespace gadt
 		using ActionList			= std::vector<Action>;
 		using UpdateStateFunc		= std::function<void(State&, const Action&)>;
 		using MakeActionFunc		= std::function<void(const State&, ActionList&)>;
-		using DetemineWinnerFunc	= std::function<AgentIndex(const State&)>;
+		using DetermineWinnerFunc	= std::function<AgentIndex(const State&)>;
 
 	public:
 		const UpdateStateFunc		UpdateState;		//get a new state from previous state and action.
 		const MakeActionFunc		MakeAction;			//the function which create action set by the state.
-		const DetemineWinnerFunc	DetemineWinner;		//return no_winner_index if a state is not terminal state.
+		const DetermineWinnerFunc	DetermineWinner;		//return no_winner_index if a state is not terminal state.
 
 	public:
 		explicit GameAlgorithmFuncPackageBase(
 			UpdateStateFunc			_UpdateState,
 			MakeActionFunc			_MakeAction,
-			DetemineWinnerFunc		_DetemineWinner
+			DetermineWinnerFunc		_DetermineWinner
 		) :
 			UpdateState(_UpdateState),
 			MakeAction(_MakeAction),
-			DetemineWinner(_DetemineWinner)
+			DetermineWinner(_DetermineWinner)
 		{
 		}
 

@@ -89,8 +89,13 @@ namespace gadt
 			using ActionList = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::ActionList;
 			using UpdateStateFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::UpdateStateFunc;
 			using MakeActionFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::MakeActionFunc;
-			using DetemineWinnerFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetemineWinnerFunc;
+			using DetermineWinnerFunc = typename GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetermineWinnerFunc;
 			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::is_debug;
+#else 
+			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::ActionList;
+			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::UpdateStateFunc;
+			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::MakeActionFunc;
+			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetermineWinnerFunc;
 #endif
 			using EvalForParentFunc = std::function<EvalValue(const State&, const AgentIndex)>;
 
@@ -102,10 +107,10 @@ namespace gadt
 			MinimaxFuncPackage(
 				UpdateStateFunc			_UpdateState,
 				MakeActionFunc			_MakeAction,
-				DetemineWinnerFunc		_DetemineWinner,
+				DetermineWinnerFunc		_DetermineWinner,
 				EvalForParentFunc		_EvalForParent
 			) :
-				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetemineWinner),
+				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetermineWinner),
 				EvalForParent(_EvalForParent)
 			{
 			}
@@ -139,7 +144,7 @@ namespace gadt
 			//node initialize
 			inline void NodeInit(const FuncPackage& func_package)
 			{
-				_winner = func_package.DetemineWinner(_state);
+				_winner = func_package.DetermineWinner(_state);
 				func_package.MakeAction(_state, _action_list);
 			}
 
@@ -298,11 +303,11 @@ namespace gadt
 			MinimaxSearch(
 				typename FuncPackage::UpdateStateFunc		UpdateState,
 				typename FuncPackage::MakeActionFunc		MakeAction,
-				typename FuncPackage::DetemineWinnerFunc	DetemineWinner,
+				typename FuncPackage::DetermineWinnerFunc	DetermineWinner,
 				typename FuncPackage::EvalForParentFunc		EvalForParent
 			):
 				GameAlgorithmBase<State, Action, AgentIndex, _is_debug>("Minimax"),
-				_func_package(UpdateState,MakeAction,DetemineWinner,EvalForParent),
+				_func_package(UpdateState,MakeAction,DetermineWinner,EvalForParent),
 				_setting()
 			{
 			}

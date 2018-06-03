@@ -64,6 +64,23 @@ namespace gadt
 #endif
 		}
 
+		//get user confirm(Y/N or y/n)
+		bool GetUserConfirm(std::string tip)
+		{
+			std::cout << ">> ";
+			Cprintf(tip + "(y/n):", COLOR_GRAY);
+			for (;;)
+			{
+				std::string input = GetInput(">>");
+				if (input == "Y" || input == "y")
+					return true;
+				if (input == "N" || input == "n")
+					return false;
+				ShowError("invaild input, please input 'y' or 'n'.");
+			}
+			return false;
+		}
+
 		//show error
 		void ShowError(std::string reason)
 		{

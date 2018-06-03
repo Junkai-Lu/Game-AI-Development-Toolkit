@@ -125,7 +125,8 @@ namespace gadt
 			renju->AddFunction("print", "print state", [](RenjuState& state) {
 				PrintRenjuState(state);
 			});
-			renju->AddFunction("take", "take action", [](RenjuState& state, const shell::ParamsList& params) {
+
+			renju->AddFunction("take", "take action", [](RenjuState& state, const shell::ParamsList& params)->bool{
 				if (params.size() >= 3)
 				{
 					RenjuAction action = {
@@ -136,30 +137,35 @@ namespace gadt
 					{
 						state.TakeAction(action);
 						PrintRenjuState(state);
-						return;
+						return true;
 					}
 				}
-				std::cout << "illegal action" << std::endl;
+				return false;
 			});
-			renju->AddFunction("winner", "show winner", [](RenjuState& state) {
+
+			renju->AddFunction("winner", "show winner", [](RenjuState& state)->void{
 				std::cout << "winner = " << (int)state.winner() << std::endl;
 			});
-			renju->AddFunction("reset", "reset state", [](RenjuState& state) {
+
+			renju->AddFunction("reset", "reset state", [](RenjuState& state)->void{
 				state = RenjuState(1);
 			});
-			renju->AddFunction("actions", "show actions", [](RenjuState& state, const shell::ParamsList& params) {
+
+			renju->AddFunction("actions", "show actions", [](RenjuState& state, const shell::ParamsList& params)->bool{
 				renju::RenjuActionGenerator generator(state);
 				if (params.size() > 0)
 				{
 					if (params[0] == "all")
 					{
 						PrintRenjuActions(state, generator.GetAllActions(state.next_player()));
-						return;
+						return true;
 					}
 				}
 				PrintRenjuActions(state, generator.GetNearbyActions(state.next_player()));
+				return true;
 			});
-			renju->AddFunction("mcts", "run mcts", [](renju::RenjuState& state) {
+
+			renju->AddFunction("mcts", "run mcts", [](renju::RenjuState& state)->void{
 				RenjuMCTS mcts(
 					UpdateState,
 					MakeAction,
@@ -185,6 +191,7 @@ namespace gadt
 					PrintRenjuState(state);
 				}
 			});
+
 		}
 	}
 }
