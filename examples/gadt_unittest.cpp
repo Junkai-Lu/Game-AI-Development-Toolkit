@@ -159,9 +159,9 @@ namespace gadt
 		{
 			int t = 0;
 			GADT_ASSERT(ToString(t), "0");
-			t = INT_MAX;
+			t = INT32_MAX;
 			t = ToInt(ToString(t));
-			GADT_ASSERT(t, INT_MAX);
+			GADT_ASSERT(t, INT32_MAX);
 
 			size_t st = UINT64_MAX;
 			st = ToSizeT(ToString(st));

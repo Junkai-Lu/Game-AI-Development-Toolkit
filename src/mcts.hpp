@@ -126,21 +126,22 @@ namespace gadt
 
 		public:
 
-			const State&        state()               const { return _state; }
-			const ActionList&   action_list()         const { return _action_list; }
-			const Action&       action(size_t i)      const { return _action_list[i]; }
-			size_t              action_num()          const { return _action_list.size(); }
-			AgentIndex          winner_index()        const { return _winner_index; }
-			uint32_t            visited_time()        const { return _visited_time; }
-			uint32_t            win_time()            const { return _win_time; }
+			const State&		state()					const { return _state; }
+			const ActionList&	action_list()			const { return _action_list; }
+			const Action&		action(size_t i)		const { return _action_list[i]; }
+			size_t				action_num()			const { return _action_list.size(); }
+			AgentIndex			winner_index()			const { return _winner_index; }
+			uint32_t			visited_time()			const { return _visited_time; }
+			uint32_t			win_time()				const { return _win_time; }
+			double				payoff()				const { return static_cast<double>(win_time) / static_cast<double>(visited_time); }
 
-			pointer             parent_node()         const { return _parent_node; }
-			pointer             fir_child_node()      const { return _fir_child_node; }
-			pointer				brother_node()        const { return _brother_node; }
+			pointer				parent_node()			const { return _parent_node; }
+			pointer				fir_child_node()		const { return _fir_child_node; }
+			pointer				brother_node()			const { return _brother_node; }
 
-			bool                exist_parent_node()   const { return _parent_node != nullptr; }
-			bool                exist_child_node()    const { return _fir_child_node != nullptr; }
-			bool			    exist_brother_node()  const { return _brother_node != nullptr; }
+			bool				exist_parent_node()		const { return _parent_node != nullptr; }
+			bool				exist_child_node()		const { return _fir_child_node != nullptr; }
+			bool				exist_brother_node()	const { return _brother_node != nullptr; }
 			
 		private:
 
@@ -470,7 +471,7 @@ namespace gadt
 			using TreePolicyValueFunc	= std::function<UcbValue(const Node&, const Node&)>;
 			using DefaultPolicyFunc		= std::function<const Action&(const ActionList&)>;
 			using AllowExtendFunc		= std::function<bool(const Node&)>;
-			using RootSelectionFunc		= std::function<size_t(const NodePtrList&)>;
+			using RootSelectionFunc		= std::function<size_t(const Node& root)>;
 
 		public:
 			//necessary functions.
@@ -526,7 +527,8 @@ namespace gadt
 				AllowExtend([](const Node& node)->bool {
 					return true;
 				}),
-				RootSelection([](const NodePtrList& node_ptr_set)->size_t{
+				RootSelection([](const Node& root)->size_t{
+					auto node_ptr_set = root.child_ptr_set();
 					size_t best_visit = node_ptr_set[0]->visited_time();
 					size_t best_index = 0;
 					for (size_t i = 0; i < node_ptr_set.size(); i++)
@@ -730,7 +732,7 @@ namespace gadt
 				//select best action.
 				GADT_CHECK_WARNING(is_debug(), root_node.fir_child_node() == nullptr, "MCTS107: empty child node under root node.");
 				auto child_nodes = root_node.child_ptr_set();
-				size_t best_child_index = _func_package.RootSelection(child_nodes);
+				size_t best_child_index = _func_package.RootSelection(root_node);
 
 				if (log_enabled())
 				{
