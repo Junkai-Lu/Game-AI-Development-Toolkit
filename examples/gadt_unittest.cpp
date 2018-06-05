@@ -93,11 +93,11 @@ namespace gadt
 
 			bool AllowUpdateValue(const State& state, Result winner)
 			{
-				if (state.next_player == BLACK && winner == WHITE)
+				if (state.next_player == BLACK && winner == BLACK)
 				{
 					return true;
 				}
-				if (state.next_player == WHITE && winner == BLACK)
+				if (state.next_player == WHITE && winner == WHITE)
 				{
 					return true;
 				}
@@ -475,18 +475,21 @@ namespace gadt
 				tic_tac_toe::StateToResult,
 				tic_tac_toe::AllowUpdateValue
 			);
-			mcts.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr);
+			//mcts.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr);
 			//mcts.EnableJsonOutput();
 			//mcts.EnableLog();
 			tic_tac_toe::State state;
+			tic_tac_toe::Action action = mcts.DoMcts(state, setting);
+			GADT_ASSERT((action.x == 1 && action.y == 1), true);
 			state.dot[0][0] = tic_tac_toe::WHITE;
 			/*for (size_t i = 1; i <= 16; i++)
 			{
 				setting.thread_num = i;
 				tic_tac_toe::Action action = mcts.DoMcts(state, setting);
 			}*/
-			tic_tac_toe::Action action = mcts.DoMcts(state, setting);
+			action = mcts.DoMcts(state, setting);
 			GADT_ASSERT((action.x == 1 && action.y == 1), true);
+			
 		}
 		void TestVisualTree()
 		{

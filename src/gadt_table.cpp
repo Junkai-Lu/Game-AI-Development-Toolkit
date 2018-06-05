@@ -248,6 +248,10 @@ namespace gadt
 					}
 				}
 			}
+			else
+			{
+				EndLine();
+			}
 
 			for (size_t row = 0; row < this->number_of_rows(); row++)
 			{

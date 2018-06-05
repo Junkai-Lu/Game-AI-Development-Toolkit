@@ -67,11 +67,11 @@ namespace gadt
 		//get user confirm(Y/N or y/n)
 		bool GetUserConfirm(std::string tip)
 		{
-			std::cout << ">> ";
-			Cprintf(tip + "(y/n):", COLOR_GRAY);
 			for (;;)
 			{
-				std::string input = GetInput(">>");
+				std::cout << ">> ";
+				Cprintf(tip + "(y/n):", COLOR_GRAY);
+				std::string input = GetInput("");
 				if (input == "Y" || input == "y")
 					return true;
 				if (input == "N" || input == "n")

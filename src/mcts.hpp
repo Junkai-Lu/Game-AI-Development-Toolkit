@@ -133,7 +133,7 @@ namespace gadt
 			AgentIndex			winner_index()			const { return _winner_index; }
 			uint32_t			visited_time()			const { return _visited_time; }
 			uint32_t			win_time()				const { return _win_time; }
-			double				payoff()				const { return static_cast<double>(win_time) / static_cast<double>(visited_time); }
+			double				reward()				const { return static_cast<double>(win_time()) / static_cast<double>(visited_time()); }
 
 			pointer				parent_node()			const { return _parent_node; }
 			pointer				fir_child_node()		const { return _fir_child_node; }
@@ -142,6 +142,7 @@ namespace gadt
 			bool				exist_parent_node()		const { return _parent_node != nullptr; }
 			bool				exist_child_node()		const { return _fir_child_node != nullptr; }
 			bool				exist_brother_node()	const { return _brother_node != nullptr; }
+			bool				is_root()				const { return _parent_node == nullptr; }
 			
 		private:
 
@@ -225,15 +226,15 @@ namespace gadt
 			//4.the simulation result is back propagated through the selected nodes to update their statistics.
 			void BackPropagation(const Result& result, const FuncPackage& func)
 			{
-				//update node if allow.
-				if (func.AllowUpdateValue(_state, result))
-				{
-					incr_win_time();
-				}
-
-				//update parent node.
 				if (exist_parent_node())
 				{
+					//update node if allow.
+					if (func.AllowUpdateValue(parent_node()->state(), result))
+					{
+						incr_win_time();
+					}
+
+					//update parent node.
 					parent_node()->BackPropagation(result, func);
 				}
 			}
@@ -414,6 +415,19 @@ namespace gadt
 					child = child->brother_node();
 				}
 				return count;
+			}
+
+			//get the winning exception of this node.
+			double exception() const
+			{
+				size_t visited_count = 0;
+				size_t win_count = 0;
+				for (pointer child = fir_child_node(); child != nullptr; child = child->brother_node())
+				{
+					visited_count += child->visited_time();
+					win_count += child->win_time();
+				}
+				return static_cast<double>(win_count) / static_cast<double>(visited_count);
 			}
 
 			//get list of all childs
@@ -683,8 +697,18 @@ namespace gadt
 
 				//initialized
 				Node root_node(root_state, nullptr, _func_package, _setting);
-				ActionList root_actions = root_node.action_list();
-				
+
+				//return the only action if it is.
+				if (root_node.action_num() == 1)
+				{
+					if (log_enabled())
+					{
+						logger() << ">> Only one action is available. action = " << _log_controller.action_to_str_func()(root_node.action(0)) << std::endl;
+					}
+					return root_node.action(0);
+				}
+					
+
 				//thread content
 				stl::LinearAllocator<Allocator, _is_debug> allocators(_setting.thread_num);
 				std::vector<std::thread> threads;
@@ -720,7 +744,7 @@ namespace gadt
 				}
 
 				//return the best result
-				GADT_CHECK_WARNING(is_debug(), root_actions.size() == 0, "MCTS101: root node do not exist any available action.");
+				GADT_CHECK_WARNING(is_debug(), root_node.action_num() == 0, "MCTS101: root node do not exist any available action.");
 
 				//output Json if enabled.
 				if (json_output_enabled())
@@ -736,56 +760,60 @@ namespace gadt
 
 				if (log_enabled())
 				{
-					std::vector<size_t> tree_size_set(root_actions.size());
-					std::vector<size_t> visit_time_set(root_actions.size());
-					std::vector<size_t> win_time_set(root_actions.size());
+					std::vector<size_t> tree_size_set(root_node.action_num());
 					size_t total_tree_size = 0;
-					size_t total_visit_time = 0;
 					size_t total_win_time = 0;
 					for (size_t i = 0; i < child_nodes.size(); i++)
 					{
 						tree_size_set[i] = child_nodes[i]->subtree_size();
-						visit_time_set[i] = child_nodes[i]->visited_time();
-						win_time_set[i] = child_nodes[i]->win_time();
 						total_tree_size += tree_size_set[i];
-						total_visit_time += visit_time_set[i];
-						total_win_time += win_time_set[i];
+						total_win_time += child_nodes[i]->win_time();
 					}
 
 					//MCTS RESULT
-					console::Table tb(6, root_node.action_list().size() + 2);
+					console::Table tb(7, root_node.action_num() + 2);
 					tb.enable_title({ "MCTS RESULT: TIME = [ " + ToString(tp_mcts_start.time_since_created()) + "s ]" });
-					tb.set_cell_in_row(0, { { "Index" },{ "Action" },{ "Visit" },{ "Win" },{ "Size" },{ "Best" } });
-					tb.set_width({ 3,10,4,4,4,4,2 });
-					for (size_t i = 0; i < root_node.action_list().size(); i++)
+					tb.set_cell_in_row(0, {
+						{ "Index", console::COLOR_GRAY },
+						{ "Reward", console::COLOR_GRAY },
+						{ "Visit", console::COLOR_GRAY },
+						{ "Win", console::COLOR_GRAY },
+						{ "Size", console::COLOR_GRAY },
+						{ "Best", console::COLOR_GRAY },
+						{ "Action", console::COLOR_GRAY }
+						});
+					tb.set_width({ 4,4,4,4,4,2,25 });
+					for (size_t i = 0; i < root_node.action_num(); i++)
 					{
 						tb.set_cell_in_row(i + 1, {
 							{ ToString(i) },
-							{ _log_controller.action_to_str_func()(root_node.action_list()[i]) },
-							{ ToString(visit_time_set[i])},
-							{ ToString(win_time_set[i]) },
+							{ ToString(child_nodes[i]->reward()) },
+							{ ToString(child_nodes[i]->visited_time()) },
+							{ ToString(child_nodes[i]->win_time()) },
 							{ ToString(tree_size_set[i]) },
-							{ i == best_child_index ? "Yes " : "  " }
-						});
+							{ i == best_child_index ? "Yes " : "  " },
+							{ _log_controller.action_to_str_func()(root_node.action(i)) }
+							});
 					}
-					tb.set_cell_in_row(root_node.action_list().size()+1, { 
+					tb.set_cell_in_row(root_node.action_num() + 1, {
 						{ "Total" },
-						{ "" },
-						{ ToString(total_visit_time) },
+						{ ToString(root_node.exception()) },
+						{ ToString(root_node.visited_time()) },
 						{ ToString(total_win_time) },
 						{ ToString(total_tree_size) },
-						{ ToString(best_child_index) } 
-					});
+						{ ToString(best_child_index) } ,
+						{ "" }
+						});
 					tb.Print();
 				}
 
-				GADT_CHECK_WARNING(is_debug(), root_actions.size() == 0, "MCTS102: best value for root node equal to 0.");
+				GADT_CHECK_WARNING(is_debug(), root_node.action_num() == 0, "MCTS102: best value for root node equal to 0.");
 
-				return root_actions[best_child_index];
+				return root_node.action(best_child_index);
 			}
 
 		public:
-			//use private allocator.
+			//create monte carlo tree search with necessary functions. 
 			MonteCarloTreeSearch(
 				typename FuncPackage::UpdateStateFunc		_UpdateState,
 				typename FuncPackage::MakeActionFunc		_MakeAction,
@@ -800,8 +828,8 @@ namespace gadt
 			}
 
 
-			//use private allocator.
-			MonteCarloTreeSearch(FuncPackage function_package, size_t max_node) :
+			//create monte carlo tree search with function package. 
+			MonteCarloTreeSearch(FuncPackage function_package) :
 				GameAlgorithmBase<State, Action, Result, _is_debug>("MCTS"),
 				_func_package(function_package),
 				_setting()

@@ -53,11 +53,11 @@ namespace gadt
 
 		bool AllowUpdateValue(const RenjuState & state, RenjuResult winner)
 		{
-			if (state.next_player() == BLACK && winner == WHITE)
+			if (state.next_player() == BLACK && winner == BLACK)
 			{
 				return true;
 			}
-			if (state.next_player() == WHITE && winner == BLACK)
+			if (state.next_player() == WHITE && winner == WHITE)
 			{
 				return true;
 			}
@@ -182,10 +182,7 @@ namespace gadt
 				setting.thread_num = 4;
 				setting.timeout = 15;
 				auto act = mcts.DoMcts(state, setting);
-				std::cout << "input 0 to take action: ";
-				size_t n;
-				std::cin >> n;
-				if (n == 0)
+				if (console::GetUserConfirm("take this action?"))
 				{
 					state.TakeAction(act);
 					PrintRenjuState(state);
