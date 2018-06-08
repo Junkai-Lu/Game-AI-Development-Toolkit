@@ -28,9 +28,12 @@
 #include "../src/gadt_algorithm.hpp"
 #include "../src/gadt_log.hpp"
 #include "../src/gadt_table.h"
+#include "../src/gadt_filesystem.h"
 #include "../src/monte_carlo.hpp"
 #include "../src/minimax.hpp"
 #include "../src/mcts.hpp"
+#include "../src/parallel_mcts.hpp"
+
 
 #pragma once
 

@@ -112,13 +112,13 @@ namespace gadt
 
 	protected:
 
-		std::string _algorithm_name;
+		std::string _name;
 		LogController _log_controller;
 
 	protected:
 
-		GameAlgorithmBase(std::string algorithm_name) :
-			_algorithm_name(algorithm_name),
+		GameAlgorithmBase(std::string name) :
+			_name(name),
 			_log_controller()
 		{
 		}
@@ -142,9 +142,9 @@ namespace gadt
 		}
 
 		//return true if timeout.
-		inline bool timeout(const timer::TimePoint tp, const GameAlgorithmSettingBase& setting) const
+		inline bool timeout(const timer::TimePoint& tp, double duration) const
 		{
-			return tp.time_since_created() > setting.timeout && setting.timeout > 0;
+			return tp.time_since_created() > duration && duration > 0;
 		}
 
 		//return the value of _is_debug.
@@ -154,13 +154,19 @@ namespace gadt
 		}
 
 	public:
-	
-		//set algorithm name.
-		inline void SetName(std::string name)
+
+		std::string name() const
 		{
-			_algorithm_name = name;
+			return _name;
 		}
 
+		void set_name(std::string name)
+		{
+			_name = name;
+		}
+
+	public:
+	
 		//enable log output to ostream.
 		inline void InitLog(
 			typename LogController::StateToStrFunc     _state_to_str,
@@ -186,7 +192,7 @@ namespace gadt
 		//enable json output
 		inline void EnableJsonOutput(std::string output_folder = "")
 		{
-			if (output_folder == "") { output_folder = _algorithm_name; }
+			if (output_folder == "") { output_folder = name(); }
 			_log_controller.EnableJsonOutput(output_folder);
 		}
 

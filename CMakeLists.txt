@@ -6,8 +6,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXE_LINKER_FLAGS "-pthread")
 
 SET(SRC_LIST
+		./src/gadt_config.h
         ./src/gadtlib.h
         ./src/gadtlib.cpp
+		./src/gadt_filesystem.h
+		./src/gadt_filesystem.cpp
 		./src/game_shell.h
         ./src/game_shell.cpp
 		./src/visual_tree.h
@@ -24,6 +27,7 @@ SET(SRC_LIST
         ./src/monte_carlo.hpp
 		./src/minimax.hpp
         ./src/mcts.hpp
+		./src/parallel_mcts.hpp
 		./examples/gadt_unittest.h
         ./examples/gadt_unittest.cpp
         ./examples/gadtmain.cpp

@@ -64,11 +64,11 @@ namespace gadt
 				mcts::MctsSetting setting;
 				setting.max_iteration_per_thread = 100000;
 				setting.max_node_per_thread = 100000;
-				setting.thread_num = 4;
+				setting.max_thread = 4;
 				setting.timeout = 30;
 				mcts.InitLog(StateToString, ActionToString, ResultToString);
 				mcts.EnableLog();
-				BtAction action = mcts.DoMcts(state, setting);
+				BtAction action = mcts.Run(state, setting);
 			});
 		}
 

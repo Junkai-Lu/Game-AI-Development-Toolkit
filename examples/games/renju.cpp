@@ -179,9 +179,9 @@ namespace gadt
 				setting.max_iteration_per_thread = 100000;
 				setting.no_winner_index = 0;
 				setting.simulation_warning_length = 382;
-				setting.thread_num = 4;
+				setting.max_thread = 4;
 				setting.timeout = 15;
-				auto act = mcts.DoMcts(state, setting);
+				auto act = mcts.Run(state, setting);
 				if (console::GetUserConfirm("take this action?"))
 				{
 					state.TakeAction(act);

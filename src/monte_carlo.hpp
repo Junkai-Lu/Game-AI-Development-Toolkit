@@ -231,9 +231,7 @@ namespace gadt
 		template<typename State, typename Action, typename Result, bool _is_debug>
 		class MonteCarloSimulation final :public GameAlgorithmBase<State, Action, Result, _is_debug>
 		{
-#ifdef __GADT_GNUC
 		private:
-			using GameAlgorithmBase<State, Action, Result, _is_debug>::_algorithm_name;
 			using GameAlgorithmBase<State, Action, Result, _is_debug>::_log_controller;
 			using GameAlgorithmBase<State, Action, Result, _is_debug>::logger;
 			using GameAlgorithmBase<State, Action, Result, _is_debug>::log_enabled;
@@ -242,13 +240,14 @@ namespace gadt
 			using GameAlgorithmBase<State, Action, Result, _is_debug>::is_debug;
 
 		public:
-			using GameAlgorithmBase<State, Action, Result, _is_debug>::SetName;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::name;
+			using GameAlgorithmBase<State, Action, Result, _is_debug>::set_name;
 			using GameAlgorithmBase<State, Action, Result, _is_debug>::InitLog;
 			using GameAlgorithmBase<State, Action, Result, _is_debug>::EnableLog;
 			using GameAlgorithmBase<State, Action, Result, _is_debug>::DisableLog;
 			using GameAlgorithmBase<State, Action, Result, _is_debug>::EnableJsonOutput;
 			using GameAlgorithmBase<State, Action, Result, _is_debug>::DisableJsonOutput;
-#endif
+
 		public:
 			using Node = MonteCarloNode<State, Action, Result, _is_debug>;
 			using FuncPackage = MonteCarloFuncPackage<State, Action, Result, _is_debug>;
@@ -377,7 +376,7 @@ namespace gadt
 							size_t sim_time = 1 + _setting.simulation_times;
 							for (size_t i = 0; i < sim_time; i++)
 							{
-								if (this->timeout(tp_mc_start, _setting)) { return; }
+								if (this->timeout(tp_mc_start, _setting.timeout)) { return; }
 								Selection(root, child_nodes);
 							}
 						}
@@ -386,7 +385,7 @@ namespace gadt
 							size_t sim_time = 1 + (_setting.simulation_times / child_nodes.size());
 							for (size_t i = 0; i < sim_time; i++)
 							{
-								if (this->timeout(tp_mc_start, _setting)) { return; }
+								if (this->timeout(tp_mc_start, _setting.timeout)) { return; }
 								ExecuteAllChild(root, child_nodes);
 							}
 						}
@@ -404,7 +403,7 @@ namespace gadt
 				{
 					child_value_set[i] = _func_package.ValueForRootNode(root, child_nodes[i]);
 				}
-				size_t best_node_index = func::GetMaxElement<UcbValue>(child_value_set);
+				size_t best_node_index = func::GetMaxElementIndex<UcbValue>(child_value_set);
 				
 				//output log.
 				if (log_enabled())

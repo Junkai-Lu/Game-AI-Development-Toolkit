@@ -70,36 +70,51 @@ namespace gadt
 			console::ConsoleColor	color;
 			AlignMode				align;
 
-			inline TableCell() :
+			TableCell();
+
+			TableCell(std::string _str);
+
+			TableCell(std::string _str, console::ConsoleColor _color);
+
+			TableCell(std::string _str, AlignMode _align);
+
+			TableCell(std::string _str, console::ConsoleColor _color, AlignMode _align);
+
+
+			/*inline TableCell::TableCell() :
 				str(),
 				color(console::COLOR_DEFAULT),
 				align(TABLE_ALIGN_LEFT)
 			{
-			}
+			}*/
 
-			inline TableCell(std::string _str) :
-				str(_str),
+			template<typename T, typename std::enable_if<!std::is_same<T, console::ConsoleColor>::value && !std::is_same<T, AlignMode>::value,int>::type = 0>
+			TableCell(T value) :
+				str(ToString<T>(value)),
 				color(console::COLOR_DEFAULT),
 				align(TABLE_ALIGN_LEFT)
 			{
 			}
 
-			inline TableCell(std::string _str, console::ConsoleColor _color) :
-				str(_str),
+			template<typename T, typename std::enable_if<!std::is_same<T, console::ConsoleColor>::value && !std::is_same<T, AlignMode>::value, int>::type = 0>
+			TableCell(T value, console::ConsoleColor _color) :
+				str(ToString<T>(value)),
 				color(_color),
 				align(TABLE_ALIGN_LEFT)
 			{
 			}
 
-			inline TableCell(std::string _str, AlignMode _align) :
-				str(_str),
+			template<typename T, typename std::enable_if<!std::is_same<T, console::ConsoleColor>::value && !std::is_same<T, AlignMode>::value, int>::type = 0>
+			TableCell(T value, AlignMode _align) :
+				str(ToString<T>(value)),
 				color(console::COLOR_DEFAULT),
 				align(_align)
 			{
 			}
 
-			inline TableCell(std::string _str, console::ConsoleColor _color, AlignMode _align) :
-				str(_str),
+			template<typename T, typename std::enable_if<!std::is_same<T, console::ConsoleColor>::value && !std::is_same<T, AlignMode>::value, int>::type = 0>
+			TableCell(T value, console::ConsoleColor _color, AlignMode _align) :
+				str(ToString<T>(value)),
 				color(_color),
 				align(_align)
 			{
@@ -325,8 +340,8 @@ namespace gadt
 			//constructor function with initializer list(cell).
 			Table(size_t column_size, size_t row_size, std::initializer_list<InitList> list);
 
-			//constructor function with initializer list(string).
-			Table(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<std::string>> list);
+			////constructor function with initializer list(string).
+			//Table(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<std::string>> list);
 
 			//print table.
 			void Print(FrameMode frame_mode = TABLE_FRAME_ENABLE, IndexMode index_mode = TABLE_INDEX_DISABLE);

@@ -19,37 +19,7 @@
 * THE SOFTWARE.
 */
 
-
-//include some extra libaries.
-#include "../lib/json11/json11.hpp"
-
-// exclude unsupported compilers and define some marco by compiler.
-#ifdef _MSC_VER
-	#define __GADT_MSVC
-	#include <SDKDDKVer.h>
-	#include <Windows.h>
-	#include <io.h>
-	#include <direct.h>
-	#include <tchar.h>
-#elif defined(__GNUC__)
-	#define __GADT_GNUC
-	#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40900
-		#error "unsupported GCC version"
-	#endif
-	#include <sys/stat.h>  
-	#include <sys/types.h>
-	#include <errno.h> 
-	#include <unistd.h>
-	#include <dirent.h>
-#else
-	#error "unsupported compiler"
-#endif
-
-//open debug-info option to include extra info , this would lead to little performance penalties.
-#define GADT_DEBUG_INFO
-
-//warning option allow the functions in GADT execute parameter check and report wrong parameters.
-#define GADT_WARNING
+#include "gadt_config.h"
 
 //a marco use for parameters check.
 #ifdef GADT_WARNING
@@ -58,36 +28,10 @@
 	#define GADT_CHECK_WARNING(enable, condition, reason)
 #endif
 
-#include <cstdio>
-#include <stdlib.h>
-#include <math.h>
-#include <stdio.h>
-#include <time.h>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <set>
-#include <vector>
-#include <list>
-#include <map>
-#include <stack>
-#include <queue>
-#include <memory>
-#include <thread>
-#include <functional>
-#include <type_traits>
-
 #pragma once
 
 namespace gadt
 {
-#ifdef GADT_WARNING
-	constexpr const bool GADT_STL_ENABLE_WARNING = true;
-#else
-	constexpr const bool GADT_STL_ENABLE_WARNING = false;
-#endif
-
 	using AgentIndex = int8_t;//AgentIndex is the index of each player, default is int8_t. 0 is the default no-winner index.
 	using UcbValue = double;
 	using EvalValue = double;
@@ -408,12 +352,6 @@ namespace gadt
 		return ToInt<T, size_t>(data);
 	}
 
-	//bool convert to string.
-	inline std::string ToString(bool data)
-	{
-		return data ? "true" : "false";
-	}
-
 	//convert to string.
 	template<typename T>
 	inline std::string ToString(T data)
@@ -657,10 +595,6 @@ namespace gadt
 
 	namespace timer
 	{
-		std::string TimeString(std::string format = "%Y.%m.%d-%H:%M:%S");
-		clock_t GetClock();
-		double GetTimeDifference(const clock_t& start);
-		
 		class TimePoint
 		{
 		private:
@@ -683,7 +617,7 @@ namespace gadt
 				_time = time(NULL);
 			}
 
-			//get the time since this time point was created.
+			//get the seconds since this time point was created.
 			inline double time_since_created() const
 			{
 				return (double)(clock() - _clock) / CLOCKS_PER_SEC;
@@ -691,36 +625,13 @@ namespace gadt
 		};
 	}
 
-	namespace file
-	{
-		//return true if the folder exists.
-		bool DirExist(std::string dir_path);
-		
-		//create dir and return true if create successfully.
-		bool MakeDir(std::string dir_path);
-
-		//remove dir and return true if remove successfully. 
-		bool RemoveDir(std::string dir_path);
-
-		//return true if the file exists.
-		bool FileExist(std::string file_path);
-
-		//remove file and return true if remove successfully.
-		bool RemoveFile(std::string file_path);
-
-		//convert a file to string. return "" if convert failed.
-		std::string FileToString(std::string file_path);
-
-		//convert a string to file.
-		bool StringToFile(std::string str, std::string file_path);
-	}
-
 	namespace func
 	{
-		//get mex element in vector.
+		//get the index of max element in vector.
 		template<typename T>
-		size_t GetMaxElement(const std::vector<T>& vec)
+		size_t GetMaxElementIndex(const std::vector<T>& vec)
 		{
+			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
 			size_t best_index = 0;
 			const T* best_ele = &vec[0];
 			for (size_t i = 1; i < vec.size(); i++)
@@ -734,10 +645,11 @@ namespace gadt
 			return best_index;
 		}
 
-		//get max element in vector.
+		//get the index of max element in vector.
 		template<typename T>
-		size_t GetMaxElement(const std::vector<T>& vec, std::function<bool(const T&, const T&)> more_than)
+		size_t GetMaxElementIndex(const std::vector<T>& vec, std::function<bool(const T&, const T&)> more_than)
 		{
+			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
 			size_t best_index = 0;
 			T* best_ele = &vec[0];
 			for (size_t i = 1; i < vec.size(); i++)
@@ -749,6 +661,74 @@ namespace gadt
 				}
 			}
 			return best_index;
+		}
+
+		//get max element in vector.
+		template<typename T>
+		const T& GetMaxElement(const std::vector<T>& vec)
+		{
+			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
+			return vec[GetMaxElementIndex<T>(vec)];
+		}
+
+		//get max element in vector.
+		template<typename T>
+		const T& GetMaxElement(const std::vector<T>& vec, std::function<bool(const T&, const T&)> more_than)
+		{
+			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
+			return vec[GetMaxElementIndex<T>(vec, more_than)];
+		}
+
+		//get the index of Min element in vector.
+		template<typename T>
+		size_t GetMinElementIndex(const std::vector<T>& vec)
+		{
+			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
+			size_t best_index = 0;
+			const T* best_ele = &vec[0];
+			for (size_t i = 1; i < vec.size(); i++)
+			{
+				if (vec[i] < *best_ele)
+				{
+					best_ele = &vec[i];
+					best_index = i;
+				}
+			}
+			return best_index;
+		}
+
+		//get the index of Min element in vector.
+		template<typename T>
+		size_t GetMinElementIndex(const std::vector<T>& vec, std::function<bool(const T&, const T&)> less_than)
+		{
+			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
+			size_t best_index = 0;
+			T* best_ele = &vec[0];
+			for (size_t i = 1; i < vec.size(); i++)
+			{
+				if (less_than(vec[i], *best_ele))
+				{
+					best_ele = &vec[i];
+					best_index = i;
+				}
+			}
+			return best_index;
+		}
+
+		//get Min element in vector.
+		template<typename T>
+		const T& GetMinElement(const std::vector<T>& vec)
+		{
+			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
+			return vec[GetMinElementIndex<T>(vec)];
+		}
+
+		//get Min element in vector.
+		template<typename T>
+		const T& GetMinElement(const std::vector<T>& vec, std::function<bool(const T&, const T&)> less_than)
+		{
+			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
+			return vec[GetMinElementIndex<T>(vec, less_than)];
 		}
 
 		//get random elements from a vector.

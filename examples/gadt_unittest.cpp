@@ -408,24 +408,24 @@ namespace gadt
 			GADT_ASSERT(temp_vec_5[0], 1);
 			GADT_ASSERT(temp_vec_5.upper_bound(), 5);
 		}
-		void TestFileLib()
+		void TestFilesystem()
 		{
 			srand((unsigned int)time(NULL));
 			std::string path = "./test_dir"  + ToString(rand() % 99999999);
-			if (!file::DirExist(path))
+			if (!gadt::filesystem::exist_directory(path))
 			{
-				GADT_ASSERT(true, file::MakeDir(path));
-				GADT_ASSERT(true, file::DirExist(path));
-				GADT_ASSERT(true, file::RemoveDir(path));
-				GADT_ASSERT(false, file::DirExist(path));
-				GADT_ASSERT(true, file::MakeDir(path));
+				GADT_ASSERT(true, filesystem::create_directory(path));
+				GADT_ASSERT(true, filesystem::exist_directory(path));
+				GADT_ASSERT(true, filesystem::remove_directory(path));
+				GADT_ASSERT(false, filesystem::exist_directory(path));
+				GADT_ASSERT(true, filesystem::create_directory(path));
 				std::string file_path = path + "/test_file.dat";
 				std::ofstream ofs(file_path, std::ios::trunc);
 				ofs << "line1" << std::endl << "line2" << std::endl << "line3" << std::endl;
-				std::string str = file::FileToString(file_path);
+				std::string str = filesystem::load_file_as_string(file_path);
 				//std::cout << str;
-				GADT_ASSERT(true, file::RemoveFile(file_path));
-				GADT_ASSERT(true, file::RemoveDir(path));
+				GADT_ASSERT(true, filesystem::remove_file(file_path));
+				GADT_ASSERT(true, filesystem::remove_directory(path));
 			}
 			
 		}
@@ -462,7 +462,7 @@ namespace gadt
 		void TestMctsSearch()
 		{
 			mcts::MctsSetting setting;
-			setting.thread_num = 4;
+			setting.max_thread = 4;
 			setting.max_node_per_thread = 10000;
 			setting.max_iteration_per_thread = 10000;
 			setting.timeout = 0;
@@ -475,19 +475,60 @@ namespace gadt
 				tic_tac_toe::StateToResult,
 				tic_tac_toe::AllowUpdateValue
 			);
+
+			mcts::LockFreeMCTS<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> lf_mcts
+			(
+				tic_tac_toe::UpdateState,
+				tic_tac_toe::MakeAction,
+				tic_tac_toe::DetemineWinner,
+				tic_tac_toe::StateToResult,
+				tic_tac_toe::AllowUpdateValue
+			);
+
+			mcts::MultiTreeMCTS<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mt_mcts
+			(
+				tic_tac_toe::UpdateState,
+				tic_tac_toe::MakeAction,
+				tic_tac_toe::DetemineWinner,
+				tic_tac_toe::StateToResult,
+				tic_tac_toe::AllowUpdateValue
+			);
 			//mcts.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr);
 			//mcts.EnableJsonOutput();
 			//mcts.EnableLog();
+
+			//lf_mcts.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr);
+			//lf_mcts.EnableJsonOutput();
+			//lf_mcts.EnableLog();
+
+			//mt_mcts.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr, tic_tac_toe::ResultToStr);
+			//mt_mcts.EnableJsonOutput();
+			//mt_mcts.EnableLog();
+
 			tic_tac_toe::State state;
-			tic_tac_toe::Action action = mcts.DoMcts(state, setting);
+			tic_tac_toe::Action action;
+			action = mcts.Run(state, setting);
 			GADT_ASSERT((action.x == 1 && action.y == 1), true);
+
+			action = lf_mcts.Run(state, setting);
+			GADT_ASSERT((action.x == 1 && action.y == 1), true);
+
+			action = mt_mcts.Run(state, setting);
+			GADT_ASSERT((action.x == 1 && action.y == 1), true);
+
 			state.dot[0][0] = tic_tac_toe::WHITE;
 			/*for (size_t i = 1; i <= 16; i++)
 			{
 				setting.thread_num = i;
-				tic_tac_toe::Action action = mcts.DoMcts(state, setting);
+				tic_tac_toe::Action action = mcts.Run(state, setting);
 			}*/
-			action = mcts.DoMcts(state, setting);
+			action = mcts.Run(state, setting);
+			GADT_ASSERT((action.x == 1 && action.y == 1), true);
+
+			action = lf_mcts.Run(state, setting);
+			GADT_ASSERT((action.x == 1 && action.y == 1), true);
+
+			action = mt_mcts.Run(state, setting);
 			GADT_ASSERT((action.x == 1 && action.y == 1), true);
 			
 		}
@@ -753,6 +794,20 @@ namespace gadt
 		}
 		void TestTable()
 		{
+			GADT_ASSERT(console::TableCell().str, "");
+			GADT_ASSERT(console::TableCell("1").str, "1");
+			GADT_ASSERT(console::TableCell("1", console::COLOR_RED).str, "1");
+			GADT_ASSERT(console::TableCell("1", console::TABLE_ALIGN_MIDDLE).str, "1");
+			GADT_ASSERT(console::TableCell("1", console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1");
+			GADT_ASSERT(console::TableCell(int16_t(1), console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1");
+			GADT_ASSERT(console::TableCell(uint16_t(1), console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1");
+			GADT_ASSERT(console::TableCell(int64_t(1), console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1");
+			GADT_ASSERT(console::TableCell(uint64_t(1), console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1");
+			GADT_ASSERT(console::TableCell(true, console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1");
+			GADT_ASSERT(console::TableCell(false, console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "0");
+			GADT_ASSERT(console::TableCell(float(1.1), console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1.1");
+			GADT_ASSERT(console::TableCell(double(1.1), console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1.1");
+
 			std::ios::sync_with_stdio(false);
 			console::Table table(3, 5,{
 				{ "1","2","3" },
@@ -845,7 +900,7 @@ namespace gadt
 			{ "convert"			,TestConvertFunc		},
 			{ "coordinate"		,TestCoordinate			},
 			{ "bitboard"		,TestBitBoard			},
-			{ "file"			,TestFileLib			},
+			{ "file"			,TestFilesystem			},
 			{ "index"			,TestIndex				},
 			{ "mcts_node"		,TestMctsNode			},
 			{ "mcts"			,TestMctsSearch			},
@@ -864,11 +919,11 @@ namespace gadt
 		{
 			cout << endl << ">> test start, target = ";
 			console::Cprintf(func_pair.first, console::COLOR_GREEN);
-			auto t = timer::GetClock();
+			timer::TimePoint tp;
 			cout << endl;
 			func_pair.second();
 			cout << ">> test complete, time = ";
-			console::Cprintf(timer::GetTimeDifference(t), console::COLOR_RED);
+			console::Cprintf(tp.time_since_created(), console::COLOR_RED);
 			cout << endl;
 		}
 	}

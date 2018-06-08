@@ -195,14 +195,13 @@ namespace gadt
 		*
 		* [State] is the game-state class, which is defined by the user.
 		* [Action] is the game-action class, which is defined by the user.
-		* [_is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
+		* [_is_debug] decides whether debug info would be ignored or not. which may cause slight degradation in performance if it is enabled.
 		*/
 		template<typename State, typename Action, bool _is_debug = false>
 		class MinimaxSearch final : public GameAlgorithmBase<State, Action, AgentIndex, _is_debug>
 		{
-#ifdef __GADT_GNUC
+
 		private:
-			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::_algorithm_name;
 			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::_log_controller;
 			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::logger;
 			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::log_enabled;
@@ -211,13 +210,14 @@ namespace gadt
 			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::is_debug;
 
 		public:
-			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::SetName;
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::name;
+			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::set_name;
 			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::InitLog;
 			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::EnableLog;
 			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::DisableLog;
 			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::EnableJsonOutput;
 			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::DisableJsonOutput;
-#endif
+
 		public:
 			using Node			= MinimaxNode<State, Action, _is_debug>;
 			using FuncPackage	= typename Node::FuncPackage;

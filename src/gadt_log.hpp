@@ -21,6 +21,7 @@
 
 #include "gadtlib.h"
 #include "visual_tree.h"
+#include "gadt_filesystem.h"
 
 #pragma once
 
@@ -234,12 +235,12 @@ namespace gadt
 			inline void OutputJson() const
 			{
 				std::string path = "./" + _json_output_folder;
-				if (!file::DirExist(path))
+				if (!filesystem::exist_directory(path))
 				{
-					file::MakeDir(path);
+					filesystem::create_directory(path);
 				}
 				path += "/";
-				path += timer::TimeString();
+				path += timer::TimePoint().get_string();
 				path += ".json";
 				std::ofstream ofs(path);
 				_visual_tree.output_json(ofs);

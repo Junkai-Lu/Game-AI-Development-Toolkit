@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+ï»¿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -19,14 +19,17 @@
 * THE SOFTWARE.
 */
 
-
-#include "../src/gadtlib.h"			//basic library of GADT
+#include "../src/gadt_config.h"		//basic config.
+#include "../src/gadtlib.h"			//basic library
+#include "../src/gadt_filesystem.h"	//file system 
 #include "../src/game_shell.h"		//game shell
 #include "../src/bitboard.hpp"		//bit board data struct
 #include "../src/mcts.hpp"			//monte carlo tree search for games.
 #include "../src/minimax.hpp"		//minimax,and alphabeta for games.
 #include "../src/monte_carlo.hpp"	//monte carlo simulation algorithm.
 #include "../src/mcts.hpp"			//monte carlo tree search for games
+#include "../src/parallel_mcts.hpp"	//parallel monte carlo tree search
+
 #include "./games/renju.h"			//game example
 #include "./games/ewn.h"			//game example
 #include "./games/breakthrough.h"	//game example
@@ -68,7 +71,7 @@ void ShellDefine()
 	
 
 	game->AddChildPage("renju", "renju game");
-	game->AddChildPage("ewn", "EinSteinw¨¹rfeltnicht! game");
+	game->AddChildPage("ewn", "EinSteinwÃ¼rfeltnicht! game");
 	game->AddChildPage("breakthrough", "breakthrough game");
 
 	//Unit Test Page
@@ -87,15 +90,6 @@ void ShellDefine()
 	test->AddChildPage("mcts", "monte carlo tree search test");
 	mcts->AddFunction("node", "node part", [](){unittest::TestMctsNode(); });
 	mcts->AddFunction("search","search part", [](){unittest::TestMctsSearch(); });
-
-	root->AddFunction("true", "test func", [](const gadt::shell::ParamsList& params)->bool{
-		if (params.size() == 1)
-		{
-			std::cout << "YES!!!" << std::endl;
-			return true;
-		}
-		return false;
-		});
 
 	//Start Shell
 	gadt.StartFromPage("root","test/");

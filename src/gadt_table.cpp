@@ -25,6 +25,40 @@ namespace gadt
 {
 	namespace console
 	{
+		TableCell::TableCell() :
+			str(),
+			color(console::COLOR_DEFAULT),
+			align(TABLE_ALIGN_LEFT)
+		{
+		}
+
+		TableCell::TableCell(std::string _str) :
+			str(_str),
+			color(console::COLOR_DEFAULT),
+			align(TABLE_ALIGN_LEFT)
+		{
+		}
+
+		TableCell::TableCell(std::string _str, console::ConsoleColor _color) :
+			str(_str),
+			color(_color),
+			align(TABLE_ALIGN_LEFT)
+		{
+		}
+
+		TableCell::TableCell(std::string _str, AlignMode _align) :
+			str(_str),
+			color(console::COLOR_DEFAULT),
+			align(_align)
+		{
+		}
+
+		TableCell::TableCell(std::string _str, console::ConsoleColor _color, AlignMode _align) :
+			str(_str),
+			color(_color),
+			align(_align)
+		{
+		}
 
 		//get string from table cell.
 		std::string TableCell::to_string(size_t max_length) const
@@ -90,15 +124,15 @@ namespace gadt
 		{
 		}
 
-		//constructor function with initializer list(string).
-		Table::Table(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<std::string>> list) :
-			_cells(column_size, row_size, list),
-			_column_width(column_size, TABLE_DEFAULT_WIDTH),
-			_enable_title(false),
-			_title_cell(),
-			_table_color(COLOR_GRAY)
-		{
-		}
+		////constructor function with initializer list(string).
+		//Table::Table(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<std::string>> list) :
+		//	_cells(column_size, row_size, list),
+		//	_column_width(column_size, TABLE_DEFAULT_WIDTH),
+		//	_enable_title(false),
+		//	_title_cell(),
+		//	_table_color(COLOR_GRAY)
+		//{
+		//}
 
 		//print table
 		void Table::Print(FrameMode frame_mode, IndexMode index_mode)
