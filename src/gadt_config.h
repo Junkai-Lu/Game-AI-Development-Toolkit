@@ -69,13 +69,14 @@
 //extra libaries.
 #include "../lib/json11/json11.hpp"
 
-//open debug-info option to include extra info , this would lead to little performance penalties.
-//#define GADT_DEBUG_INFO
-
 //warning option allow the functions in GADT execute parameter check and report wrong parameters.
-//#define GADT_WARNING
+#define GADT_WARNING
 
 namespace gadt
 {
-	constexpr const bool GADT_STL_ENABLE_WARNING = true;
+	constexpr const bool GADT_BITBOARD_ENABLE_WARNING = true;	//enable warning in module 'bitboard'
+	constexpr const bool GADT_STL_ENABLE_WARNING = true;		//enable warning in all modules in namespace 'stl'
+	constexpr const bool GADT_TABLE_ENABLE_WARNING = true;		//enable warning in module 'table'.
+	constexpr const bool GADT_SHELL_ENABLE_WARNING = true;		//enable warning in module 'shell'.
+
 }

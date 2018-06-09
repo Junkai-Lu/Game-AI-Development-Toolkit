@@ -28,9 +28,6 @@ namespace gadt
 {
 	namespace minimax
 	{
-		//allow check warning if it is true.
-		constexpr const bool g_MINIMAX_ENABLE_WARNING = true;
-
 		/*
 		* MinimaxSetting is the setting of MCTS.
 		*
@@ -270,10 +267,7 @@ namespace gadt
 					return eval;
 				}
 
-				if (is_debug())
-				{
-					GADT_CHECK_WARNING(g_MINIMAX_ENABLE_WARNING, node.action_list().size() == 0, "MM101: empty action set");
-				}
+				GADT_CHECK_WARNING(is_debug(), node.action_list().size() == 0, "MM101: empty action set");
 				
 				//pick up best value in child nodes.
 				State first_child_state = node.state();

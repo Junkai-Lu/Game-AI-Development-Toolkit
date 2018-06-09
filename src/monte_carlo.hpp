@@ -215,7 +215,7 @@ namespace gadt
 					return policy::UCB1(avg, static_cast<UcbValue>(parent.visited_time()), static_cast<UcbValue>(child.visited_time()));
 				}),
 				DefaultPolicy([](const ActionList& actions)->const Action&{
-					GADT_CHECK_WARNING(_is_debug, actions.size() == 0, "MCTS104: empty action set during default policy.");
+					GADT_CHECK_WARNING(is_debug(), actions.size() == 0, "MCTS104: empty action set during default policy.");
 					return actions[rand() % actions.size()];
 				}),
 				ValueForRootNode([](const Node& parent, const Node& child)->UcbValue {

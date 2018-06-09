@@ -466,7 +466,6 @@ namespace gadt
 			setting.max_node_per_thread = 10000;
 			setting.max_iteration_per_thread = 10000;
 			setting.timeout = 0;
-
 			mcts::MonteCarloTreeSearch<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true> mcts
 			(
 				tic_tac_toe::UpdateState,
