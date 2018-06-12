@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -363,6 +363,12 @@ namespace gadt
 			inline std::string get_error() const
 			{
 				return _err_log.output();
+			}
+
+			//add error to error log.
+			inline void add_error(std::string err)
+			{
+				_err_log.add(err);
 			}
 
 		public:

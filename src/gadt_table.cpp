@@ -224,7 +224,7 @@ namespace gadt
 			if (enable_index)
 			{
 				print_frame(std::string(space_before_line_size + 1, ' '));
-				size_t extra = 1;//frame_mode == TABLE_FRAME_DISABLE ? 0 : 1;
+				//size_t extra = 1;//frame_mode == TABLE_FRAME_DISABLE ? 0 : 1;
 				for (size_t column = 0; column < this->number_of_columns(); column++)
 					print_index(column + index_mode, _column_width[column] * 2);
 				EndLine();

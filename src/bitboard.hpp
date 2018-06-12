@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -75,20 +75,18 @@ namespace gadt
 		class BitBoard
 		{
 		private:
-			//data array upper bound
+
 			static const size_t data_ub = (ub / 16) + 1;
-
-			//data array.
 			uint16_t _data[data_ub];
-
-			//debug info
+#ifdef GADT_BITBOARD_CONSTANT_TOTAL
+			size_t _total;
+#endif
 #ifdef GADT_BITBOARD_DEBUG_INFO
 			bool _debug_data[ub];
 #endif
 
-#ifdef GADT_BITBOARD_CONSTANT_TOTAL
-			size_t _total;
-#endif
+		private:
+
 			//iter type.
 			using Iter = BitIter<bool, BitBoard>;
 
@@ -344,17 +342,17 @@ namespace gadt
 		class BitBoard64
 		{
 		private:
+
 			static const size_t _upper_bound = 64;
-
 			gadt_int64 _data;
-
-#ifdef GADT_BITBOARD_DEBUG_INFO
-			bool _debug_data[_upper_bound];
-#endif
-
 #ifdef GADT_BITBOARD_CONSTANT_TOTAL
 			size_t _total;
 #endif
+#ifdef GADT_BITBOARD_DEBUG_INFO
+			bool _debug_data[_upper_bound];
+#endif
+		private:
+
 			//iter type.
 			using Iter = BitIter<size_t, BitBoard64>;
 
@@ -369,6 +367,7 @@ namespace gadt
 			}
 
 		public:
+
 			inline BitBoard64() :
 				_data(0)
 #ifdef GADT_BITBOARD_CONSTANT_TOTAL
@@ -692,16 +691,16 @@ namespace gadt
 		class BitPoker
 		{
 		private:
+
 			static const size_t _upper_bound = 16;
-
-#ifdef GADT_BITBOARD_DEBUG_INFO
-			size_t _debug_data[_upper_bound];
-#endif
-
+			gadt_int64 _data;
 #ifdef GADT_BITBOARD_CONSTANT_TOTAL
 			size_t _total;
 #endif
-			gadt_int64 _data;
+#ifdef GADT_BITBOARD_DEBUG_INFO
+			size_t _debug_data[_upper_bound];
+#endif
+		private:
 
 			//iter type.
 			using Iter = BitIter<size_t, BitPoker>;
@@ -717,6 +716,7 @@ namespace gadt
 			}
 
 		public:
+
 			inline BitPoker() :
 				_data(0)
 #ifdef GADT_BITBOARD_CONSTANT_TOTAL
@@ -1138,21 +1138,23 @@ namespace gadt
 		class BitMahjong
 		{
 		private:
-			static const size_t _upper_bound = 42;
-#ifdef GADT_BITBOARD_DEBUG_INFO
-			size_t _debug_data[_upper_bound];
-#endif
 
+			static const size_t _upper_bound = 42;
+			gadt_int64 _fir_data;
+			gadt_int64 _sec_data;
 #ifdef GADT_BITBOARD_CONSTANT_TOTAL
 			size_t _total;
 #endif
-			gadt_int64 _fir_data;
-			gadt_int64 _sec_data;
+#ifdef GADT_BITBOARD_DEBUG_INFO
+			size_t _debug_data[_upper_bound];
+#endif
+		private:
 
 			//iter type.
 			using Iter = BitIter<size_t, BitMahjong>;
 
 		public:
+
 			inline BitMahjong() :
 				_fir_data(0),
 				_sec_data(0)
