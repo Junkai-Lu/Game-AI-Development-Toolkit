@@ -267,7 +267,7 @@ namespace gadt
 				//waning if excute failed.
 				void wrong_params_warning() const
 				{
-					console::ShowError("illegal parameters");
+					console::PrintError("illegal parameters");
 				}
 
 				//excute params check.
@@ -463,7 +463,7 @@ namespace gadt
 							if (_cmd_name_list[i].size() > 0)
 							{
 								std::cout << ">> ";
-								console::Cprintf("[" + define::GetCommandTypeName(i) + "]", console::COLOR_YELLOW);
+								console::Cprintf("[" + define::GetCommandTypeName(i) + "]", console::ConsoleColor::Yellow);
 								std::cout << std::endl;
 								console::Table tb(3, _cmd_name_list[i].size());
 								tb.set_width({ SYMBOL_WIDTH,NAME_WIDTH,DESC_WIDTH });
@@ -473,12 +473,12 @@ namespace gadt
 									std::string name = _cmd_name_list[i].at(n);
 									std::string desc = _command_list.at(name)->desc();
 									tb.set_cell_in_row(n,{
-										{ type,console::COLOR_GRAY, console::TABLE_ALIGN_MIDDLE },
-										{ name,console::COLOR_RED, console::TABLE_ALIGN_LEFT },
-										{ desc,console::COLOR_WHITE, console::TABLE_ALIGN_LEFT }
+										{ type,console::ConsoleColor::Gray, console::TableAlign::Middle },
+										{ name,console::ConsoleColor::Red, console::TableAlign::Left },
+										{ desc,console::ConsoleColor::White, console::TableAlign::Left }
 									});
 								}
-								tb.Print(console::TABLE_FRAME_CIRCLE_TIGHT, console::TABLE_INDEX_DISABLE);
+								tb.Print(console::TableFrame::CircleAndTight, console::TableIndex::Disable);
 								std::cout << std::endl;
 							}
 						}
@@ -486,7 +486,7 @@ namespace gadt
 					else//-n
 					{
 						std::cout << ">> ";
-						console::Cprintf("[ COMMANDS ]", console::COLOR_YELLOW);
+						console::Cprintf("[ COMMANDS ]", console::ConsoleColor::Yellow);
 						std::cout << std::endl;
 						console::Table tb(3, _command_list.size());
 						tb.set_width({ SYMBOL_WIDTH,NAME_WIDTH,DESC_WIDTH });
@@ -497,13 +497,13 @@ namespace gadt
 							std::string desc = pair.second.get()->desc();
 							std::string type = define::GetCommandTypeSymbol(pair.second.get()->type());
 							tb.set_cell_in_row(n, {
-								{ type,console::COLOR_GRAY },
-								{ name,console::COLOR_RED },
-								{ desc,console::COLOR_WHITE }
+								{ type,console::ConsoleColor::Gray },
+								{ name,console::ConsoleColor::Red },
+								{ desc,console::ConsoleColor::White }
 							});
 							n++;
 						}
-						tb.Print(console::TABLE_FRAME_CIRCLE_TIGHT, console::TABLE_INDEX_DISABLE);
+						tb.Print(console::TableFrame::CircleAndTight, console::TableIndex::Disable);
 						std::cout << std::endl;
 					}
 				}
@@ -551,12 +551,12 @@ namespace gadt
 				{
 					if (command.size() > define::g_MAX_COMMAND_LENGTH)
 					{
-						console::ShowError("command '" + command + "' out of max length");
+						console::PrintError("command '" + command + "' out of max length");
 						return false;
 					}
 					if (!command::CommandParser::CheckStringLegality(command))
 					{
-						console::ShowError("illegal command name '" + command + "'.");
+						console::PrintError("illegal command name '" + command + "'.");
 						return false;
 					}
 					return true;
@@ -614,7 +614,7 @@ namespace gadt
 					}
 					else
 					{
-						console::ShowError("command " + command + " not found");
+						console::PrintError("command " + command + " not found");
 					}
 				}
 
@@ -869,7 +869,7 @@ namespace gadt
 			{
 				if (page_exist(page_name))
 				{
-					console::ShowError("repeation of create page " + page_name);
+					console::PrintError("repeation of create page " + page_name);
 					console::SystemPause();
 					return nullptr;
 				}
@@ -885,7 +885,7 @@ namespace gadt
 			{
 				if (page_exist(page_name))
 				{
-					console::ShowError("repeation of create page " + page_name);
+					console::PrintError("repeation of create page " + page_name);
 					console::SystemPause();
 					return nullptr;
 				}
@@ -1015,7 +1015,7 @@ namespace gadt
 					bool result = _bool_params_command_func(params);
 					if (result == false)
 					{
-						gadt::console::ShowError("run " + this->name() + " failed.");
+						gadt::console::PrintError("run " + this->name() + " failed.");
 					}
 				}
 			};
@@ -1042,7 +1042,7 @@ namespace gadt
 					bool result = _bool_data_params_command_func(data, params);
 					if (result == false)
 					{
-						console::ShowError("run " + this->name() + " failed.");
+						console::PrintError("run " + this->name() + " failed.");
 					}
 				}
 			};

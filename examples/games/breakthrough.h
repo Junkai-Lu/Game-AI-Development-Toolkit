@@ -47,8 +47,8 @@ namespace gadt
 
 		struct BtAction
 		{
-			UnsignedCoordinate source;
-			UnsignedCoordinate dest;
+			UPoint source;
+			UPoint dest;
 
 			std::string to_string() const
 			{
@@ -94,7 +94,7 @@ namespace gadt
 			const Board& board() const { return _board; }
 			BtPlayer next_player() const { return _next_player; }
 			size_t remain_piece(BtPlayer player) const { return player == BLACK ? _black_piece : _white_piece; }
-			BtPlayer piece(UnsignedCoordinate coord) const { return _board.element(coord); }
+			BtPlayer piece(UPoint point) const { return _board.element(point); }
 
 		public:
 
@@ -125,21 +125,21 @@ namespace gadt
 			void Print() const
 			{
 				console::Table table(g_BT_WIDTH, g_BT_HEIGHT);
-				for (auto coord : _board)
+				for (auto point : _board)
 				{
-					switch (_board.element(coord))
+					switch (_board.element(point))
 					{
 					case WHITE:
-						table.set_cell({ "W " , console::COLOR_RED, console::TABLE_ALIGN_MIDDLE}, coord);
+						table.set_cell({ "W " , console::ConsoleColor::Red, console::TableAlign::Middle}, point);
 						break;
 					case BLACK:
-						table.set_cell({ "B " , console::COLOR_BLUE, console::TABLE_ALIGN_MIDDLE}, coord);
+						table.set_cell({ "B " , console::ConsoleColor::Blue, console::TableAlign::Middle}, point);
 						break;
 					default:
 						break;
 					}
 				}
-				table.Print(console::TABLE_FRAME_ENABLE, console::TABLE_INDEX_FROM_ZERO);
+				table.Print(console::TableFrame::Enable, console::TableIndex::BeginFromZero);
 			}
 
 			BtPlayer Winner() const
@@ -175,24 +175,24 @@ namespace gadt
 				BtActionList actions;
 				BtPlayer player = _state.next_player();
 				int dir = _state.next_player() == BLACK ? -1 : 1;
-				Coordinate right_move = { 1,dir };
-				Coordinate left_move = { -1, dir };
-				Coordinate center_move = { 0,dir };
+				Point right_move = { 1,dir };
+				Point left_move = { -1, dir };
+				Point center_move = { 0,dir };
 
-				for (auto coord : _state.board())
+				for (auto point : _state.board())
 				{
-					const auto signed_coord = coord.to_signed();
-					if (_state.piece(coord) == player)
+					const auto signed_point = point.to_signed();
+					if (_state.piece(point) == player)
 					{
-						UnsignedCoordinate right_coord = (signed_coord + right_move).to_unsigned();
-						if (_state.board().is_legal_coordinate(right_coord) && _state.piece(right_coord) != player)
-							actions.push_back({ coord, right_coord });
-						UnsignedCoordinate left_coord = (signed_coord + left_move).to_unsigned();
-						if (_state.board().is_legal_coordinate(left_coord) && _state.piece(left_coord) != player)
-							actions.push_back({ coord, left_coord });
-						UnsignedCoordinate center_coord = (signed_coord + center_move).to_unsigned();
-						if (_state.board().is_legal_coordinate(center_coord) && _state.piece(center_coord) == NO_PLAYER)
-							actions.push_back({ coord, center_coord });
+						UPoint right_point = (signed_point + right_move).to_unsigned();
+						if (_state.board().is_legal_point(right_point) && _state.piece(right_point) != player)
+							actions.push_back({ point, right_point });
+						UPoint left_point = (signed_point + left_move).to_unsigned();
+						if (_state.board().is_legal_point(left_point) && _state.piece(left_point) != player)
+							actions.push_back({ point, left_point });
+						UPoint center_point = (signed_point + center_move).to_unsigned();
+						if (_state.board().is_legal_point(center_point) && _state.piece(center_point) == NO_PLAYER)
+							actions.push_back({ point, center_point });
 					}
 				}
 				return actions;

@@ -267,7 +267,7 @@ namespace gadt
 					return eval;
 				}
 
-				GADT_CHECK_WARNING(is_debug(), node.action_list().size() == 0, "MM101: empty action set");
+				GADT_WARNING_IF(is_debug(), node.action_list().size() == 0, "MM101: empty action set");
 				
 				//pick up best value in child nodes.
 				State first_child_state = node.state();
@@ -313,7 +313,7 @@ namespace gadt
 				Node root(state, _setting.max_depth,_func_package);
 				VisualNodePtr root_visual_node = nullptr;
 
-				GADT_CHECK_WARNING(is_debug(), root.is_terminal_state(_setting), "MM102: execute search for terminal state.");
+				GADT_WARNING_IF(is_debug(), root.is_terminal_state(_setting), "MM102: execute search for terminal state.");
 
 				if (log_enabled())
 				{

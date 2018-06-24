@@ -215,7 +215,7 @@ namespace gadt
 					return policy::UCB1(avg, static_cast<UcbValue>(parent.visited_time()), static_cast<UcbValue>(child.visited_time()));
 				}),
 				DefaultPolicy([](const ActionList& actions)->const Action&{
-					GADT_CHECK_WARNING(_is_debug, actions.size() == 0, "MCTS104: empty action set during default policy.");
+					GADT_WARNING_IF(_is_debug, actions.size() == 0, "MCTS104: empty action set during default policy.");
 					return actions[rand() % actions.size()];
 				}),
 				ValueForRootNode([](const Node& parent, const Node& child)->UcbValue {
@@ -268,7 +268,7 @@ namespace gadt
 				ActionList actions;
 				for (size_t i = 0;; i++)
 				{
-					GADT_CHECK_WARNING(is_debug(), i > _setting.simulation_warning_length, "out of default policy process max length.");
+					GADT_WARNING_IF(is_debug(), i > _setting.simulation_warning_length, "out of default policy process max length.");
 
 					//detemine winner
 					AgentIndex winner = _func_package.DetermineWinner(state);
@@ -282,7 +282,7 @@ namespace gadt
 					//generate new actions.
 					actions.clear();
 					_func_package.MakeAction(state, actions);
-					GADT_CHECK_WARNING(is_debug(), actions.size() == 0, "empty action list.");
+					GADT_WARNING_IF(is_debug(), actions.size() == 0, "empty action list.");
 
 					//choose action by default policy.
 					Action action = _func_package.DefaultPolicy(actions);
@@ -355,7 +355,7 @@ namespace gadt
 
 				//make actions
 				_func_package.MakeAction(state, action_list);
-				GADT_CHECK_WARNING(is_debug(), action_list.empty(), "empty action list for root node");
+				GADT_WARNING_IF(is_debug(), action_list.empty(), "empty action list for root node");
 
 				//get child nodes
 				for (const Action& act : action_list)

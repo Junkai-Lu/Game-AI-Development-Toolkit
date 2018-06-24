@@ -167,7 +167,7 @@ namespace gadt
 
 			void pop_back()
 			{
-				GADT_CHECK_WARNING(is_debug(), _last_node == nullptr, "no element in the back of link list");
+				GADT_WARNING_IF(is_debug(), _last_node == nullptr, "no element in the back of link list");
 				node_pointer temp = _last_node;
 				_last_node = _last_node->prev_node();
 				_last_node->set_next_node(nullptr);
@@ -176,7 +176,7 @@ namespace gadt
 
 			void pop_front()
 			{
-				GADT_CHECK_WARNING(is_debug(), _first_node == nullptr, "no element in the front of link list");
+				GADT_WARNING_IF(is_debug(), _first_node == nullptr, "no element in the front of link list");
 				node_pointer temp = _first_node;
 				_first_node = _first_node->next_node();
 				_first_node->set_prev_node(nullptr);
@@ -259,13 +259,13 @@ namespace gadt
 		class MatrixIter
 		{
 		private:
-			UnsignedCoordinate _coord;
+			UPoint _point;
 			const size_t _width;
 			const size_t _height;
 
 		public:
-			MatrixIter(UnsignedCoordinate coord, size_t width, size_t height) :
-				_coord(coord),
+			MatrixIter(UPoint point, size_t width, size_t height) :
+				_point(point),
 				_width(width),
 				_height(height)
 			{
@@ -273,22 +273,22 @@ namespace gadt
 
 			bool operator!=(const MatrixIter& iter) const
 			{
-				return _coord != iter._coord;
+				return _point != iter._point;
 			}
 
 			void operator++()
 			{
-				_coord.x++;
-				if (_coord.x >= _width)
+				_point.x++;
+				if (_point.x >= _width)
 				{
-					_coord.x = 0;
-					_coord.y++;
+					_point.x = 0;
+					_point.y++;
 				}
 			}
 
-			UnsignedCoordinate operator* ()
+			UPoint operator* ()
 			{
-				return _coord;
+				return _point;
 			}
 		};
 
@@ -359,16 +359,16 @@ namespace gadt
 
 		public:
 
-			//return true if the coordinate is legal
-			inline bool is_legal_coordinate(size_t x, size_t y) const
+			//return true if the Point is legal
+			inline bool is_legal_point(size_t x, size_t y) const
 			{
 				return (x < _width) && (y < _height);
 			}
 
-			//return true if the coordinate is legal
-			inline bool is_legal_coordinate(UnsignedCoordinate coord) const
+			//return true if the Point is legal
+			inline bool is_legal_point(UPoint point) const
 			{
-				return is_legal_coordinate(coord.x, coord.y);
+				return is_legal_point(point.x, point.y);
 			}
 
 			//get number of rows.
@@ -384,29 +384,29 @@ namespace gadt
 			}
 
 			//get element
-			inline const_reference element(UnsignedCoordinate coord) const 
+			inline const_reference element(UPoint point) const 
 			{
-				return element(coord.x, coord.y);
+				return element(point.x, point.y);
 			}
 
 			//get element
 			inline const_reference element(size_t x, size_t y) const 
 			{
-				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x,y), "out of row range.");
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, !is_legal_point(x,y), "out of row range.");
 				return (_elements[x])[y];
 			}
 
 			//get row by index.
 			inline const Row& get_row(size_t index) const
 			{
-				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, index >= _height, "out of row range.");
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, index >= _height, "out of row range.");
 				return _row[index];
 			}
 
 			//get column by index.
 			inline const Column& get_column(size_t index) const
 			{
-				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, index >= _width, "out of column range.");
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, index >= _width, "out of column range.");
 				return _column[index];
 			}
 
@@ -421,14 +421,14 @@ namespace gadt
 			//set element.
 			inline void set_element(const_reference elem, size_t x, size_t y)
 			{
-				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x, y), "out of range.");
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, !is_legal_point(x, y), "out of range.");
 				(_elements[x])[y] = elem;
 			}
 
 			//set element.
-			inline void set_element(const_reference elem, UnsignedCoordinate coord)
+			inline void set_element(const_reference elem, UPoint point)
 			{
-				set_element(elem, coord.x, coord.y);
+				set_element(elem, point.x, point.y);
 			}
 
 			//set row as same element.
@@ -480,9 +480,9 @@ namespace gadt
 			//return true if element exist.
 			inline bool any(const_reference elem) const
 			{
-				for (auto coord : *this)
+				for (auto point : *this)
 				{
-					if (element(coord) == elem)
+					if (element(point) == elem)
 						return true;
 				}
 				return false;
@@ -491,9 +491,9 @@ namespace gadt
 			//return true if element do not exist.
 			inline bool none(const_reference elem) const
 			{
-				for (auto coord : *this)
+				for (auto point : *this)
 				{
-					if (element(coord) == elem)
+					if (element(point) == elem)
 						return false;
 				}
 				return true;
@@ -511,11 +511,11 @@ namespace gadt
 				return Iter({ 0, height() }, width(), height());
 			}
 
-			//get element by coordinate.
-			inline reference operator[](UnsignedCoordinate coord)
+			//get element by point.
+			inline reference operator[](UPoint point)
 			{
-				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(coord.x, coord.y), "out of row range.");
-				return (_elements[coord.x])[coord.y];
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, !is_legal_point(point.x, point.y), "out of row range.");
+				return (_elements[point.x])[point.y];
 			}
 
 		public:
@@ -809,16 +809,16 @@ namespace gadt
 
 		public:
 
-			//return true if the coordinate is legal.
-			inline bool is_legal_coordinate(size_t x, size_t y) const
+			//return true if the Point is legal.
+			inline bool is_legal_point(size_t x, size_t y) const
 			{
 				return (x < _WIDTH) && (y < _HEIGHT);
 			}
 
-			//return true if the coordinate is legal.
-			inline bool is_legal_coordinate(UnsignedCoordinate coord) const
+			//return true if the Point is legal.
+			inline bool is_legal_point(UPoint point) const
 			{
-				return is_legal_coordinate(coord.x, coord.y);
+				return is_legal_point(point.x, point.y);
 			}
 
 			//get height, which is the number of rows. 
@@ -854,35 +854,35 @@ namespace gadt
 			//get element
 			inline const_reference element(size_t x, size_t y) const
 			{
-				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x, y), "out of row range.");
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, !is_legal_point(x, y), "out of row range.");
 				return _elements[get_index(x, y)];
 			}
 
 			//get element
-			inline const_reference element(UnsignedCoordinate coord) const
+			inline const_reference element(UPoint point) const
 			{
-				return element(coord.x, coord.y);
+				return element(point.x, point.y);
 			}
 
 			//set element
 			inline void set_element(const_reference elem, size_t x, size_t y)
 			{
-				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(x, y), "out of row range.");
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, !is_legal_point(x, y), "out of row range.");
 				_elements[get_index(x, y)] = elem;
 			}
 
 			//set element
-			inline void set_element(const_reference elem, UnsignedCoordinate coord)
+			inline void set_element(const_reference elem, UPoint point)
 			{
-				set_element(elem, coord.x, coord.y);
+				set_element(elem, point.x, point.y);
 			}
 
 			//return true if any element exist in the matrix.
 			inline bool any(const_reference elem) const
 			{
-				for (auto coord : *this)
+				for (auto point : *this)
 				{
-					if (element(coord) == elem)
+					if (element(point) == elem)
 						return true;
 				}
 				return false;
@@ -891,18 +891,18 @@ namespace gadt
 			//return true if none of the element exist in the matrix.
 			inline bool none(const_reference elem) const
 			{
-				for (auto coord : *this)
+				for (auto point : *this)
 				{
-					if (element(coord) == elem)
+					if (element(point) == elem)
 						return false;
 				}
 				return true;
 			}
 
-			inline reference operator[](UnsignedCoordinate coord)
+			inline reference operator[](UPoint point)
 			{
-				GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, !is_legal_coordinate(coord.x, coord.y), "out of row range.");
-				return _elements[get_index(coord.x, coord.y)];
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, !is_legal_point(point.x, point.y), "out of row range.");
+				return _elements[get_index(point.x, point.y)];
 			}
 
 		public:
@@ -1120,21 +1120,21 @@ namespace gadt
 			DynamicMatrix<T> ToDynamic()
 			{
 				DynamicMatrix<T> matrix(_WIDTH, _HEIGHT, element(0, 0));
-				for (auto coord : *this)
-					matrix.set_element(element(coord), coord);
+				for (auto point : *this)
+					matrix.set_element(element(point), point);
 				return matrix;
 			}
 
 			//return the submatrix of this matrix.
 			template<size_t AREA_WIDTH, size_t AREA_HEIGHT, typename std::enable_if<((AREA_WIDTH <= _WIDTH) && (AREA_HEIGHT <= _HEIGHT)), int>::type = 0>
-			StaticMatrix<T, AREA_WIDTH, AREA_HEIGHT> SubMatrix(UnsignedCoordinate coord) const
+			StaticMatrix<T, AREA_WIDTH, AREA_HEIGHT> SubMatrix(UPoint point) const
 			{
 				StaticMatrix<T, AREA_WIDTH, AREA_HEIGHT> submatrix;
-				for (auto sub_coord : submatrix)
+				for (auto sub_point : submatrix)
 				{
-					auto pos = coord + sub_coord;
-					if (is_legal_coordinate(pos))
-						submatrix[sub_coord] = element(pos);
+					auto pos = point + sub_point;
+					if (is_legal_point(pos))
+						submatrix[sub_point] = element(pos);
 				}
 				return submatrix;
 			}
@@ -1143,7 +1143,7 @@ namespace gadt
 			template<size_t AREA_WIDTH, size_t AREA_HEIGHT, typename std::enable_if<((AREA_WIDTH <= _WIDTH) && (AREA_HEIGHT <= _HEIGHT)), int>::type = 0>
 			StaticMatrix<T, AREA_WIDTH, AREA_HEIGHT> SubMatrix(size_t x, size_t y) const
 			{
-				return SubMatrix<AREA_WIDTH, AREA_HEIGHT>(UnsignedCoordinate{ x,y });
+				return SubMatrix<AREA_WIDTH, AREA_HEIGHT>(UPoint{ x,y });
 			}
 		};
 
@@ -1281,7 +1281,7 @@ namespace gadt
 			//get random element.
 			inline const reference random() const
 			{
-				GADT_CHECK_WARNING(is_debug(), size() == 0, "random pool is empty.");
+				GADT_WARNING_IF(is_debug(), size() == 0, "random pool is empty.");
 				size_t rnd = rand() % _accumulated_range;
 				for (size_t i = 0; i < size(); i++)
 				{
@@ -1290,7 +1290,7 @@ namespace gadt
 						return _ele_alloc[i]->data;
 					}
 				}
-				GADT_CHECK_WARNING(is_debug(), true, "unsuccessful random pick up.");
+				GADT_WARNING_IF(is_debug(), true, "unsuccessful random pick up.");
 				return _ele_alloc[0]->data;
 			}
 

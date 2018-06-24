@@ -86,26 +86,26 @@ namespace gadt
 			std::stringstream ss;
 			ss << "player:" << (int)state.next_player() << " winner:" << (int)state.winner();
 			tb.enable_title({ ss.str() });
-			for (auto coord : state)
+			for (auto point : state)
 			{
-				if (state.piece(coord) == BLACK)
+				if (state.piece(point) == BLACK)
 				{
-					tb.set_cell({ "X" }, coord);
+					tb.set_cell({ "X" }, point);
 				}
-				else if (state.piece(coord) == WHITE)
+				else if (state.piece(point) == WHITE)
 				{
-					tb.set_cell({ "O" }, coord);
+					tb.set_cell({ "O" }, point);
 				}
-				else if (state.piece(coord) == FLAG)
+				else if (state.piece(point) == FLAG)
 				{
-					tb.set_cell({ "F" }, coord);
+					tb.set_cell({ "F" }, point);
 				}
 				else
 				{
-					tb.set_cell({ "+" }, coord);
+					tb.set_cell({ "+" }, point);
 				}
 			}
-			tb.Print(console::TABLE_FRAME_DISABLE, console::TABLE_INDEX_FROM_ZERO);
+			tb.Print(console::TableFrame::Disable, console::TableIndex::BeginFromZero);
 		}
 
 		void PrintRenjuActions(const RenjuState& state, RenjuActionList action_list)
@@ -113,7 +113,7 @@ namespace gadt
 			RenjuState temp = state;
 			for (auto act : action_list)
 			{
-				temp.TakeAction({act.coord, FLAG});
+				temp.TakeAction({act.point, FLAG});
 			}
 			std::cout << "Action Num: " << action_list.size();
 			PrintRenjuState(temp);

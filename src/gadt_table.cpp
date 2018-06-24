@@ -27,33 +27,33 @@ namespace gadt
 	{
 		TableCell::TableCell() :
 			str(),
-			color(console::COLOR_DEFAULT),
-			align(TABLE_ALIGN_LEFT)
+			color(console::ConsoleColor::Default),
+			align(TableAlign::Left)
 		{
 		}
 
 		TableCell::TableCell(std::string _str) :
 			str(_str),
-			color(console::COLOR_DEFAULT),
-			align(TABLE_ALIGN_LEFT)
+			color(console::ConsoleColor::Default),
+			align(TableAlign::Left)
 		{
 		}
 
 		TableCell::TableCell(std::string _str, console::ConsoleColor _color) :
 			str(_str),
 			color(_color),
-			align(TABLE_ALIGN_LEFT)
+			align(TableAlign::Left)
 		{
 		}
 
-		TableCell::TableCell(std::string _str, AlignMode _align) :
+		TableCell::TableCell(std::string _str, TableAlign _align) :
 			str(_str),
-			color(console::COLOR_DEFAULT),
+			color(console::ConsoleColor::Default),
 			align(_align)
 		{
 		}
 
-		TableCell::TableCell(std::string _str, console::ConsoleColor _color, AlignMode _align) :
+		TableCell::TableCell(std::string _str, console::ConsoleColor _color, TableAlign _align) :
 			str(_str),
 			color(_color),
 			align(_align)
@@ -68,17 +68,17 @@ namespace gadt
 			if (str.length() < max_length)
 			{
 				size_t space_width = max_length - str.length();
-				if (align == TABLE_ALIGN_LEFT)
+				if (align == TableAlign::Left)
 				{
 					temp += str;
 					temp += std::string(space_width, ' ');
 				}
-				else if (align == TABLE_ALIGN_RIGHT)
+				else if (align == TableAlign::Right)
 				{
 					temp += std::string(space_width, ' ');
 					temp += str;
 				}
-				else if (align == TABLE_ALIGN_MIDDLE)
+				else if (align == TableAlign::Middle)
 				{
 					size_t left_width = space_width / 2;
 					size_t right_width = space_width - left_width;
@@ -100,7 +100,7 @@ namespace gadt
 			_column_width(0, TABLE_DEFAULT_WIDTH),
 			_enable_title(false),
 			_title_cell(),
-			_table_color(COLOR_GRAY)
+			_table_color(ConsoleColor::Gray)
 		{
 		}
 
@@ -110,7 +110,7 @@ namespace gadt
 			_column_width(column_size, TABLE_DEFAULT_WIDTH),
 			_enable_title(false),
 			_title_cell(),
-			_table_color(COLOR_GRAY)
+			_table_color(ConsoleColor::Gray)
 		{
 		}
 
@@ -120,7 +120,7 @@ namespace gadt
 			_column_width(column_size, TABLE_DEFAULT_WIDTH),
 			_enable_title(false),
 			_title_cell(),
-			_table_color(COLOR_GRAY)
+			_table_color(ConsoleColor::Gray)
 		{
 		}
 
@@ -130,12 +130,12 @@ namespace gadt
 		//	_column_width(column_size, TABLE_DEFAULT_WIDTH),
 		//	_enable_title(false),
 		//	_title_cell(),
-		//	_table_color(COLOR_GRAY)
+		//	_table_color(ConsoleColor::Gray)
 		//{
 		//}
 
 		//print table
-		void Table::Print(FrameMode frame_mode, IndexMode index_mode)
+		void Table::Print(TableFrame frame_mode, TableIndex index_mode)
 		{
 			/*
 			* Frame String Index
@@ -156,11 +156,11 @@ namespace gadt
 
 			std::vector<std::string> FRAME;
 			
-			if (frame_mode == TABLE_FRAME_DISABLE || frame_mode == TABLE_FRAME_DISABLE_TIGHT)
+			if (frame_mode == TableFrame::Disable || frame_mode == TableFrame::DisableAndTight)
 			{
 				FRAME = std::vector<std::string>(13, " ");
 			}
-			else if (frame_mode == TABLE_FRAME_BASIC)
+			else if (frame_mode == TableFrame::Basic)
 			{
 				FRAME = std::vector<std::string>{
 					"-",	//0: outer horizon line
@@ -178,7 +178,7 @@ namespace gadt
 					"|",	//12: inner vectical line
 				};
 			}
-			else if (frame_mode == TABLE_FRAME_CIRCLE || frame_mode == TABLE_FRAME_CIRCLE_TIGHT)
+			else if (frame_mode == TableFrame::Circle || frame_mode == TableFrame::CircleAndTight)
 			{
 				FRAME = std::vector<std::string>{
 					"─",	//0: outer horizon line
@@ -215,19 +215,19 @@ namespace gadt
 				};
 			}
 
-			bool enable_index = (index_mode != TABLE_INDEX_DISABLE);
+			bool enable_index = (index_mode != TableIndex::Disable);
 			const size_t space_before_line_size = 4;
 			std::string space_before_line(space_before_line_size, ' ');
-			EndLine();
+			PrintEndLine();
 			//print indexs upper the table.
 
 			if (enable_index)
 			{
 				print_frame(std::string(space_before_line_size + 1, ' '));
-				//size_t extra = 1;//frame_mode == TABLE_FRAME_DISABLE ? 0 : 1;
+				//size_t extra = 1;//frame_mode == TableFrame::Disable ? 0 : 1;
 				for (size_t column = 0; column < this->number_of_columns(); column++)
-					print_index(column + index_mode, _column_width[column] * 2);
-				EndLine();
+					print_index(column + static_cast<size_t>(index_mode), _column_width[column] * 2);
+				PrintEndLine();
 			}
 
 			//print title
@@ -240,15 +240,15 @@ namespace gadt
 				for (size_t i = 0; i < str_width; i++)
 					print_frame(FRAME[0]);//outer hor line
 				print_frame(FRAME[8]);
-				EndLine(); 
+				PrintEndLine(); 
 				print_frame(space_before_line + FRAME[1]);
 				print_cell(_title_cell, str_width);
 				print_frame(FRAME[1]);
-				EndLine();
+				PrintEndLine();
 			}
 
 			//print upper line of the table.
-			if (frame_mode != TABLE_FRAME_DISABLE)
+			if (frame_mode != TableFrame::Disable)
 			{
 				if (_enable_title)
 					print_frame(space_before_line + FRAME[3]);//left dot
@@ -278,20 +278,20 @@ namespace gadt
 							print_frame(FRAME[4]);//right dot
 						else
 							print_frame(FRAME[8]);//top right corner
-						EndLine();
+						PrintEndLine();
 					}
 				}
 			}
 			else
 			{
-				EndLine();
+				PrintEndLine();
 			}
 
 			for (size_t row = 0; row < this->number_of_rows(); row++)
 			{
 				//print first line , include value and space.
 				if (enable_index)
-					print_index(row + index_mode, space_before_line_size - 1);
+					print_index(row + static_cast<size_t>(index_mode), space_before_line_size - 1);
 				else
 					print_frame(space_before_line);
 				print_frame(FRAME[1]);//outer vec line
@@ -303,7 +303,7 @@ namespace gadt
 					if (column == this->number_of_columns() - 1)//last column
 					{
 						print_frame(FRAME[1]); //outer vec line
-						EndLine();
+						PrintEndLine();
 					}
 					else
 					{
@@ -312,7 +312,7 @@ namespace gadt
 				}
 
 				//print second line
-				if (row == this->number_of_rows() - 1 || (frame_mode != TABLE_FRAME_DISABLE_TIGHT && frame_mode != TABLE_FRAME_CIRCLE_TIGHT))
+				if (row == this->number_of_rows() - 1 || (frame_mode != TableFrame::DisableAndTight && frame_mode != TableFrame::CircleAndTight))
 				{
 					if (row == this->number_of_rows() - 1)//last row
 						print_frame(space_before_line + FRAME[9]);//left bottom corner
@@ -327,7 +327,7 @@ namespace gadt
 							if (column == this->number_of_columns() - 1)
 							{
 								print_frame(FRAME[10]);//right bottom corner
-								EndLine();
+								PrintEndLine();
 							}
 							else
 							{
@@ -341,7 +341,7 @@ namespace gadt
 							if (column == this->number_of_columns() - 1)
 							{
 								print_frame(FRAME[4]);//right dot
-								EndLine();
+								PrintEndLine();
 							}
 							else
 							{

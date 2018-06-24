@@ -75,7 +75,7 @@ namespace gadt
 			{
 				console::Table tb(2, 6);
 				tb.set_width({ 12,6 });
-				tb.enable_title({"MCTS Setting", console::TABLE_ALIGN_MIDDLE });
+				tb.enable_title({"MCTS Setting", console::TableAlign::Middle });
 				tb.set_cell_in_row(0, { { "timeout" },					{ ToString(timeout) } });
 				tb.set_cell_in_row(1, { { "max_thread" },				{ ToString(max_thread) } });
 				tb.set_cell_in_row(2, { { "max_iteration_per_thread" },	{ ToString(max_iteration_per_thread) } });
@@ -192,7 +192,7 @@ namespace gadt
 
 				//free the node itself.
 				bool b = allocator.destory(this);
-				GADT_CHECK_WARNING(is_debug(), b == false, "MCTS105: free child node failed.");
+				GADT_WARNING_IF(is_debug(), b == false, "MCTS105: free child node failed.");
 			}
 
 		public:
@@ -237,7 +237,7 @@ namespace gadt
 				ActionList actions;
 				for (size_t i = 0;; i++)
 				{
-					GADT_CHECK_WARNING(is_debug(), i > setting.simulation_warning_length, "MCTS103: out of default policy process max length.");
+					GADT_WARNING_IF(is_debug(), i > setting.simulation_warning_length, "MCTS103: out of default policy process max length.");
 
 					//detemine winner
 					AgentIndex winner = func.DetermineWinner(state);
@@ -251,7 +251,7 @@ namespace gadt
 					//generate new actions.
 					actions.clear();
 					func.MakeAction(state, actions);
-					GADT_CHECK_WARNING(is_debug(), actions.size() == 0, "empty action list.");
+					GADT_WARNING_IF(is_debug(), actions.size() == 0, "empty action list.");
 
 					//choose action by default policy.
 					const Action& action = func.DefaultPolicy(actions);
@@ -309,7 +309,7 @@ namespace gadt
 					}
 					else
 					{
-						GADT_CHECK_WARNING(is_debug(), _action_list.size() == 0, "MCTS106: empty action set during tree policy.");
+						GADT_WARNING_IF(is_debug(), _action_list.size() == 0, "MCTS106: empty action set during tree policy.");
 
 						pointer max_ucb_child_node = fir_child_node();
 						UcbValue max_ucb_value = 0;
@@ -325,7 +325,7 @@ namespace gadt
 							}
 							node = node->brother_node();
 						}
-						GADT_CHECK_WARNING(is_debug(), max_ucb_child_node == nullptr, "MCTS108: best child node pointer is nullptr.");
+						GADT_WARNING_IF(is_debug(), max_ucb_child_node == nullptr, "MCTS108: best child node pointer is nullptr.");
 						max_ucb_child_node->Selection(allocator, func, setting);
 					}
 				}
@@ -538,7 +538,7 @@ namespace gadt
 					return policy::UCB1(avg, static_cast<UcbValue>(parent.visit_count()), static_cast<UcbValue>(child.visit_count()));
 				}),
 				DefaultPolicy([](const ActionList& actions)->const Action&{
-					GADT_CHECK_WARNING(_is_debug, actions.size() == 0, "MCTS104: empty action set during default policy.");
+					GADT_WARNING_IF(_is_debug, actions.size() == 0, "MCTS104: empty action set during default policy.");
 					return actions[rand() % actions.size()];
 				}),
 				AllowExtend([](const Node& node)->bool {
@@ -702,38 +702,38 @@ namespace gadt
 				console::Table tb(7, root_node.action_num() + 2);
 				tb.enable_title({ 
 					name() + " Result: Time = [ " + ToString(tp.time_since_created()) + "s ]", 
-					console::COLOR_GRAY, 
-					console::TABLE_ALIGN_MIDDLE
+					console::ConsoleColor::Gray, 
+					console::TableAlign::Middle
 					});
 				tb.set_cell_in_row(0, {
-					{ "Index", console::COLOR_GRAY, console::TABLE_ALIGN_MIDDLE },
-					{ "Size", console::COLOR_GRAY },
-					{ "Visit", console::COLOR_GRAY },
-					{ "Win", console::COLOR_GRAY },
-					{ "Avg Reward", console::COLOR_GRAY },
-					{ "Best", console::COLOR_GRAY },
-					{ "Action", console::COLOR_GRAY, console::TABLE_ALIGN_MIDDLE }
+					{ "Index", console::ConsoleColor::Gray, console::TableAlign::Middle },
+					{ "Size", console::ConsoleColor::Gray },
+					{ "Visit", console::ConsoleColor::Gray },
+					{ "Win", console::ConsoleColor::Gray },
+					{ "Avg Reward", console::ConsoleColor::Gray },
+					{ "Best", console::ConsoleColor::Gray },
+					{ "Action", console::ConsoleColor::Gray, console::TableAlign::Middle }
 					});
 				tb.set_width({ 4,4,4,4,5,2,25 });
 				for (size_t i = 0; i < root_node.action_num(); i++)
 				{
 					tb.set_cell_in_row(i + 1, {
-						{ i, console::COLOR_GRAY, console::TABLE_ALIGN_MIDDLE },
+						{ i, console::ConsoleColor::Gray, console::TableAlign::Middle },
 						{ tree_size_set[i] },
 						{ child_nodes[i]->visit_count()},
 						{ child_nodes[i]->win_count() },
 						{ child_nodes[i]->avg_reward() },
 						{ i == best_child_index ? " Yes" : "" },
-						{ _log_controller.action_to_str_func()(root_node.action(i)), console::TABLE_ALIGN_MIDDLE }
+						{ _log_controller.action_to_str_func()(root_node.action(i)), console::TableAlign::Middle }
 						});
 				}
 				tb.set_cell_in_row(root_node.action_num() + 1, {
-					{ "Total", console::COLOR_GRAY, console::TABLE_ALIGN_MIDDLE },
+					{ "Total", console::ConsoleColor::Gray, console::TableAlign::Middle },
 					{ total_tree_size },
 					{ root_node.visit_count() },
 					{ total_win_count },
 					{ root_node.exception() },
-					{ best_child_index, console::TABLE_ALIGN_MIDDLE },
+					{ best_child_index, console::TableAlign::Middle },
 					{ "" }
 					});
 				tb.Print();
@@ -803,8 +803,8 @@ namespace gadt
 				ExcuteIteration(root_node, allocators);
 
 				//select best action.
-				GADT_CHECK_WARNING(is_debug(), root_node.fir_child_node() == nullptr, "empty child node under root node.");
-				GADT_CHECK_WARNING(is_debug(), root_node.action_num() == 0, "no existing available action in root node.");
+				GADT_WARNING_IF(is_debug(), root_node.fir_child_node() == nullptr, "empty child node under root node.");
+				GADT_WARNING_IF(is_debug(), root_node.action_num() == 0, "no existing available action in root node.");
 				size_t best_child_index = _func_package.RootSelection(root_node);
 
 				//output Json if enabled.

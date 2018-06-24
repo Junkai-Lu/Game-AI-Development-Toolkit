@@ -23,9 +23,9 @@
 
 //a marco use for parameters check.
 #ifdef GADT_WARNING
-	#define GADT_CHECK_WARNING(enable, condition, reason) gadt::console::WarningCheck(enable && condition, reason, __FILE__, __LINE__, __FUNCTION__);
+	#define GADT_WARNING_IF(enable_condition, condition, reason) ::gadt::console::WarningCheck(enable_condition && condition, reason, __FILE__, __LINE__, __FUNCTION__);
 #else
-	#define GADT_CHECK_WARNING(enable, condition, reason)
+	#define GADT_WARNING_IF(enable_condition, condition, reason)
 #endif
 
 #pragma once
@@ -36,55 +36,55 @@ namespace gadt
 	using UcbValue = double;
 	using EvalValue = double;
 
-	//extern BasicUnsignedCoordinate.
+	//extern BasicUPoint.
 	template<typename IntType = uint64_t, typename std::enable_if<std::is_unsigned<IntType>::value, int>::type = 0>
-	struct BasicUnsignedCoordinate;
+	struct BasicUPoint;
 
-	//struct BasicCoordinate is used to express a plane coordinate of signed integer.
+	//struct BasicPoint is used to express a plane Point of signed integer.
 	template<typename IntType = int64_t, typename std::enable_if<std::is_signed<IntType>::value, int>::type = 0>
-	struct BasicCoordinate
+	struct BasicPoint
 	{
 		IntType x;
 		IntType y;
 
-		BasicCoordinate() : x(0), y(0) {}
+		constexpr BasicPoint() noexcept: x(0), y(0) {}
 
-		BasicCoordinate(IntType _x, IntType _y) : x(_x), y(_y) {}
+		constexpr BasicPoint(IntType _x, IntType _y) noexcept : x(_x), y(_y) {}
 
 		//bool operation is banned.
 		inline operator bool() = delete;
 
-		//convert to singed coordinate
+		//convert to singed point
 		template<typename T = uint64_t, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
-		inline BasicUnsignedCoordinate<T> to_unsigned() const
+		inline BasicUPoint<T> to_unsigned() const
 		{
 			return { T(x),T(y) };
 		}
 
 		//comparison operation
 		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
-		inline bool operator==(BasicCoordinate<T> coord) const
+		inline bool operator==(BasicPoint<T> point) const
 		{
-			return x == coord.x && y == coord.y;
+			return x == point.x && y == point.y;
 		}
 
 		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
-		inline bool operator!=(BasicCoordinate<T> coord) const
+		inline bool operator!=(BasicPoint<T> point) const
 		{
-			return x != coord.x || y != coord.y;
+			return x != point.x || y != point.y;
 		}
 
 		//with integer.(multiply or divide)
 		template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
-		inline BasicCoordinate<IntType> operator*(T i) const
+		inline BasicPoint<IntType> operator*(T i) const
 		{
-			return BasicCoordinate<IntType>(x*i, y*i);
+			return BasicPoint<IntType>(x*i, y*i);
 		}
 
 		template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
-		inline BasicCoordinate<IntType> operator/(T i) const
+		inline BasicPoint<IntType> operator/(T i) const
 		{
-			return BasicCoordinate<IntType>(x / i, y / i);
+			return BasicPoint<IntType>(x / i, y / i);
 		}
 
 		template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
@@ -101,38 +101,38 @@ namespace gadt
 			y /= i;
 		}
 
-		//with coordinate(plus or reduce).
+		//with point(plus or reduce).
 		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
-		inline BasicCoordinate<IntType> operator+(BasicCoordinate<T> coord) const
+		inline BasicPoint<IntType> operator+(BasicPoint<T> point) const
 		{
-			return BasicCoordinate<IntType>(x + coord.x, y + coord.y);
+			return BasicPoint<IntType>(x + point.x, y + point.y);
 		}
 
 		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
-		inline BasicCoordinate<IntType> operator-(BasicCoordinate<T> coord) const
+		inline BasicPoint<IntType> operator-(BasicPoint<T> point) const
 		{
-			return BasicCoordinate<IntType>(x - coord.x, y - coord.y);
+			return BasicPoint<IntType>(x - point.x, y - point.y);
 		}
 
 		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
-		inline void operator+=(BasicCoordinate<T> coord)
+		inline void operator+=(BasicPoint<T> point)
 		{
-			x += coord.x;
-			y += coord.y;
+			x += point.x;
+			y += point.y;
 		}
 
 		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
-		inline void operator-=(BasicCoordinate<T> coord)
+		inline void operator-=(BasicPoint<T> point)
 		{
-			x -= coord.x;
-			y -= coord.y;
+			x -= point.x;
+			y -= point.y;
 		}
 
-		//multiply with another coordinate(the result would be a integer).
+		//multiply with another point(the result would be a integer).
 		template<typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
-		inline IntType operator*(BasicCoordinate<T> coord) const
+		inline IntType operator*(BasicPoint<T> point) const
 		{
-			return IntType((x * coord.x) + (y* coord.y));
+			return IntType((x * point.x) + (y* point.y));
 		}
 
 		//swap
@@ -141,10 +141,10 @@ namespace gadt
 			IntType t = x; x = y; y = t;
 		}
 
-		//swap with another coordinate.
-		inline void swap(BasicCoordinate<IntType>& coord)
+		//swap with another point.
+		inline void swap(BasicPoint<IntType>& point)
 		{
-			BasicCoordinate<IntType> t = coord; *this = coord; coord = *this;
+			BasicPoint<IntType> t = point; *this = point; point = *this;
 		}
 
 		//convert to  
@@ -156,51 +156,51 @@ namespace gadt
 		}
 	};
 
-	//struct BasicUnsignedCoordinate is used to express a plane coordinate of unsigned integer.
+	//struct BasicUPoint is used to express a plane Point of unsigned integer.
 	template<typename IntType, typename std::enable_if<std::is_unsigned<IntType>::value, int>::type>
-	struct BasicUnsignedCoordinate
+	struct BasicUPoint
 	{
 		IntType x;
 		IntType y;
 
-		BasicUnsignedCoordinate() : x(0), y(0) {}
+		constexpr BasicUPoint() noexcept : x(0), y(0) {}
 
-		BasicUnsignedCoordinate(IntType _x, IntType _y) : x(_x), y(_y) {}
+		constexpr BasicUPoint(IntType _x, IntType _y) noexcept : x(_x), y(_y) {}
 
 		//bool operation is banned.
 		inline operator bool() = delete;
 
-		//convert to singed coordinate
+		//convert to singed point
 		template<typename T = int, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
-		inline BasicCoordinate<T> to_signed() const
+		inline constexpr BasicPoint<T> to_signed() const
 		{
 			return { T(x),T(y) };
 		}
 
 		//comparison operation
 		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
-		inline bool operator==(BasicUnsignedCoordinate<T> coord) const
+		inline bool operator==(BasicUPoint<T> point) const
 		{
-			return x == coord.x && y == coord.y;
+			return x == point.x && y == point.y;
 		}
 
 		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
-		inline bool operator!=(BasicUnsignedCoordinate<T> coord) const
+		inline bool operator!=(BasicUPoint<T> point) const
 		{
-			return x != coord.x || y != coord.y;
+			return x != point.x || y != point.y;
 		}
 
 		//with integer.(multiply or divide)
 		template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
-		inline BasicUnsignedCoordinate<IntType> operator*(T i) const
+		inline BasicUPoint<IntType> operator*(T i) const
 		{
-			return BasicUnsignedCoordinate<IntType>(x*i, y*i);
+			return BasicUPoint<IntType>(x*i, y*i);
 		}
 
 		template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
-		inline BasicUnsignedCoordinate<IntType> operator/(T i) const
+		inline BasicUPoint<IntType> operator/(T i) const
 		{
-			return BasicUnsignedCoordinate<IntType>(x /i, y /i);
+			return BasicUPoint<IntType>(x /i, y /i);
 		}
 
 		template<typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
@@ -217,38 +217,38 @@ namespace gadt
 			y /= i;
 		}
 
-		//with coordinate(plus or reduce).
+		//with point(plus or reduce).
 		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
-		inline BasicUnsignedCoordinate<IntType> operator+(BasicUnsignedCoordinate<T> coord) const
+		inline BasicUPoint<IntType> operator+(BasicUPoint<T> point) const
 		{
-			return BasicUnsignedCoordinate<IntType>(x + coord.x, y + coord.y);
+			return BasicUPoint<IntType>(x + point.x, y + point.y);
 		}
 
 		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
-		inline BasicUnsignedCoordinate<IntType> operator-(BasicUnsignedCoordinate<T> coord) const
+		inline BasicUPoint<IntType> operator-(BasicUPoint<T> point) const
 		{
-			return BasicUnsignedCoordinate<IntType>(x - coord.x, y - coord.y);
+			return BasicUPoint<IntType>(x - point.x, y - point.y);
 		}
 
 		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
-		inline void operator+=(BasicUnsignedCoordinate<T> coord)
+		inline void operator+=(BasicUPoint<T> point)
 		{
-			x += coord.x;
-			y += coord.y;
+			x += point.x;
+			y += point.y;
 		}
 
 		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
-		inline void operator-=(BasicUnsignedCoordinate<T> coord)
+		inline void operator-=(BasicUPoint<T> point)
 		{
-			x -= coord.x;
-			y -= coord.y;
+			x -= point.x;
+			y -= point.y;
 		}
 
-		//multiply with another coordinate(the result would be a integer).
+		//multiply with another point(the result would be a integer).
 		template<typename T, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
-		inline IntType operator*(BasicUnsignedCoordinate<T> coord) const
+		inline IntType operator*(BasicUPoint<T> point) const
 		{
-			return IntType((x * coord.x) + (y* coord.y));
+			return IntType((x * point.x) + (y* point.y));
 		}
 
 		//swap
@@ -257,10 +257,10 @@ namespace gadt
 			IntType t = x; x = y; y = t;
 		}
 
-		//swap with another coordinate.
-		inline void swap(BasicUnsignedCoordinate<IntType>& coord)
+		//swap with another point.
+		inline void swap(BasicUPoint<IntType>& point)
 		{
-			BasicUnsignedCoordinate<IntType> t = coord; *this = coord; coord = *this;
+			BasicUPoint<IntType> t = point; *this = point; point = *this;
 		}
 
 		//convert to  
@@ -272,11 +272,11 @@ namespace gadt
 		}
 	};
 
-	//default coordinate.
-	using Coordinate = BasicCoordinate<int>;
+	//default point.
+	using Point = BasicPoint<int>;
 
-	//default unsigned coordinate.
-	using UnsignedCoordinate = BasicUnsignedCoordinate<size_t>;
+	//default unsigned point.
+	using UPoint = BasicUPoint<size_t>;
 
 	//srting to interger.
 	template<typename T, typename ReturnType = int, typename std::enable_if<std::is_integral<ReturnType>::value, int>::type = 0>
@@ -369,23 +369,23 @@ namespace gadt
 		const std::string DELIMITER_STR_EMPTY = "";
 
 		//console color type
-		enum ConsoleColor
+		enum class ConsoleColor
 		{
-			COLOR_DEEP_BLUE = 1,
-			COLOR_DEEP_GREEN = 2,
-			COLOR_DEEP_CYAN = 3,
-			COLOR_BROWN = 4,
-			COLOR_PURPLE = 5,
-			COLOR_DEEP_YELLOW = 6,
-			COLOR_DEFAULT = 7,
-			COLOR_GRAY = 8,
-			COLOR_BLUE = 9,
-			COLOR_GREEN = 10,
-			COLOR_CYAN = 11,
-			COLOR_RED = 12,
-			COLOR_PINK = 13,
-			COLOR_YELLOW = 14,
-			COLOR_WHITE = 15
+			DeepBlue = 1,
+			DeepGreen = 2,
+			DeepCyan = 3,
+			Brown = 4,
+			Purple = 5,
+			DeepYellow = 6,
+			Default = 7,
+			Gray = 8,
+			Blue = 9,
+			Green = 10,
+			Cyan = 11,
+			Red = 12,
+			Pink = 13,
+			Yellow = 14,
+			White = 15
 		};
 
 		//color ostream.
@@ -443,13 +443,13 @@ namespace gadt
 			//return true if current color is tint
 			inline bool is_tint() const
 			{
-				return _index >= COLOR_BLUE && _index <= COLOR_YELLOW;
+				return _index >= static_cast<size_t>(ConsoleColor::Blue) && _index <= static_cast<size_t>(ConsoleColor::Yellow);
 			}
 
 			//return true if current color is deep
 			inline bool is_deep() const
 			{
-				return _index >= COLOR_DEEP_BLUE && _index <= COLOR_DEEP_YELLOW;
+				return _index >= static_cast<size_t>(ConsoleColor::DeepBlue) && _index <= static_cast<size_t>(ConsoleColor::DeepYellow);
 			}
 
 			//convert index to color.
@@ -501,14 +501,14 @@ namespace gadt
 			inline ConsoleColor GetRandomTint() const
 			{
 				size_t rnd = rand() % 6;
-				return get_color(COLOR_BLUE + rnd);
+				return get_color(static_cast<size_t>(ConsoleColor::Blue) + rnd);
 			}
 
 			//get random deep color
 			inline ConsoleColor GetRandomDeep() const
 			{
 				size_t rnd = rand() % 6;
-				return get_color(COLOR_DEEP_BLUE + rnd);
+				return get_color(static_cast<size_t>(ConsoleColor::DeepBlue) + rnd);
 			}
 
 			//get random any color
@@ -517,7 +517,7 @@ namespace gadt
 				size_t rnd = rand() % 12;
 				if (rnd >= 6)
 					rnd += 2;
-				return get_color(COLOR_DEEP_BLUE + rnd);
+				return get_color(static_cast<size_t>(ConsoleColor::DeepBlue) + rnd);
 			}
 
 			//get tint color by index.
@@ -525,7 +525,7 @@ namespace gadt
 			inline ConsoleColor GetTintByIndex(Index index) const
 			{
 				size_t remain = static_cast<size_t>(index) % 6;
-				return get_color(COLOR_BLUE + remain);
+				return get_color(ConsoleColor::Blue + remain);
 			}
 
 			//get deep color by index.
@@ -533,7 +533,7 @@ namespace gadt
 			inline ConsoleColor GetDeepByIndex(Index index) const
 			{
 				size_t remain = static_cast<size_t>(index) % 6;
-				return get_color(COLOR_DEEP_BLUE + remain);
+				return get_color(ConsoleColor::DeepBlue + remain);
 			}
 
 			//get any color by index.
@@ -543,17 +543,9 @@ namespace gadt
 				size_t remain = static_cast<size_t>(index) % 12;
 				if (remain >= 6)
 					remain += 2;
-				return get_color(COLOR_DEEP_BLUE + remain);
+				return get_color(ConsoleColor::DeepBlue + remain);
 			}
 		};
-
-		//print endline.
-		template<size_t COUNT = 1>
-		inline void EndLine()
-		{
-			for (size_t i = 0; i < COUNT; i++)
-				std::cout << std::endl;
-		}
 
 		//colorful print.
 		template<typename T>
@@ -577,11 +569,19 @@ namespace gadt
 		//get user confirm(Y/N or y/n)
 		bool GetUserConfirm(std::string tip);
 
+		//print PrintEndLine.
+		template<size_t COUNT = 1>
+		inline void PrintEndLine()
+		{
+			for (size_t i = 0; i < COUNT; i++)
+				std::cout << std::endl;
+		}
+
 		//show error in terminal.
-		void ShowError(std::string reason);
+		void PrintError(std::string reason);
 
 		//show message in terminal.
-		void ShowMessage(std::string message);
+		void PrintMessage(std::string message);
 
 		//if 'condition' is true that report detail.
 		void WarningCheck(bool condition, std::string reason, std::string file, int line, std::string function);
@@ -631,7 +631,7 @@ namespace gadt
 		template<typename T>
 		size_t GetMaxElementIndex(const std::vector<T>& vec)
 		{
-			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
+			GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
 			size_t best_index = 0;
 			const T* best_ele = &vec[0];
 			for (size_t i = 1; i < vec.size(); i++)
@@ -649,7 +649,7 @@ namespace gadt
 		template<typename T>
 		size_t GetMaxElementIndex(const std::vector<T>& vec, std::function<bool(const T&, const T&)> more_than)
 		{
-			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
+			GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
 			size_t best_index = 0;
 			T* best_ele = &vec[0];
 			for (size_t i = 1; i < vec.size(); i++)
@@ -667,7 +667,7 @@ namespace gadt
 		template<typename T>
 		const T& GetMaxElement(const std::vector<T>& vec)
 		{
-			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
+			GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
 			return vec[GetMaxElementIndex<T>(vec)];
 		}
 
@@ -675,7 +675,7 @@ namespace gadt
 		template<typename T>
 		const T& GetMaxElement(const std::vector<T>& vec, std::function<bool(const T&, const T&)> more_than)
 		{
-			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
+			GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
 			return vec[GetMaxElementIndex<T>(vec, more_than)];
 		}
 
@@ -683,7 +683,7 @@ namespace gadt
 		template<typename T>
 		size_t GetMinElementIndex(const std::vector<T>& vec)
 		{
-			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
+			GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
 			size_t best_index = 0;
 			const T* best_ele = &vec[0];
 			for (size_t i = 1; i < vec.size(); i++)
@@ -701,7 +701,7 @@ namespace gadt
 		template<typename T>
 		size_t GetMinElementIndex(const std::vector<T>& vec, std::function<bool(const T&, const T&)> less_than)
 		{
-			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
+			GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
 			size_t best_index = 0;
 			T* best_ele = &vec[0];
 			for (size_t i = 1; i < vec.size(); i++)
@@ -719,7 +719,7 @@ namespace gadt
 		template<typename T>
 		const T& GetMinElement(const std::vector<T>& vec)
 		{
-			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
+			GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
 			return vec[GetMinElementIndex<T>(vec)];
 		}
 
@@ -727,7 +727,7 @@ namespace gadt
 		template<typename T>
 		const T& GetMinElement(const std::vector<T>& vec, std::function<bool(const T&, const T&)> less_than)
 		{
-			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
+			GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
 			return vec[GetMinElementIndex<T>(vec, less_than)];
 		}
 
@@ -735,13 +735,23 @@ namespace gadt
 		template<typename T>
 		const T& GetRandomElement(const std::vector<T>& vec)
 		{
-			GADT_CHECK_WARNING(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty container");
+			GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty container");
 			size_t rnd = rand() % vec.size();
 			return vec[rnd];
 		}
 		
-		//get manhattan distance between two coordinate.
-		size_t GetManhattanDistance(Coordinate fir, Coordinate sec);
+		//get sum of a container.
+		template<typename SumType, typename ContainerType>
+		SumType GetElementSum(const ContainerType& container)
+		{
+			SumType sum = SumType();
+			for (auto elem : container)
+				sum += elem;
+			return sum;
+		}
+
+		//get manhattan distance between two point.
+		size_t GetManhattanDistance(Point fir, Point sec);
 		
 	}
 }

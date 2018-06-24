@@ -25,10 +25,6 @@ namespace gadt
 {
 	namespace visual_tree
 	{
-		const char* g_VISUAL_TREE_CHILD_KEY = "childs";
-		const char* g_VISUAL_TREE_COUNT_KEY = "count";
-		const char* g_VISUAL_TREE_DEPTH_KEY = "depth";
-
 		//copy constructor.
 		VisualNode::VisualNode(const VisualNode* node, pointer new_parent, VisualTree* new_owner) :
 			_dict(node->_dict),
@@ -125,7 +121,7 @@ namespace gadt
 				{
 					ss << ",";
 				}
-				ss << std::endl << "\"" << g_VISUAL_TREE_CHILD_KEY << "\":" << std::endl << "[" << std::endl;
+				ss << std::endl << "\"" << VISUAL_TREE_CHILD_KEY << "\":" << std::endl << "[" << std::endl;
 				for (size_t i = 0; i < _childs.size(); i++)
 				{
 					ss << _childs[i]->to_json();

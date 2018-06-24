@@ -74,9 +74,9 @@
 
 namespace gadt
 {
-	constexpr const bool GADT_BITBOARD_ENABLE_WARNING = true;	//enable warning in module 'bitboard'
-	constexpr const bool GADT_STL_ENABLE_WARNING = true;		//enable warning in all modules in namespace 'stl'
-	constexpr const bool GADT_TABLE_ENABLE_WARNING = true;		//enable warning in module 'table'.
-	constexpr const bool GADT_SHELL_ENABLE_WARNING = true;		//enable warning in module 'shell'.
-
+	constexpr bool GADT_BITBOARD_ENABLE_WARNING		= true;	//enable warning in module 'bitboard'
+	constexpr bool GADT_STL_ENABLE_WARNING			= true;	//enable warning in all modules in namespace 'stl'
+	constexpr bool GADT_TABLE_ENABLE_WARNING		= true;	//enable warning in module 'table'.
+	constexpr bool GADT_SHELL_ENABLE_WARNING		= true;	//enable warning in module 'shell'.
+	constexpr bool GADT_VISUAL_TREE_ENABLE_WARNING	= true; //enable warning in module 'visual_tree'
 }

@@ -199,59 +199,59 @@ namespace gadt
 			ut64 = ToUInt64(ToString(ut64));
 			GADT_ASSERT(ut64, UINT64_MAX);
 		}
-		void TestCoordinate()
+		void Testpoint()
 		{
-			//test signed coordinate
-			BasicCoordinate<int64_t> coord64(-100, -200);
-			BasicCoordinate<int8_t> coord8(-1, -2);
+			//test signed point
+			BasicPoint<int64_t> point64(-100, -200);
+			BasicPoint<int8_t> point8(-1, -2);
 
 			//comparison
-			GADT_ASSERT(coord64 == BasicCoordinate<int64_t>(-100, -200), true);
-			GADT_ASSERT(coord64 != BasicCoordinate<int64_t>(-100, 0), true);
-			GADT_ASSERT(coord64 != BasicCoordinate<int64_t>(0, -200), true);
+			GADT_ASSERT(point64 == BasicPoint<int64_t>(-100, -200), true);
+			GADT_ASSERT(point64 != BasicPoint<int64_t>(-100, 0), true);
+			GADT_ASSERT(point64 != BasicPoint<int64_t>(0, -200), true);
 
 			//integer
-			GADT_ASSERT(coord64 * -10 == BasicCoordinate<int16_t>(1000, 2000), true);
-			GADT_ASSERT(coord64 / -10 == BasicCoordinate<int16_t>(10, 20), true);
-			coord64 *= -10;
-			GADT_ASSERT(coord64 == BasicCoordinate<int16_t>(1000, 2000), true);
-			coord64 /= -10;
-			GADT_ASSERT(coord64 == BasicCoordinate<int16_t>(-100, -200), true);
+			GADT_ASSERT(point64 * -10 == BasicPoint<int16_t>(1000, 2000), true);
+			GADT_ASSERT(point64 / -10 == BasicPoint<int16_t>(10, 20), true);
+			point64 *= -10;
+			GADT_ASSERT(point64 == BasicPoint<int16_t>(1000, 2000), true);
+			point64 /= -10;
+			GADT_ASSERT(point64 == BasicPoint<int16_t>(-100, -200), true);
 
-			//coordinate
-			GADT_ASSERT((coord64 + coord8) == BasicCoordinate<int16_t>(-101, -202), true);
-			GADT_ASSERT((coord64 - coord8) == BasicCoordinate<int16_t>(-99, -198), true);
-			coord64 += coord8;
-			GADT_ASSERT(coord64 == BasicCoordinate<int16_t>(-101, -202), true);
-			coord64 -= coord8;
-			GADT_ASSERT(coord64 == BasicCoordinate<int16_t>(-100, -200), true);
-			GADT_ASSERT(coord64 * coord8, 500);
+			//point
+			GADT_ASSERT((point64 + point8) == BasicPoint<int16_t>(-101, -202), true);
+			GADT_ASSERT((point64 - point8) == BasicPoint<int16_t>(-99, -198), true);
+			point64 += point8;
+			GADT_ASSERT(point64 == BasicPoint<int16_t>(-101, -202), true);
+			point64 -= point8;
+			GADT_ASSERT(point64 == BasicPoint<int16_t>(-100, -200), true);
+			GADT_ASSERT(point64 * point8, 500);
 
-			//test unsigned coordinate
-			BasicUnsignedCoordinate<uint8_t> ucoord8(1, 2);
-			BasicUnsignedCoordinate<uint64_t> ucoord64(100, 200);
+			//test unsigned point
+			BasicUPoint<uint8_t> upoint8(1, 2);
+			BasicUPoint<uint64_t> upoint64(100, 200);
 
 			//comparison
-			GADT_ASSERT(ucoord64 == BasicUnsignedCoordinate<uint64_t>(100, 200), true);
-			GADT_ASSERT(ucoord64 != BasicUnsignedCoordinate<uint64_t>(100, 0), true);
-			GADT_ASSERT(ucoord64 != BasicUnsignedCoordinate<uint64_t>(0, 200), true);
+			GADT_ASSERT(upoint64 == BasicUPoint<uint64_t>(100, 200), true);
+			GADT_ASSERT(upoint64 != BasicUPoint<uint64_t>(100, 0), true);
+			GADT_ASSERT(upoint64 != BasicUPoint<uint64_t>(0, 200), true);
 
 			//uinteger
-			GADT_ASSERT(ucoord64 * 10 == BasicUnsignedCoordinate<uint16_t>(1000, 2000), true);
-			GADT_ASSERT(ucoord64 / 10 == BasicUnsignedCoordinate<uint16_t>(10, 20), true);
-			ucoord64 *= 10;
-			GADT_ASSERT(ucoord64 == BasicUnsignedCoordinate<uint16_t>(1000, 2000), true);
-			ucoord64 /= 10;
-			GADT_ASSERT(ucoord64 == BasicUnsignedCoordinate<uint16_t>(100, 200), true);
+			GADT_ASSERT(upoint64 * 10 == BasicUPoint<uint16_t>(1000, 2000), true);
+			GADT_ASSERT(upoint64 / 10 == BasicUPoint<uint16_t>(10, 20), true);
+			upoint64 *= 10;
+			GADT_ASSERT(upoint64 == BasicUPoint<uint16_t>(1000, 2000), true);
+			upoint64 /= 10;
+			GADT_ASSERT(upoint64 == BasicUPoint<uint16_t>(100, 200), true);
 
-			//ucoordinate
-			GADT_ASSERT((ucoord64 + ucoord8) == BasicUnsignedCoordinate<uint16_t>(101, 202), true);
-			GADT_ASSERT((ucoord64 - ucoord8) == BasicUnsignedCoordinate<uint16_t>(99, 198), true);
-			ucoord64 += ucoord8;
-			GADT_ASSERT(ucoord64 == BasicUnsignedCoordinate<uint16_t>(101, 202), true);
-			ucoord64 -= ucoord8;
-			GADT_ASSERT(ucoord64 == BasicUnsignedCoordinate<uint16_t>(100, 200), true);
-			GADT_ASSERT(ucoord64 * ucoord8, 500);
+			//upoint
+			GADT_ASSERT((upoint64 + upoint8) == BasicUPoint<uint16_t>(101, 202), true);
+			GADT_ASSERT((upoint64 - upoint8) == BasicUPoint<uint16_t>(99, 198), true);
+			upoint64 += upoint8;
+			GADT_ASSERT(upoint64 == BasicUPoint<uint16_t>(101, 202), true);
+			upoint64 -= upoint8;
+			GADT_ASSERT(upoint64 == BasicUPoint<uint16_t>(100, 200), true);
+			GADT_ASSERT(upoint64 * upoint8, 500);
 		}
 		void TestBitBoard()
 		{
@@ -684,8 +684,8 @@ namespace gadt
 			GADT_ASSERT(init_matrix.element(3, 3), 4);
 			
 			stl::DynamicMatrix<size_t> matrix(4, 4);
-			for (auto coord : matrix)
-				matrix[coord] = coord.x * coord.y;
+			for (auto point : matrix)
+				matrix[point] = point.x * point.y;
 			
 			std::string str_json = matrix.ConvertToJsonObj(ElemToString).dump();
 			//std::cout << str_json << std::endl;
@@ -742,8 +742,8 @@ namespace gadt
 		{
 			using Matrix = stl::StaticMatrix<size_t, 4, 4>;
 			Matrix matrix;
-			for (auto coord : matrix)
-				matrix[coord] = coord.x * coord.y;
+			for (auto point : matrix)
+				matrix[point] = point.x * point.y;
 			auto sub = matrix.SubMatrix<3, 3>(0, 0);
 			typename Matrix::ElementToStringFunc ElemToString = [](const size_t& i)->std::string {
 				return gadt::ToString(i);
@@ -795,17 +795,17 @@ namespace gadt
 		{
 			GADT_ASSERT(console::TableCell().str, "");
 			GADT_ASSERT(console::TableCell("1").str, "1");
-			GADT_ASSERT(console::TableCell("1", console::COLOR_RED).str, "1");
-			GADT_ASSERT(console::TableCell("1", console::TABLE_ALIGN_MIDDLE).str, "1");
-			GADT_ASSERT(console::TableCell("1", console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1");
-			GADT_ASSERT(console::TableCell(int16_t(1), console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1");
-			GADT_ASSERT(console::TableCell(uint16_t(1), console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1");
-			GADT_ASSERT(console::TableCell(int64_t(1), console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1");
-			GADT_ASSERT(console::TableCell(uint64_t(1), console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1");
-			GADT_ASSERT(console::TableCell(true, console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1");
-			GADT_ASSERT(console::TableCell(false, console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "0");
-			GADT_ASSERT(console::TableCell(float(1.1), console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1.1");
-			GADT_ASSERT(console::TableCell(double(1.1), console::COLOR_RED, console::TABLE_ALIGN_MIDDLE).str, "1.1");
+			GADT_ASSERT(console::TableCell("1", console::ConsoleColor::Red).str, "1");
+			GADT_ASSERT(console::TableCell("1", console::TableAlign::Middle).str, "1");
+			GADT_ASSERT(console::TableCell("1", console::ConsoleColor::Red, console::TableAlign::Middle).str, "1");
+			GADT_ASSERT(console::TableCell(int16_t(1), console::ConsoleColor::Red, console::TableAlign::Middle).str, "1");
+			GADT_ASSERT(console::TableCell(uint16_t(1), console::ConsoleColor::Red, console::TableAlign::Middle).str, "1");
+			GADT_ASSERT(console::TableCell(int64_t(1), console::ConsoleColor::Red, console::TableAlign::Middle).str, "1");
+			GADT_ASSERT(console::TableCell(uint64_t(1), console::ConsoleColor::Red, console::TableAlign::Middle).str, "1");
+			GADT_ASSERT(console::TableCell(true, console::ConsoleColor::Red, console::TableAlign::Middle).str, "1");
+			GADT_ASSERT(console::TableCell(false, console::ConsoleColor::Red, console::TableAlign::Middle).str, "0");
+			GADT_ASSERT(console::TableCell(float(1.1), console::ConsoleColor::Red, console::TableAlign::Middle).str, "1.1");
+			GADT_ASSERT(console::TableCell(double(1.1), console::ConsoleColor::Red, console::TableAlign::Middle).str, "1.1");
 
 			std::ios::sync_with_stdio(false);
 			console::Table table(3, 5,{
@@ -818,8 +818,8 @@ namespace gadt
 			GADT_ASSERT(table.get_row(0).size(), 3);
 			GADT_ASSERT(table.get_column(0).size(), 5);
 			GADT_ASSERT(table.get_cell(1,0).str, "2");
-			table.set_cell_in_row(0, { "hello", console::COLOR_BLUE, console::TABLE_ALIGN_RIGHT });
-			table.set_cell_in_column(1, { "world", console::COLOR_RED, console::TABLE_ALIGN_MIDDLE });
+			table.set_cell_in_row(0, { "hello", console::ConsoleColor::Blue, console::TableAlign::Right });
+			table.set_cell_in_column(1, { "world", console::ConsoleColor::Red, console::TableAlign::Middle });
 			GADT_ASSERT(table.get_cell(0, 0).str, "hello");
 			GADT_ASSERT(table.get_cell(2, 0).str, "hello");
 			GADT_ASSERT(table.get_cell(1, 2).str, "world");
@@ -897,7 +897,7 @@ namespace gadt
 
 		const std::vector<FuncPair> func_list = {
 			{ "convert"			,TestConvertFunc		},
-			{ "coordinate"		,TestCoordinate			},
+			{ "point"		,Testpoint			},
 			{ "bitboard"		,TestBitBoard			},
 			{ "file"			,TestFilesystem			},
 			{ "index"			,TestIndex				},
@@ -917,12 +917,12 @@ namespace gadt
 		void RunTest(FuncPair func_pair)
 		{
 			cout << endl << ">> test start, target = ";
-			console::Cprintf(func_pair.first, console::COLOR_GREEN);
+			console::Cprintf(func_pair.first, console::ConsoleColor::Green);
 			timer::TimePoint tp;
 			cout << endl;
 			func_pair.second();
 			cout << ">> test complete, time = ";
-			console::Cprintf(tp.time_since_created(), console::COLOR_RED);
+			console::Cprintf(tp.time_since_created(), console::ConsoleColor::Red);
 			cout << endl;
 		}
 	}

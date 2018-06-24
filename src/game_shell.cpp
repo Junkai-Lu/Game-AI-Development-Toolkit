@@ -178,9 +178,9 @@ namespace gadt
 		void GameShell::PrintDir() const
 		{
 			//print shell name.
-			console::Cprintf(GameShell::focus_game()->name(), console::COLOR_PURPLE);
+			console::Cprintf(GameShell::focus_game()->name(), console::ConsoleColor::Purple);
 			std::cout << " @ ";
-			//console::Cprintf(_name, console::COLOR_YELLOW);
+			//console::Cprintf(_name, console::ConsoleColor::Yellow);
 
 			//print dir
 			bool is_first = false;
@@ -189,11 +189,11 @@ namespace gadt
 				if (is_first == true)
 				{
 					std::cout << "/";
-					console::Cprintf(page_name, console::COLOR_GREEN);
+					console::Cprintf(page_name, console::ConsoleColor::Green);
 				}
 				else
 				{
-					console::Cprintf(page_name, console::COLOR_YELLOW);
+					console::Cprintf(page_name, console::ConsoleColor::Yellow);
 					is_first = true;
 				}
 			}
@@ -210,12 +210,12 @@ namespace gadt
 				{
 					std::cout << "/";
 				}
-				console::Cprintf(tip, console::COLOR_GREEN);
+				console::Cprintf(tip, console::ConsoleColor::Green);
 				std::cout << ": >> ";
 			}
 			else
 			{
-				console::Cprintf("ERROR: focus game not exist", console::COLOR_PURPLE);
+				console::Cprintf("ERROR: focus game not exist", console::ConsoleColor::Purple);
 			}
 		}
 
@@ -234,11 +234,11 @@ namespace gadt
 			console::SystemClear();
 			focus_page()->_info_func();
 			std::cout << ">> ";
-			console::Cprintf("[ Shell ", console::COLOR_DEEP_YELLOW);
-			console::Cprintf("<" + focus_page()->_name + ">", console::COLOR_YELLOW);
-			console::Cprintf(" ]\n", console::COLOR_DEEP_YELLOW);
+			console::Cprintf("[ Shell ", console::ConsoleColor::DeepYellow);
+			console::Cprintf("<" + focus_page()->_name + ">", console::ConsoleColor::Yellow);
+			console::Cprintf(" ]\n", console::ConsoleColor::DeepYellow);
 			std::cout << ">> ";
-			console::Cprintf(std::string("use '") + std::string(define::g_HELP_COMMAND_NAME) + std::string("' to get more command\n\n"), console::COLOR_DEEP_GREEN);
+			console::Cprintf(std::string("use '") + std::string(define::g_HELP_COMMAND_NAME) + std::string("' to get more command\n\n"), console::ConsoleColor::DeepGreen);
 		}
 
 		//initialize shell commands.
@@ -269,10 +269,10 @@ namespace gadt
 					{
 						return true;
 					}
-					console::ShowMessage("'" + std::string(define::g_LIST_COMMAND_NAME) + "' only accept -n or -t as parameter");
+					console::PrintMessage("'" + std::string(define::g_LIST_COMMAND_NAME) + "' only accept -n or -t as parameter");
 					return false;
 				}
-				console::ShowMessage("'" + std::string(define::g_LIST_COMMAND_NAME) + "' only accept one paramater");
+				console::PrintMessage("'" + std::string(define::g_LIST_COMMAND_NAME) + "' only accept one paramater");
 				return false;
 			};
 
@@ -300,11 +300,11 @@ namespace gadt
 					}
 					else
 					{
-						console::ShowMessage(std::string("command '") + params.front() + "' not found.");
+						console::PrintMessage(std::string("command '") + params.front() + "' not found.");
 						return false;
 					}
 				}
-				console::ShowMessage(std::string("'") + define::g_HELP_COMMAND_NAME + "' only accept one parameter.");
+				console::PrintMessage(std::string("'") + define::g_HELP_COMMAND_NAME + "' only accept one parameter.");
 				return false;
 			};
 
@@ -405,7 +405,7 @@ namespace gadt
 						parser.refresh(original_command);
 						if (parser.is_legal() == false)
 						{
-							console::ShowError("inavailable command!");
+							console::PrintError("inavailable command!");
 							parser.clear();
 						}
 					}
@@ -434,14 +434,14 @@ namespace gadt
 							}
 							else
 							{
-								console::ShowError("page " + page_name + " not found");
+								console::PrintError("page " + page_name + " not found");
 								parser.clear();
 							}
 						}
 					}
 				}
 			}
-			console::ShowError("page " + name + "not found");
+			console::PrintError("page " + name + "not found");
 		}
 	}
 }

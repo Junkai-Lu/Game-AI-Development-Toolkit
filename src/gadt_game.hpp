@@ -91,12 +91,12 @@ namespace gadt
 		//define action of mnk game.
 		struct MnkGameAction
 		{
-			UnsignedCoordinate coord;
+			UPoint point;
 			AgentIndex piece;
 
 			template<typename T>
-			MnkGameAction(UnsignedCoordinate _coord, T _piece):
-				coord(_coord),
+			MnkGameAction(UPoint _point, T _piece):
+				point(_point),
 				piece((AgentIndex)_piece)
 			{
 			}
@@ -104,7 +104,7 @@ namespace gadt
 			std::string to_string() const
 			{
 				std::stringstream ss;
-				ss << "{ " << coord.to_string() << " , " << (int)piece << " }";
+				ss << "{ " << point.to_string() << " , " << (int)piece << " }";
 				return ss.str();
 			}
 		};
@@ -124,17 +124,17 @@ namespace gadt
 			size_t _piece_count;
 
 		private:
-			void SetActionRange(const UnsignedCoordinate& coord)
+			void SetActionRange(const UPoint& point)
 			{
 				for (int i = 1; i <= _ACTION_RANGE; i++)
 				{
-					Coordinate dir[8] = { {0,1}, { 1,1 }, { 1,0 }, { 1,-1 }, { 0, -1 }, { -1,-1 }, { -1,0 }, { -1,1 }};
-					for (Coordinate d : dir)
+					Point dir[8] = { {0,1}, { 1,1 }, { 1,0 }, { 1,-1 }, { 0, -1 }, { -1,-1 }, { -1,0 }, { -1,1 }};
+					for (Point d : dir)
 					{
-						UnsignedCoordinate new_coord = (coord.to_signed() + (d * i)).to_unsigned();
-						if(_piece.is_legal_coordinate(new_coord))
-							if (_piece[new_coord] == 0)
-								_action_range[new_coord] = true;
+						UPoint new_point = (point.to_signed() + (d * i)).to_unsigned();
+						if(_piece.is_legal_point(new_point))
+							if (_piece[new_point] == 0)
+								_action_range[new_point] = true;
 					}
 				}
 			}
@@ -144,21 +144,21 @@ namespace gadt
 			inline constexpr size_t height() const { return _HEIGHT; }
 			inline Iter begin() const { return _piece.begin(); }
 			inline Iter end() const { return _piece.end(); }
-			inline AgentIndex piece(UnsignedCoordinate coord) const { return _piece.element(coord); }
+			inline AgentIndex piece(UPoint point) const { return _piece.element(point); }
 			inline AgentIndex winner() const { return _winner; }
 			inline AgentIndex next_player() const { return _next_player; }
 			inline bool is_empty()
 			{
-				for (auto coord : _piece)
+				for (auto point : _piece)
 				{
-					if (piece(coord) != 0)
+					if (piece(point) != 0)
 						return false;
 				}
 				return true;
 			}
-			inline bool in_action_range(const UnsignedCoordinate& coord) const
+			inline bool in_action_range(const UPoint& point) const
 			{
-				return _action_range.element(coord);
+				return _action_range.element(point);
 			}
 			inline bool is_draw() const
 			{
@@ -184,34 +184,34 @@ namespace gadt
 
 			void TakeAction(const MnkGameAction& action)
 			{
-				_piece.set_element(action.piece, action.coord);
+				_piece.set_element(action.piece, action.point);
 				_next_player = AgentIndex(-action.piece);
-				_winner = JudgeWinnerFromPiece(action.coord);
-				_action_range.set_element(false, action.coord);
+				_winner = JudgeWinnerFromPiece(action.point);
+				_action_range.set_element(false, action.point);
 				_piece_count++;
-				SetActionRange(action.coord);
+				SetActionRange(action.point);
 			}
 
-			AgentIndex JudgeWinnerFromPiece(const UnsignedCoordinate& coord)
+			AgentIndex JudgeWinnerFromPiece(const UPoint& point)
 			{
-				if (piece(coord) == 0) { return 0; }
-				Coordinate dir[4] = { { 0,1 },{ 1,1 },{ 1,0 },{ 1,-1 } };
+				if (piece(point) == 0) { return 0; }
+				Point dir[4] = { { 0,1 },{ 1,1 },{ 1,0 },{ 1,-1 } };
 				for (size_t i = 0; i < 4; i++)
 				{
-					UnsignedCoordinate check_coord = coord;
+					UPoint check_point = point;
 					size_t count = 0;
-					while (_piece.is_legal_coordinate(check_coord) && piece(check_coord) == piece(coord))
+					while (_piece.is_legal_point(check_point) && piece(check_point) == piece(point))
 					{
-						check_coord = (check_coord.to_signed() - dir[i]).to_unsigned();
+						check_point = (check_point.to_signed() - dir[i]).to_unsigned();
 					}
-					check_coord = (check_coord.to_signed() + dir[i]).to_unsigned();
-					while (_piece.is_legal_coordinate(check_coord) && piece(check_coord) == piece(coord))
+					check_point = (check_point.to_signed() + dir[i]).to_unsigned();
+					while (_piece.is_legal_point(check_point) && piece(check_point) == piece(point))
 					{
-						check_coord = (check_coord.to_signed() + dir[i]).to_unsigned();
+						check_point = (check_point.to_signed() + dir[i]).to_unsigned();
 						count++;
 						if (count >= _WIN_LENGTH)
 						{
-							return piece(coord);
+							return piece(point);
 						}
 					}
 				}
@@ -220,7 +220,7 @@ namespace gadt
 
 			inline bool IsLegalAction(const MnkGameAction& action)
 			{
-				return _piece.is_legal_coordinate(action.coord);
+				return _piece.is_legal_point(action.point);
 			}
 		};
 
@@ -245,9 +245,9 @@ namespace gadt
 			ActionList GetNearbyActions(AgentIndex player)
 			{
 				std::vector<Action> actions;
-				for (UnsignedCoordinate coord : _state)
-					if (_state.in_action_range(coord))
-						actions.push_back({ coord, player });
+				for (UPoint point : _state)
+					if (_state.in_action_range(point))
+						actions.push_back({ point, player });
 				if (actions.size() == 0)
 					actions.push_back({ {_WIDTH / 2, _HEIGHT / 2}, player });
 				return actions;
@@ -256,9 +256,9 @@ namespace gadt
 			ActionList GetAllActions(AgentIndex player)
 			{
 				ActionList actions;
-				for (UnsignedCoordinate coord : _state)
-					if (_state.piece(coord) == 0)
-						actions.push_back({ coord, player });
+				for (UPoint point : _state)
+					if (_state.piece(point) == 0)
+						actions.push_back({ point, player });
 				return actions;
 			}
 		};

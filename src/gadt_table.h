@@ -30,30 +30,30 @@ namespace gadt
 	namespace console
 	{
 		//align mode of cell
-		enum AlignMode : int8_t
+		enum class TableAlign : int8_t
 		{
-			TABLE_ALIGN_LEFT = 0,
-			TABLE_ALIGN_MIDDLE = 1,
-			TABLE_ALIGN_RIGHT = 2
+			Left = 0,
+			Middle = 1,
+			Right = 2
 		};
 
 		//frame mode of table
-		enum FrameMode : int8_t
+		enum class TableFrame : int8_t
 		{
-			TABLE_FRAME_DISABLE = 0,
-			TABLE_FRAME_BASIC = 1,
-			TABLE_FRAME_CIRCLE = 2,
-			TABLE_FRAME_ENABLE = 3,
-			TABLE_FRAME_DISABLE_TIGHT = 10,
-			TABLE_FRAME_CIRCLE_TIGHT = 12,
+			Disable = 0,
+			Basic = 1,
+			Circle = 2,
+			Enable = 3,
+			DisableAndTight = 10,
+			CircleAndTight = 12,
 		};
 
 		//index type of table
-		enum IndexMode : int8_t
+		enum class TableIndex : int8_t
 		{
-			TABLE_INDEX_DISABLE = -1,
-			TABLE_INDEX_FROM_ZERO = 0,
-			TABLE_INDEX_FROM_ONE = 1
+			Disable = -1,
+			BeginFromZero = 0,
+			BeginFromOne = 1
 		};
 
 		//basic cell of table.
@@ -61,7 +61,7 @@ namespace gadt
 		{
 			std::string				str;
 			console::ConsoleColor	color;
-			AlignMode				align;
+			TableAlign				align;
 
 			TableCell();
 
@@ -69,44 +69,44 @@ namespace gadt
 
 			TableCell(std::string _str, console::ConsoleColor _color);
 
-			TableCell(std::string _str, AlignMode _align);
+			TableCell(std::string _str, TableAlign _align);
 
-			TableCell(std::string _str, console::ConsoleColor _color, AlignMode _align);
+			TableCell(std::string _str, console::ConsoleColor _color, TableAlign _align);
 
 
 			/*inline TableCell::TableCell() :
 				str(),
-				color(console::COLOR_DEFAULT),
-				align(TABLE_ALIGN_LEFT)
+				color(console::ConsoleColor::Default),
+				align(TableAlign::Left)
 			{
 			}*/
 
-			template<typename T, typename std::enable_if<!std::is_same<T, console::ConsoleColor>::value && !std::is_same<T, AlignMode>::value,int>::type = 0>
+			template<typename T, typename std::enable_if<!std::is_same<T, console::ConsoleColor>::value && !std::is_same<T, TableAlign>::value,int>::type = 0>
 			TableCell(T value) :
 				str(ToString<T>(value)),
-				color(console::COLOR_DEFAULT),
-				align(TABLE_ALIGN_LEFT)
+				color(console::ConsoleColor::Default),
+				align(TableAlign::Left)
 			{
 			}
 
-			template<typename T, typename std::enable_if<!std::is_same<T, console::ConsoleColor>::value && !std::is_same<T, AlignMode>::value, int>::type = 0>
+			template<typename T, typename std::enable_if<!std::is_same<T, console::ConsoleColor>::value && !std::is_same<T, TableAlign>::value, int>::type = 0>
 			TableCell(T value, console::ConsoleColor _color) :
 				str(ToString<T>(value)),
 				color(_color),
-				align(TABLE_ALIGN_LEFT)
+				align(TableAlign::Left)
 			{
 			}
 
-			template<typename T, typename std::enable_if<!std::is_same<T, console::ConsoleColor>::value && !std::is_same<T, AlignMode>::value, int>::type = 0>
-			TableCell(T value, AlignMode _align) :
+			template<typename T, typename std::enable_if<!std::is_same<T, console::ConsoleColor>::value && !std::is_same<T, TableAlign>::value, int>::type = 0>
+			TableCell(T value, TableAlign _align) :
 				str(ToString<T>(value)),
-				color(console::COLOR_DEFAULT),
+				color(console::ConsoleColor::Default),
 				align(_align)
 			{
 			}
 
-			template<typename T, typename std::enable_if<!std::is_same<T, console::ConsoleColor>::value && !std::is_same<T, AlignMode>::value, int>::type = 0>
-			TableCell(T value, console::ConsoleColor _color, AlignMode _align) :
+			template<typename T, typename std::enable_if<!std::is_same<T, console::ConsoleColor>::value && !std::is_same<T, TableAlign>::value, int>::type = 0>
+			TableCell(T value, console::ConsoleColor _color, TableAlign _align) :
 				str(ToString<T>(value)),
 				color(_color),
 				align(_align)
@@ -128,19 +128,19 @@ namespace gadt
 			//set the cell to left align
 			inline void set_left_aligh()
 			{
-				align = TABLE_ALIGN_LEFT;
+				align = TableAlign::Left;
 			}
 
 			//set the cell to middile align.
 			inline void set_middle_aligh()
 			{
-				align = TABLE_ALIGN_MIDDLE;
+				align = TableAlign::Middle;
 			}
 
 			//set the cell to rignt align.
 			inline void set_right_aligh()
 			{
-				align = TABLE_ALIGN_RIGHT;
+				align = TableAlign::Right;
 			}
 
 			//get string.
@@ -209,16 +209,16 @@ namespace gadt
 				return _cells.width();
 			}
 
-			//get cell by coordinate
+			//get cell by point
 			inline const_reference get_cell(size_t column, size_t row) const
 			{
 				return _cells.element(column, row);
 			}
 
-			//get cell by coordinate
-			inline const_reference get_cell(UnsignedCoordinate coord) const
+			//get cell by point
+			inline const_reference get_cell(UPoint point) const
 			{
-				return _cells.element(coord);
+				return _cells.element(point);
 			}
 
 			//get row by index
@@ -256,7 +256,7 @@ namespace gadt
 			//set width for appointed column
 			inline void set_width(size_t column, size_t width)
 			{
-				GADT_CHECK_WARNING(GADT_TABLE_ENABLE_WARNING, column >= number_of_columns(), "TABLE02: out of column range.");
+				GADT_WARNING_IF(GADT_TABLE_ENABLE_WARNING, column >= number_of_columns(), "TABLE02: out of column range.");
 				_column_width[column] = width;
 			}
 
@@ -274,16 +274,16 @@ namespace gadt
 				}
 			}
 
-			//set cell by coordinate
+			//set cell by point
 			inline void set_cell(const_reference cell, size_t column, size_t row)
 			{
 				_cells.set_element(cell, column, row);
 			}
 
-			//set cell by coordinate
-			inline void set_cell(const_reference cell, UnsignedCoordinate coord)
+			//set cell by point
+			inline void set_cell(const_reference cell, UPoint point)
 			{
-				_cells.set_element(cell, coord);
+				_cells.set_element(cell, point);
 			}
 
 			//set cell in appointed row
@@ -316,10 +316,10 @@ namespace gadt
 				_table_color = color;
 			}
 
-			//get cell reference by coordinate
-			reference operator[](UnsignedCoordinate coord)
+			//get cell reference by point
+			reference operator[](UPoint point)
 			{
-				return _cells[coord];
+				return _cells[point];
 			}
 
 		public:
@@ -337,7 +337,7 @@ namespace gadt
 			//Table(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<std::string>> list);
 
 			//print table.
-			void Print(FrameMode frame_mode = TABLE_FRAME_ENABLE, IndexMode index_mode = TABLE_INDEX_DISABLE);
+			void Print(TableFrame frame_mode = TableFrame::Enable, TableIndex index_mode = TableIndex::Disable);
 
 			//increase row
 			void IncreaseRow(size_t row_number);
@@ -359,8 +359,8 @@ namespace gadt
 			void LoadFromStaticMatrix(const stl::StaticMatrix<T, WIDTH, HEIGHT>& matrix, std::function<TableCell(const T&)> ElemToCell)
 			{
 				stl::DynamicMatrix<TableCell> new_cells(WIDTH, HEIGHT);
-				for (auto coord : matrix)
-					new_cells.set_element(ElemToCell(matrix.element(coord)), coord);
+				for (auto point : matrix)
+					new_cells.set_element(ElemToCell(matrix.element(point)), point);
 				std::vector<size_t> new_column_width(WIDTH, TABLE_DEFAULT_WIDTH);
 				_cells = new_cells;
 				_column_width = new_column_width;
@@ -381,8 +381,8 @@ namespace gadt
 			void LoadFromDynamicMatrix(const stl::DynamicMatrix<T>& matrix, std::function<TableCell(const T&)> ElemToCell)
 			{
 				stl::DynamicMatrix<TableCell> new_cells(matrix.width(), matrix.height());
-				for (auto coord : matrix)
-					new_cells.set_element(ElemToCell(matrix.element(coord)), coord);
+				for (auto point : matrix)
+					new_cells.set_element(ElemToCell(matrix.element(point)), point);
 				std::vector<size_t> new_column_width(matrix.width(), TABLE_DEFAULT_WIDTH);
 				_cells = new_cells;
 				_column_width = new_column_width;

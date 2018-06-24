@@ -353,7 +353,7 @@ namespace gadt
 			//get first element.
 			pointer element(size_t index) const
 			{
-				GADT_CHECK_WARNING(is_debug(), index >= _length, "out of range");
+				GADT_WARNING_IF(is_debug(), index >= _length, "out of range");
 				return _fir_element + index;
 			}
 

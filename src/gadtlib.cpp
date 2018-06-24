@@ -30,7 +30,7 @@ namespace gadt
 	namespace console
 	{
 		//set global console color.
-		ConsoleColor costream::_current_color = COLOR_DEFAULT;
+		ConsoleColor costream::_current_color = ConsoleColor::Default;
 
 		//change_color
 		void costream::change_color(ConsoleColor color)
@@ -38,7 +38,7 @@ namespace gadt
 			_current_color = color;
 #ifdef __GADT_MSVC
 			HANDLE handle = ::GetStdHandle(STD_OUTPUT_HANDLE);
-			SetConsoleTextAttribute(handle, color);
+			SetConsoleTextAttribute(handle, static_cast<int8_t>(color));
 #elif defined(__GADT_GNUC)
 			static std::string color_str[16] =
 			{
@@ -70,33 +70,33 @@ namespace gadt
 			for (;;)
 			{
 				std::cout << ">> ";
-				Cprintf(tip + "(y/n):", COLOR_GRAY);
+				Cprintf(tip + "(y/n):", ConsoleColor::Gray);
 				std::string input = GetInput("");
 				if (input == "Y" || input == "y")
 					return true;
 				if (input == "N" || input == "n")
 					return false;
-				ShowError("invaild input, please input 'y' or 'n'.");
+				PrintError("invaild input, please input 'y' or 'n'.");
 			}
 			return false;
 		}
 
 		//show error
-		void ShowError(std::string reason)
+		void PrintError(std::string reason)
 		{
 			//std::cout << std::endl;
-			Cprintf(">> ERROR", COLOR_PURPLE);
+			Cprintf(">> ERROR", ConsoleColor::Purple);
 			std::cout << ": ";
-			Cprintf(reason, COLOR_RED);
-			std::cout << std::endl << std::endl;
+			Cprintf(reason, ConsoleColor::Red);
+			PrintEndLine<2>();
 		}
 
 		//show message
-		void ShowMessage(std::string message)
+		void PrintMessage(std::string message)
 		{
 			std::cout << ">> ";
-			Cprintf(message, COLOR_WHITE);
-			std::cout << std::endl << std::endl;
+			Cprintf(message, ConsoleColor::White);
+			PrintEndLine<2>();
 		}
 
 		//warning check.
@@ -104,16 +104,16 @@ namespace gadt
 		{
 			if (condition)
 			{
-				std::cout << std::endl << std::endl;
-				Cprintf(">> WARNING: ", COLOR_PURPLE);
-				Cprintf(reason, COLOR_RED);
-				std::cout << std::endl;
-				Cprintf("[File]: " + file, COLOR_GRAY);
-				std::cout << std::endl;
-				Cprintf("[Line]: " + ToString(line), COLOR_GRAY);
-				std::cout << std::endl;
-				Cprintf("[Func]: " + function, COLOR_GRAY);
-				std::cout << std::endl;
+				PrintEndLine<2>();
+				Cprintf(">> WARNING: ", ConsoleColor::Purple);
+				Cprintf(reason, ConsoleColor::Red);
+				PrintEndLine();
+				Cprintf("[File]: " + file, ConsoleColor::Gray);
+				PrintEndLine();
+				Cprintf("[Line]: " + ToString(line), ConsoleColor::Gray);
+				PrintEndLine();
+				Cprintf("[Func]: " + function, ConsoleColor::Gray);
+				PrintEndLine();
 				console::SystemPause();
 			}
 		}
@@ -164,11 +164,9 @@ namespace gadt
 
 	namespace func
 	{
-		size_t GetManhattanDistance(Coordinate fir, Coordinate sec)
+		size_t GetManhattanDistance(Point fir, Point sec)
 		{
 			return abs(fir.x - sec.x) + abs(fir.y - sec.y);
 		}
 	}
 }
-
-

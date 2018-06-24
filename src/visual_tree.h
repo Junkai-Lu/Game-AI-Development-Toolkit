@@ -27,16 +27,9 @@ namespace gadt
 {
 	namespace visual_tree
 	{
-		
-#ifdef GADT_WARNING
-		constexpr const bool g_VISUAL_TREE_ENABLE_WARNING = true;	//enable warning in visual tree.
-#else
-		constexpr const bool g_VISUAL_TREE_ENABLE_WARNING = false;	//disable warning in visual tree.
-#endif
-
-		extern const char* g_VISUAL_TREE_CHILD_KEY;
-		extern const char* g_VISUAL_TREE_COUNT_KEY;
-		extern const char* g_VISUAL_TREE_DEPTH_KEY;
+		constexpr const char* VISUAL_TREE_CHILD_KEY = "childs";;
+		constexpr const char* VISUAL_TREE_COUNT_KEY = "count";
+		constexpr const char* VISUAL_TREE_DEPTH_KEY = "depth";
 
 		class VisualTree;
 		class VisualNode;
@@ -307,7 +300,7 @@ namespace gadt
 			template<typename T>
 			inline bool set_value(std::string key, T value)
 			{
-				if (key != g_VISUAL_TREE_CHILD_KEY)
+				if (key != VISUAL_TREE_CHILD_KEY)
 				{
 					_dict.insert({ key,DictValue(value) });
 					return true;
@@ -319,7 +312,7 @@ namespace gadt
 			template<typename T>
 			inline bool add_value(std::string key, T value)
 			{
-				if (key != g_VISUAL_TREE_CHILD_KEY)
+				if (key != VISUAL_TREE_CHILD_KEY)
 				{
 					if (exist_value(key))
 					{
@@ -435,7 +428,7 @@ namespace gadt
 			//destructor function.
 			inline ~VisualTree()
 			{
-				GADT_CHECK_WARNING(g_VISUAL_TREE_ENABLE_WARNING, _root_node == nullptr, "VT101:root node is nullptr");
+				GADT_WARNING_IF(GADT_VISUAL_TREE_ENABLE_WARNING, _root_node == nullptr, "VT101:root node is nullptr");
 				delete _root_node;
 			}
 

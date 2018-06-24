@@ -47,11 +47,11 @@ void ShellDefine()
 
 	//Define Root Page.
 	gadt.SetDefaultInfoFunc([]()->void{
-		console::Cprintf("=============================================\n", console::COLOR_GRAY);
-		console::Cprintf("       Game AI Development Toolkit\n", console::COLOR_YELLOW);
-		console::Cprintf("       Copyright @ Junkai-Lu 2018\n", console::COLOR_YELLOW);
-		console::Cprintf("=============================================", console::COLOR_GRAY);
-		console::EndLine<2>();
+		console::Cprintf("=============================================\n", console::ConsoleColor::Gray);
+		console::Cprintf("       Game AI Development Toolkit\n", console::ConsoleColor::Yellow);
+		console::Cprintf("       Copyright @ Junkai-Lu 2018\n", console::ConsoleColor::Yellow);
+		console::Cprintf("=============================================", console::ConsoleColor::Gray);
+		console::PrintEndLine<2>();
 	});
 
 	auto* root = gadt.CreateShellPage("root");

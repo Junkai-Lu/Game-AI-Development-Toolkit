@@ -65,7 +65,7 @@ namespace gadt
 				if(_board[action.dest] >= 0)
 					_piece_flag.reset(_board[action.dest]);
 				_board[action.dest] = piece;
-				_piece_coord[piece] = action.dest;
+				_piece_point[piece] = action.dest;
 				_board[action.source] = g_EMPTY;
 				_next_player = _next_player == RED ? BLUE : RED;
 			}
@@ -87,8 +87,8 @@ namespace gadt
 
 		void EwnState::Init(Formation red, Formation blue)
 		{
-			UnsignedCoordinate red_coord[6] = { {0,0},{1,0},{2,0},{0,1},{1,1},{0,2} };
-			UnsignedCoordinate blue_coord[6] = { 
+			UPoint red_point[6] = { {0,0},{1,0},{2,0},{0,1},{1,1},{0,2} };
+			UPoint blue_point[6] = { 
 				{ g_WIDTH - 1,g_HEIGHT -1 },
 				{ g_WIDTH - 2,g_HEIGHT - 1 },
 				{ g_WIDTH - 3,g_HEIGHT - 1 },
@@ -98,10 +98,10 @@ namespace gadt
 			};
 			for (size_t i = 0; i < 6; i++)
 			{
-				_board.set_element(red[i] - 1, red_coord[i]);
-				_board.set_element(blue[i] + 5, blue_coord[i]);
-				_piece_coord[i] = red_coord[i];
-				_piece_coord[i + 6] = blue_coord[i];
+				_board.set_element(red[i] - 1, red_point[i]);
+				_board.set_element(blue[i] + 5, blue_point[i]);
+				_piece_point[i] = red_point[i];
+				_piece_point[i + 6] = blue_point[i];
 			}
 		}
 
@@ -134,18 +134,18 @@ namespace gadt
 		void EwnState::Print() const
 		{
 			console::Table table(g_WIDTH, g_HEIGHT);
-			for (auto coord : _board)
+			for (auto point : _board)
 			{
-				EwnPiece p = piece(coord);
+				EwnPiece p = piece(point);
 				if (p >= 0)
 				{
 					if (p >= 6)//blue
-						table[coord] = { ToString((size_t)p - 5), console::COLOR_BLUE, console::TABLE_ALIGN_MIDDLE };
+						table[point] = { ToString((size_t)p - 5), console::ConsoleColor::Blue, console::TableAlign::Middle };
 					else
-						table[coord] = { ToString((size_t)p + 1), console::COLOR_RED, console::TABLE_ALIGN_MIDDLE };
+						table[point] = { ToString((size_t)p + 1), console::ConsoleColor::Red, console::TableAlign::Middle };
 				}
 			}
-			table.Print(console::TABLE_FRAME_ENABLE, console::TABLE_INDEX_FROM_ZERO);
+			table.Print(console::TableFrame::Enable, console::TableIndex::BeginFromZero);
 			std::cout << "    >> Roll = " << (int)roll_result() + 1 << std::endl;
 			std::cout << "    >> Piece Flag = " << _piece_flag.to_string().substr(52,12) << std::endl;
 		}
@@ -153,16 +153,16 @@ namespace gadt
 		void EwnActionGenerator::AddActionForPiece(EwnActionList& actions, EwnPlayer player, RollResult roll, bool enable_herustic) const
 		{
 			int distant = player == RED ? 1 : -1;
-			Coordinate target = ((player == RED) ? Coordinate{ g_WIDTH - 1, g_HEIGHT - 1 } : Coordinate{ 0, 0 });
-			Coordinate dir[3] = { { distant, 0 },{ 0,distant },{ distant,distant } };
-			Coordinate source_coord = _state.piece_coord(player, roll).to_signed();
-			size_t source_dis = enable_herustic ? func::GetManhattanDistance(source_coord, target) : 0;
+			Point target = ((player == RED) ? Point{ g_WIDTH - 1, g_HEIGHT - 1 } : Point{ 0, 0 });
+			Point dir[3] = { { distant, 0 },{ 0,distant },{ distant,distant } };
+			Point source_point = _state.piece_point(player, roll).to_signed();
+			size_t source_dis = enable_herustic ? func::GetManhattanDistance(source_point, target) : 0;
 			for (auto d : dir)
 			{
-				Coordinate dest_coord = source_coord + d;
-				size_t dest_dis = enable_herustic ? func::GetManhattanDistance(dest_coord, target) : 0;
-				if (_state.is_legal_coord(dest_coord.to_unsigned()) && (!enable_herustic || dest_dis < source_dis))
-					actions.push_back({ source_coord.to_unsigned(), dest_coord.to_unsigned(), g_EMPTY });
+				Point dest_point = source_point + d;
+				size_t dest_dis = enable_herustic ? func::GetManhattanDistance(dest_point, target) : 0;
+				if (_state.is_legal_point(dest_point.to_unsigned()) && (!enable_herustic || dest_dis < source_dis))
+					actions.push_back({ source_point.to_unsigned(), dest_point.to_unsigned(), g_EMPTY });
 			}
 		}
 
@@ -254,10 +254,10 @@ namespace gadt
 					std::cout << "NO PLAYER" << std::endl;
 					break;
 				case gadt::ewn::RED:
-					console::Cprintf("RED\n", console::COLOR_RED);
+					console::Cprintf("RED\n", console::ConsoleColor::Red);
 					break;
 				case gadt::ewn::BLUE:
-					console::Cprintf("BLUE\n", console::COLOR_BLUE);
+					console::Cprintf("BLUE\n", console::ConsoleColor::Blue);
 					break;
 				default:
 					break;
