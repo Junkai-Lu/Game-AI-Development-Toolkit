@@ -854,7 +854,7 @@ namespace gadt
 			//minimax.EnableLog();
 			tic_tac_toe::State state;
 			state.dot[0][0] = tic_tac_toe::WHITE;
-			tic_tac_toe::Action action = minimax.DoNegamax(state, { timeout, max_depth, false });
+			tic_tac_toe::Action action = minimax.RunNegamax(state, { timeout, max_depth, false });
 			GADT_ASSERT((action.x == 1 && action.y == 1), true);
 		}
 		void TestRandomPool()

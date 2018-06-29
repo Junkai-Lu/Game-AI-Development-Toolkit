@@ -243,12 +243,13 @@ namespace gadt
 			}
 
 			//get the highest eval for parent of node.
+			template<bool JSON_ENABLE, bool ALPHABETA_ENABLE>
 			EvalValue NegamaxEvalForParents(const Node& node, VisualNodePtr parent_visual_node, size_t& leaf_node_count)
 			{
 				VisualNodePtr visual_node = nullptr;
 				const size_t original_leaf_node_count = leaf_node_count;
 
-				if (json_output_enabled())
+				if (JSON_ENABLE)
 				{
 					visual_node = parent_visual_node->create_child();
 					MinimaxNodeToVisualNode(node, visual_node, _setting);
@@ -260,7 +261,7 @@ namespace gadt
 					leaf_node_count++;
 					EvalValue eval = _func_package.EvalForParent(node.state(), node.winner());
 
-					if (json_output_enabled())
+					if (JSON_ENABLE)
 					{
 						visual_node->add_value("eval for parent", eval);
 					}
@@ -273,23 +274,103 @@ namespace gadt
 				State first_child_state = node.state();
 				_func_package.UpdateState(first_child_state, node.action_list()[0]);
 				Node first_child(first_child_state, node.depth() - 1, _func_package);
-				EvalValue best_value = NegamaxEvalForParents(first_child, visual_node, leaf_node_count);
+				EvalValue best_value = NegamaxEvalForParents<JSON_ENABLE, ALPHABETA_ENABLE>(first_child, visual_node, leaf_node_count);
 				for (size_t i = 1; i < node.action_list().size(); i++)
 				{
 					State child_state = node.state();
 					_func_package.UpdateState(child_state, node.action_list()[i]);
 					Node child(child_state , node.depth() - 1, _func_package);
-					EvalValue child_value = NegamaxEvalForParents(child, visual_node, leaf_node_count);
+					EvalValue child_value = NegamaxEvalForParents<JSON_ENABLE, ALPHABETA_ENABLE>(child, visual_node, leaf_node_count);
 					if (child_value >= best_value) { best_value = child_value; }
 				}
 
 				EvalValue eval_for_parent = -best_value;//negamax!
-				if (json_output_enabled())
+				if (JSON_ENABLE)
 				{
 					visual_node->add_value("leaf node count", leaf_node_count - original_leaf_node_count);
 					visual_node->add_value("eval for parent", eval_for_parent);
 				}
 				return eval_for_parent;
+			}
+
+			//start a negamax search.
+			template<bool JSON_ENABLE, bool ALPHABETA_ENABLE>
+			std::pair<Action, EvalValue> StartNegamaxIteration(const State& state, MinimaxSetting setting)
+			{
+				_setting = setting;
+				Node root(state, _setting.max_depth, _func_package);
+				VisualNodePtr root_visual_node = nullptr;
+
+				GADT_WARNING_IF(is_debug(), root.is_terminal_state(_setting), "MM102: execute search for terminal state.");
+
+				if (log_enabled())
+				{
+					logger() << "[ Minimax Search ]" << std::endl;
+					_setting.PrintInfo();
+					logger() << std::endl << ">> Executing Minimax Search......" << std::endl;
+				}
+
+				if (JSON_ENABLE)
+				{
+					root_visual_node = _log_controller.visual_tree().root_node();
+				}
+
+				std::vector<EvalValue> eval_set(root.action_list().size());
+				size_t leaf_node_count = 0;
+
+				//pick up best action.
+
+				//create first node.
+				State first_child_state = state;
+				_func_package.UpdateState(first_child_state, root.action_list()[0]);
+				Node first_child(first_child_state, root.depth() - 1, _func_package);
+
+				EvalValue best_value = NegamaxEvalForParents<JSON_ENABLE, ALPHABETA_ENABLE>(first_child, root_visual_node, leaf_node_count);
+
+				eval_set[0] = best_value;
+				size_t best_action_index = 0;
+				for (size_t i = 1; i < root.action_list().size(); i++)
+				{
+					//create new node.
+					State child_state = state;
+					_func_package.UpdateState(child_state, root.action_list()[i]);
+					Node child(child_state, root.depth() - 1, _func_package);
+
+					eval_set[i] = NegamaxEvalForParents<JSON_ENABLE, ALPHABETA_ENABLE>(child, root_visual_node, leaf_node_count);
+
+					if (eval_set[i] > best_value)
+					{
+						best_action_index = i;
+						best_value = eval_set[i];
+					}
+				}
+
+				if (log_enabled())
+				{
+					console::Table tb(4, root.action_list().size() + 1);
+					tb.enable_title({ "MINIMAX RESULT" });
+					tb.set_cell_in_row(0, { { "Index" },{ "Action" },{ "Eval" },{ "Is Best" } });
+					tb.set_width({ 3,10,4,4 });
+					for (size_t i = 0; i < root.action_list().size(); i++)
+					{
+						tb.set_cell_in_row(i + 1, {
+							{ ToString(i) },
+							{ _log_controller.action_to_str_func()(root.action_list()[i]) },
+							{ ToString(eval_set[i]) },
+							{ i == best_action_index ? "Yes " : "  " }
+							});
+					}
+					tb.Print();
+				}
+
+				if (JSON_ENABLE)
+				{
+					root_visual_node->add_value("leaf node count", leaf_node_count);
+					_log_controller.OutputJson();
+				}
+
+				//return best action.
+				return { root.action_list()[best_action_index], best_value };
 			}
 
 		public:
@@ -306,89 +387,24 @@ namespace gadt
 			{
 			}
 
+			
+
 			//excute nega minimax search
-			Action DoNegamax(const State& state, MinimaxSetting setting = MinimaxSetting())
+			Action RunNegamax(const State& state, MinimaxSetting setting = MinimaxSetting())
 			{
 				_setting = setting;
-				Node root(state, _setting.max_depth,_func_package);
-				VisualNodePtr root_visual_node = nullptr;
-
-				GADT_WARNING_IF(is_debug(), root.is_terminal_state(_setting), "MM102: execute search for terminal state.");
-
-				if (log_enabled())
-				{
-					logger() << "[ Minimax Search ]" << std::endl;
-					_setting.PrintInfo();
-					logger() << std::endl << ">> Executing Minimax Search......" << std::endl;
-				}
-
-				if (json_output_enabled())
-				{
-					root_visual_node = _log_controller.visual_tree().root_node();
-				}
-
-				std::vector<EvalValue> eval_set(root.action_list().size());
-				size_t leaf_node_count = 0;
-
-				//pick up best action.
-				
-				//create first node.
-				State first_child_state = state;
-				_func_package.UpdateState(first_child_state, root.action_list()[0]);
-				Node first_child(first_child_state, root.depth() - 1, _func_package);
-
-				EvalValue best_value = NegamaxEvalForParents(first_child, root_visual_node, leaf_node_count);
-				eval_set[0] = best_value;
-				size_t best_action_index = 0;
-				for (size_t i = 1; i < root.action_list().size(); i++)
-				{
-					//create new node.
-					State child_state = state;
-					_func_package.UpdateState(child_state, root.action_list()[i]);
-					Node child(child_state, root.depth() - 1, _func_package);
-
-					eval_set[i] = NegamaxEvalForParents(child, root_visual_node, leaf_node_count);
-					
-					if (eval_set[i] > best_value)
-					{
-						best_action_index = i;
-						best_value = eval_set[i];
-					}
-				}
-
-				if (log_enabled())
-				{
-					console::Table tb(4, root.action_list().size() + 1);
-					tb.enable_title({ "MINIMAX RESULT" });
-					tb.set_cell_in_row(0, { {"Index" }, {"Action"},{"Eval"},{"Is Best"} });
-					tb.set_width({ 3,10,4,4 });
-					for (size_t i = 0; i < root.action_list().size(); i++)
-					{
-						tb.set_cell_in_row(i + 1, {
-							{ ToString(i) },
-							{ _log_controller.action_to_str_func()(root.action_list()[i])},
-							{ ToString(eval_set[i])},
-							{ i == best_action_index ? "Yes ":"  "}
-						});
-					}
-					tb.Print();
-				}
-
-				if (json_output_enabled())
-				{
-					root_visual_node->add_value("leaf node count", leaf_node_count);
-					_log_controller.OutputJson();
-				}
-
-				//return best action.
-				return root.action_list()[best_action_index];
+				if(json_output_enabled())
+					return StartNegamaxIteration<true, false>(state, setting).first;
+				return StartNegamaxIteration<false, false>(state, setting).first;
 			}
 
-			//TODO
 			//excute alpha-beta search.
-			Action DoAlphaBeta(const State& state, MinimaxSetting setting = MinimaxSetting())
+			Action RunAlphaBeta(const State& state, MinimaxSetting setting = MinimaxSetting())
 			{
 				_setting = setting;
+				if (json_output_enabled())
+					return StartNegamaxIteration<true, true>(state, setting).first;
+				return StartNegamaxIteration<false, true>(state, setting).first;
 			}
 		};
 
