@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -59,7 +59,7 @@ namespace gadt
 				size_t _max_thread,	
 				size_t _max_iteration_per_thread,
 				size_t _max_node_per_thread,
-				AgentIndex _no_winner_index = 0,
+				AgentIndex _no_winner_index = GADT_DEFAULT_NO_WINNER_INDEX,
 				size_t _simulation_warning_length = 1000
 			) :
 				GameAlgorithmSettingBase(_timeout,_no_winner_index),
@@ -129,7 +129,7 @@ namespace gadt
 			const State&		state()					const { return _state; }
 			const ActionList&	action_list()			const { return _action_list; }
 			const Action&		action(size_t i)		const { return _action_list[i]; }
-			size_t				action_num()			const { return _action_list.size(); }
+			size_t				action_count()			const { return _action_list.size(); }
 			AgentIndex			winner_index()			const { return _winner_index; }
 			uint32_t			visit_count()			const { return _visit_count; }
 			uint32_t			win_count()				const { return _win_count; }
@@ -150,7 +150,7 @@ namespace gadt
 			inline bool exist_unactivated_action() const
 			{
 				size_t action_size = _action_list.size();
-				volatile size_t child_size = child_num();
+				volatile size_t child_size = child_count();
 				if (action_size == 0)
 					return false;
 				else if (action_size == child_size)
@@ -161,7 +161,7 @@ namespace gadt
 			//get next action.
 			inline const Action& next_action()
 			{
-				return _action_list[child_num()];
+				return _action_list[child_count()];
 			}
 
 			//increase visited time.
@@ -273,7 +273,7 @@ namespace gadt
 				}
 				else
 				{
-					volatile const size_t new_child_index = child_num();
+					volatile const size_t new_child_index = child_count();
 					if (new_child_index < _action_list.size())
 					{
 						//create new node.
@@ -338,7 +338,7 @@ namespace gadt
 			}
 
 			//get child num
-			size_t child_num() const
+			size_t child_count() const
 			{
 				size_t num = 0;
 				if (exist_child_node())
@@ -385,7 +385,7 @@ namespace gadt
 				ss << "{ visited:" << visit_count() << " win:" << win_count() <<" avg:" << avg << " child";
 				if (exist_unactivated_action())
 				{
-					ss << child_num() << "/" << action_list().size();
+					ss << child_count() << "/" << action_list().size();
 				}
 				else
 				{
@@ -579,13 +579,14 @@ namespace gadt
 			using StateToStrFunc = std::function<std::string(const State& state)>;
 
 		private:
+
 			const char* DEPTH_NAME           = "depth";
 			const char* COUNT_NAME           = "tree_size";
 			const char* STATE_NAME           = "state";
 			const char* WINNER_INDEX_NAME    = "winner";
-			const char* visit_count_NAME    = "visit_count";
-			const char* win_count_NAME        = "win_count";
-			const char* CHILD_NUM_NAME       = "child_number";
+			const char* VISIT_COUNT_NAME     = "visit_count";
+			const char* WIN_COUNT_NAME       = "win_count";
+			const char* CHILD_COUNT_NAME     = "child_count";
 			const char* IS_TERMIANL_NAME     = "is_terminal";
 			
 		private:
@@ -599,9 +600,9 @@ namespace gadt
 			{
 				visual_node.add_value(DEPTH_NAME, visual_node.depth());
 				visual_node.add_value(WINNER_INDEX_NAME, search_node.winner_index());
-				visual_node.add_value(visit_count_NAME, search_node.visit_count());
-				visual_node.add_value(win_count_NAME, search_node.win_count());
-				visual_node.add_value(CHILD_NUM_NAME, search_node.child_num());
+				visual_node.add_value(VISIT_COUNT_NAME, search_node.visit_count());
+				visual_node.add_value(WIN_COUNT_NAME, search_node.win_count());
+				visual_node.add_value(CHILD_COUNT_NAME, search_node.child_count());
 				//visual_node.add_value(IS_TERMIANL_NAME, search_node.is_end_state());
 				visual_node.add_value(STATE_NAME, _StateToStr(search_node.state()));
 				auto node_ptr = search_node.fir_child_node();
@@ -688,7 +689,7 @@ namespace gadt
 			void PrintResult(Node& root_node, size_t best_child_index, const timer::TimePoint& tp) const
 			{
 				auto child_nodes = root_node.child_ptr_set();
-				std::vector<size_t> tree_size_set(root_node.action_num());
+				std::vector<size_t> tree_size_set(root_node.action_count());
 				size_t total_tree_size = 0;
 				size_t total_win_count = 0;
 				for (size_t i = 0; i < child_nodes.size(); i++)
@@ -699,7 +700,7 @@ namespace gadt
 				}
 
 				//MCTS RESULT
-				console::Table tb(7, root_node.action_num() + 2);
+				console::Table tb(7, root_node.action_count() + 2);
 				tb.enable_title({ 
 					name() + " Result: Time = [ " + ToString(tp.time_since_created()) + "s ]", 
 					console::ConsoleColor::Gray, 
@@ -715,7 +716,7 @@ namespace gadt
 					{ "Action", console::ConsoleColor::Gray, console::TableAlign::Middle }
 					});
 				tb.set_width({ 4,4,4,4,5,2,25 });
-				for (size_t i = 0; i < root_node.action_num(); i++)
+				for (size_t i = 0; i < root_node.action_count(); i++)
 				{
 					tb.set_cell_in_row(i + 1, {
 						{ i, console::ConsoleColor::Gray, console::TableAlign::Middle },
@@ -727,7 +728,7 @@ namespace gadt
 						{ _log_controller.action_to_str_func()(root_node.action(i)), console::TableAlign::Middle }
 						});
 				}
-				tb.set_cell_in_row(root_node.action_num() + 1, {
+				tb.set_cell_in_row(root_node.action_count() + 1, {
 					{ "Total", console::ConsoleColor::Gray, console::TableAlign::Middle },
 					{ total_tree_size },
 					{ root_node.visit_count() },
@@ -790,7 +791,7 @@ namespace gadt
 				}
 				
 				//return action if there is only one action in root node.
-				if (root_node.action_num() == 1)
+				if (root_node.action_count() == 1)
 				{
 					if (log_enabled())
 					{
@@ -804,7 +805,7 @@ namespace gadt
 
 				//select best action.
 				GADT_WARNING_IF(is_debug(), root_node.fir_child_node() == nullptr, "empty child node under root node.");
-				GADT_WARNING_IF(is_debug(), root_node.action_num() == 0, "no existing available action in root node.");
+				GADT_WARNING_IF(is_debug(), root_node.action_count() == 0, "no existing available action in root node.");
 				size_t best_child_index = _func_package.RootSelection(root_node);
 
 				//output Json if enabled.
@@ -934,6 +935,7 @@ namespace gadt
 			//run mcts.
 			Action Run(const State& root_state) override
 			{
+				_setting = MctsSetting();
 				_setting.max_thread = 1;
 				return ExcuteMCTS(root_state);
 			}
@@ -941,6 +943,7 @@ namespace gadt
 			//run mcts with custom setting.
 			Action Run(const State& root_state, MctsSetting setting) override
 			{
+				_setting = setting;
 				_setting.max_thread = 1;
 				return ExcuteMCTS(root_state);
 			}

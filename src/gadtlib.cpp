@@ -60,7 +60,7 @@ namespace gadt
 				string("\e[0;40;37m")		//white = 15
 											//string("\e[0;40;37m")		//white = 15
 			};
-			std::cout << color_str[color];
+			std::cout << color_str[static_cast<size_t>(color)];
 #endif
 		}
 

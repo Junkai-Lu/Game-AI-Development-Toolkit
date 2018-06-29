@@ -27,7 +27,9 @@
 #define GADT_BITBOARD_CONSTANT_TOTAL
 
 //enable debug-info option to include extra info , this would lead to little performance penalties.
-#define GADT_BITBOARD_DEBUG_INFO
+#ifdef GADT_WARNING
+	#define GADT_BITBOARD_DEBUG_INFO
+#endif
 
 namespace gadt
 {

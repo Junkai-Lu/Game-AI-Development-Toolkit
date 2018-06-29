@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,16 @@ namespace gadt
 {
 	namespace minimax
 	{
+		//constexpr string
+		constexpr const char* MINIMAX_VT_STATE_NAME = "state";
+		constexpr const char* MINIMAX_VT_DEPTH_NAME = "depth";
+		constexpr const char* MINIMAX_VT_WINNER_NAME = "winner";
+		constexpr const char* MINIMAX_VT_EVALUATION_NAME = "eval";
+		constexpr const char* MINIMAX_VT_LEAF_COUNT_NAME = "leaf_count";
+		constexpr const char* MINIMAX_VT_IS_TERMINAL_STATE_NAME = "is_terminal_state";
+
+		using MinimaxEvalType = double;
+
 		/*
 		* MinimaxSetting is the setting of MCTS.
 		*
@@ -37,15 +47,11 @@ namespace gadt
 		struct MinimaxSetting final : GameAlgorithmSettingBase
 		{
 			size_t max_depth;
-			bool ab_prune_enabled;
-			EvalValue original_eval;		//original eval value.
 
 			//default setting constructor.
 			MinimaxSetting() :
 				GameAlgorithmSettingBase(),
-				max_depth(10),
-				ab_prune_enabled(false),
-				original_eval(0)
+				max_depth(2)
 			{
 			}
 
@@ -53,32 +59,26 @@ namespace gadt
 			MinimaxSetting(
 				double _timeout, 
 				size_t _max_depth, 
-				bool _ab_prune_enabled, 
-				AgentIndex _no_winner_index = 0, 
-				EvalValue _original_eval = 0
+				AgentIndex _no_winner_index = GADT_DEFAULT_NO_WINNER_INDEX
 			) :
 				GameAlgorithmSettingBase(_timeout, _no_winner_index),
-				max_depth(_max_depth),
-				ab_prune_enabled(_ab_prune_enabled),
-				original_eval(_original_eval)
+				max_depth(_max_depth)
 			{
 			}
 
 			void PrintInfo() const override
 			{
-				console::Table tb(2, 5);
+				console::Table tb(2, 3);
 				tb.set_width({ 12,6 });
 				tb.enable_title({ "MINIMAX SETTING" });
 				tb.set_cell_in_row(0, { { "timeout" },			{ ToString(timeout) } });
 				tb.set_cell_in_row(1, { { "max_depth" },		{ ToString(max_depth) } });
-				tb.set_cell_in_row(2, { { "ab_prune_enabled" },	{ ToString(ab_prune_enabled) } });
-				tb.set_cell_in_row(3, { { "no_winner_index" },	{ ToString(no_winner_index) } });
-				tb.set_cell_in_row(4, { { "original_eval" },	{ ToString(original_eval) } });
+				tb.set_cell_in_row(2, { { "no_winner_index" },	{ ToString(no_winner_index) } });
 				tb.Print();
 			}
 		};
 
-		template<typename State, typename Action, bool _is_debug>
+		template<typename State, typename Action, typename EvalType, bool _is_debug>
 		struct MinimaxFuncPackage final: public GameAlgorithmFuncPackageBase<State, Action, _is_debug>
 		{
 		public:
@@ -94,21 +94,21 @@ namespace gadt
 			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::MakeActionFunc;
 			using GameAlgorithmFuncPackageBase<State, Action, _is_debug>::DetermineWinnerFunc;
 #endif
-			using EvalForParentFunc = std::function<EvalValue(const State&, const AgentIndex)>;
+			using EvaluateStateFunc = std::function<EvalType(const State&, const AgentIndex)>;
 
 		public:
 			//necessary functions.
-			const EvalForParentFunc		EvalForParent;		//get the eval for parent node.
+			const EvaluateStateFunc		EvaluateState;		//get the eval for parent node.
 
 		public:
 			MinimaxFuncPackage(
 				UpdateStateFunc			_UpdateState,
 				MakeActionFunc			_MakeAction,
 				DetermineWinnerFunc		_DetermineWinner,
-				EvalForParentFunc		_EvalForParent
+				EvaluateStateFunc		_EvaluateState
 			) :
 				GameAlgorithmFuncPackageBase<State, Action, _is_debug>(_UpdateState, _MakeAction, _DetermineWinner),
-				EvalForParent(_EvalForParent)
+				EvaluateState(_EvaluateState)
 			{
 			}
 		};
@@ -120,15 +120,16 @@ namespace gadt
 		* [Action] is the game-action class, which is defined by the user.
 		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
 		*/
-		template<typename State, typename Action, bool _is_debug>
+		template<typename State, typename Action, typename EvalType, EvalType MAX_EVAL, bool _is_debug>
 		class MinimaxNode
 		{
 		public:
-			using pointer     = MinimaxNode<State, Action, _is_debug>*;
-			using reference   = MinimaxNode<State, Action, _is_debug>&;
-			using Node        = MinimaxNode<State, Action, _is_debug>;
-			using FuncPackage = MinimaxFuncPackage<State, Action, _is_debug>;
-			using ActionList  = typename FuncPackage::ActionList;
+			using pointer		= MinimaxNode<State, Action, EvalType, MAX_EVAL, _is_debug>*;
+			using reference		= MinimaxNode<State, Action, EvalType, MAX_EVAL, _is_debug>&;
+			using Node			= MinimaxNode<State, Action, EvalType, MAX_EVAL, _is_debug>;
+			using FuncPackage	= MinimaxFuncPackage<State, Action, EvalType, _is_debug>;
+			using Setting		= MinimaxSetting;
+			using ActionList	= typename FuncPackage::ActionList;
 
 		private:
 			const State			  _state;		//game state
@@ -156,6 +157,17 @@ namespace gadt
 				NodeInit(func_package);
 			}
 
+			//return the count of actions
+			inline size_t action_count() const
+			{
+				return _action_list.size();
+			}
+
+			inline const Action& action(size_t index) const
+			{
+				return _action_list[index];
+			}
+
 			//get state of the node.
 			inline const State& state() const
 			{
@@ -181,7 +193,7 @@ namespace gadt
 			}
 
 			//return true if the node is terminal.
-			inline bool is_terminal_state(const MinimaxSetting& setting) const
+			inline bool is_terminal_state(const Setting& setting) const
 			{
 				return _winner != setting.no_winner_index;
 			}
@@ -194,7 +206,7 @@ namespace gadt
 		* [Action] is the game-action class, which is defined by the user.
 		* [_is_debug] decides whether debug info would be ignored or not. which may cause slight degradation in performance if it is enabled.
 		*/
-		template<typename State, typename Action, bool _is_debug = false>
+		template<typename State, typename Action, typename EvalType = MinimaxEvalType, EvalType MAX_EVAL = INFINITY, bool _is_debug = false>
 		class MinimaxSearch final : public GameAlgorithmBase<State, Action, AgentIndex, _is_debug>
 		{
 
@@ -216,40 +228,36 @@ namespace gadt
 			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::DisableJsonOutput;
 
 		public:
-			using Node			= MinimaxNode<State, Action, _is_debug>;
+			using Node			= MinimaxNode<State, Action, EvalType, MAX_EVAL, _is_debug>;
 			using FuncPackage	= typename Node::FuncPackage;
+			using Setting		= typename Node::Setting;
 			using ActionList	= typename FuncPackage::ActionList;
 			using VisualTree	= visual_tree::VisualTree;
 			using VisualNodePtr	= visual_tree::VisualNode*;
 			
 		private:
 			
-			FuncPackage		_func_package;
-			MinimaxSetting	_setting;
+			FuncPackage	_func_package;
+			Setting		_setting;
 
 		private:
 			//convert minimax node to visual node.
-			void MinimaxNodeToVisualNode(const Node& node, VisualNodePtr visual_node, const MinimaxSetting& setting)
+			void MinimaxNodeToVisualNode(const Node& node, VisualNodePtr visual_node, const Setting& setting)
 			{
-				static constexpr const char* STATE_NAME = "state";
-				static constexpr const char* DEPTH_NAME = "depth";
-				static constexpr const char* WINNER_NAME = "winner";
-				static constexpr const char* IS_TERMINAL_STATE_NAME = "is_terminal_state";
-
-				visual_node->add_value(STATE_NAME, _log_controller.state_to_str_func()(node.state()));
-				visual_node->add_value(DEPTH_NAME, node.depth());
-				visual_node->add_value(WINNER_NAME, node.winner());
-				visual_node->add_value(IS_TERMINAL_STATE_NAME, node.is_terminal_state(setting));
+				visual_node->add_value(MINIMAX_VT_STATE_NAME, _log_controller.state_to_str_func()(node.state()));
+				visual_node->add_value(MINIMAX_VT_DEPTH_NAME, node.depth());
+				visual_node->add_value(MINIMAX_VT_WINNER_NAME, node.winner());
+				visual_node->add_value(MINIMAX_VT_IS_TERMINAL_STATE_NAME, node.is_terminal_state(setting));
 			}
 
 			//get the highest eval for parent of node.
-			template<bool JSON_ENABLE, bool ALPHABETA_ENABLE>
-			EvalValue NegamaxEvalForParents(const Node& node, VisualNodePtr parent_visual_node, size_t& leaf_node_count)
+			template<bool JSON_ENABLED, bool ALPHABETA_ENABLED>
+			EvalType NegamaxEvaluateStates(const Node& node, EvalType alpha, EvalType beta, VisualNodePtr parent_visual_node, size_t& leaf_node_count)
 			{
 				VisualNodePtr visual_node = nullptr;
 				const size_t original_leaf_node_count = leaf_node_count;
 
-				if (JSON_ENABLE)
+				if (JSON_ENABLED)
 				{
 					visual_node = parent_visual_node->create_child();
 					MinimaxNodeToVisualNode(node, visual_node, _setting);
@@ -259,11 +267,11 @@ namespace gadt
 				{
 					//get the eavl of the parent node.
 					leaf_node_count++;
-					EvalValue eval = _func_package.EvalForParent(node.state(), node.winner());
+					EvalType eval = _func_package.EvaluateState(node.state(), node.winner());
 
-					if (JSON_ENABLE)
+					if (JSON_ENABLED)
 					{
-						visual_node->add_value("eval for parent", eval);
+						visual_node->add_value(MINIMAX_VT_EVALUATION_NAME, eval);
 					}
 					return eval;
 				}
@@ -274,28 +282,33 @@ namespace gadt
 				State first_child_state = node.state();
 				_func_package.UpdateState(first_child_state, node.action_list()[0]);
 				Node first_child(first_child_state, node.depth() - 1, _func_package);
-				EvalValue best_value = NegamaxEvalForParents<JSON_ENABLE, ALPHABETA_ENABLE>(first_child, visual_node, leaf_node_count);
-				for (size_t i = 1; i < node.action_list().size(); i++)
+				EvalType best_value = alpha;
+				for (size_t i = 0; i < node.action_list().size(); i++)
 				{
 					State child_state = node.state();
 					_func_package.UpdateState(child_state, node.action_list()[i]);
 					Node child(child_state , node.depth() - 1, _func_package);
-					EvalValue child_value = NegamaxEvalForParents<JSON_ENABLE, ALPHABETA_ENABLE>(child, visual_node, leaf_node_count);
+					EvalType child_value = -NegamaxEvaluateStates<JSON_ENABLED, ALPHABETA_ENABLED>(child, -beta, -alpha, visual_node, leaf_node_count);
+					if (ALPHABETA_ENABLED && child_value >= beta)
+						return beta;//prune!
 					if (child_value >= best_value) { best_value = child_value; }
 				}
-
-				EvalValue eval_for_parent = -best_value;//negamax!
-				if (JSON_ENABLE)
+				if (JSON_ENABLED)
 				{
-					visual_node->add_value("leaf node count", leaf_node_count - original_leaf_node_count);
-					visual_node->add_value("eval for parent", eval_for_parent);
+					if (ALPHABETA_ENABLED)
+					{
+						visual_node->add_value("beta", beta);
+						visual_node->add_value("alpha", alpha);
+					}
+					visual_node->add_value(MINIMAX_VT_LEAF_COUNT_NAME, leaf_node_count - original_leaf_node_count);
+					visual_node->add_value(MINIMAX_VT_EVALUATION_NAME, best_value);
 				}
-				return eval_for_parent;
+				return best_value;
 			}
 
 			//start a negamax search.
-			template<bool JSON_ENABLE, bool ALPHABETA_ENABLE>
-			std::pair<Action, EvalValue> StartNegamaxIteration(const State& state, MinimaxSetting setting)
+			template<bool JSON_ENABLED, bool ALPHABETA_ENABLED>
+			std::pair<Action, EvalType> StartNegamaxIteration(const State& state, Setting setting)
 			{
 				_setting = setting;
 				Node root(state, _setting.max_depth, _func_package);
@@ -310,33 +323,38 @@ namespace gadt
 					logger() << std::endl << ">> Executing Minimax Search......" << std::endl;
 				}
 
-				if (JSON_ENABLE)
+				//return action if there is only one action in root node.
+				if (root.action_count() == 1)
+				{
+					if (log_enabled())
+					{
+						logger() << ">> Only one action is available. action = " << _log_controller.action_to_str_func()(root.action(0)) << std::endl;
+					}
+					return { root.action(0) ,EvalType() };
+				}
+
+				if (JSON_ENABLED)
 				{
 					root_visual_node = _log_controller.visual_tree().root_node();
 				}
-
-				std::vector<EvalValue> eval_set(root.action_list().size());
+				std::vector<EvalType> eval_set(root.action_list().size(), EvalType());
 				size_t leaf_node_count = 0;
-
-				//pick up best action.
 
 				//create first node.
 				State first_child_state = state;
 				_func_package.UpdateState(first_child_state, root.action_list()[0]);
 				Node first_child(first_child_state, root.depth() - 1, _func_package);
 
-				EvalValue best_value = NegamaxEvalForParents<JSON_ENABLE, ALPHABETA_ENABLE>(first_child, root_visual_node, leaf_node_count);
-
-				eval_set[0] = best_value;
+				EvalType best_value = static_cast<EvalType>(-MAX_EVAL);
 				size_t best_action_index = 0;
-				for (size_t i = 1; i < root.action_list().size(); i++)
+				for (size_t i = 0; i < root.action_list().size(); i++)
 				{
 					//create new node.
 					State child_state = state;
 					_func_package.UpdateState(child_state, root.action_list()[i]);
 					Node child(child_state, root.depth() - 1, _func_package);
-
-					eval_set[i] = NegamaxEvalForParents<JSON_ENABLE, ALPHABETA_ENABLE>(child, root_visual_node, leaf_node_count);
+					EvalType child_beta = (ALPHABETA_ENABLED ? -best_value : static_cast<EvalType>(MAX_EVAL));
+					eval_set[i] = -NegamaxEvaluateStates<JSON_ENABLED, ALPHABETA_ENABLED>(child, static_cast<EvalType>(-MAX_EVAL), child_beta , root_visual_node, leaf_node_count);
 
 					if (eval_set[i] > best_value)
 					{
@@ -363,10 +381,11 @@ namespace gadt
 					tb.Print();
 				}
 
-				if (JSON_ENABLE)
+				if (JSON_ENABLED)
 				{
-					root_visual_node->add_value("leaf node count", leaf_node_count);
+					root_visual_node->add_value(MINIMAX_VT_EVALUATION_NAME, leaf_node_count);
 					_log_controller.OutputJson();
+					_log_controller.ClearVisualTree();
 				}
 
 				//return best action.
@@ -379,18 +398,16 @@ namespace gadt
 				typename FuncPackage::UpdateStateFunc		UpdateState,
 				typename FuncPackage::MakeActionFunc		MakeAction,
 				typename FuncPackage::DetermineWinnerFunc	DetermineWinner,
-				typename FuncPackage::EvalForParentFunc		EvalForParent
+				typename FuncPackage::EvaluateStateFunc		EvaluateState
 			):
 				GameAlgorithmBase<State, Action, AgentIndex, _is_debug>("Minimax"),
-				_func_package(UpdateState,MakeAction,DetermineWinner,EvalForParent),
+				_func_package(UpdateState,MakeAction,DetermineWinner,EvaluateState),
 				_setting()
 			{
 			}
 
-			
-
 			//excute nega minimax search
-			Action RunNegamax(const State& state, MinimaxSetting setting = MinimaxSetting())
+			Action RunNegamax(const State& state, Setting setting = Setting())
 			{
 				_setting = setting;
 				if(json_output_enabled())
@@ -399,12 +416,18 @@ namespace gadt
 			}
 
 			//excute alpha-beta search.
-			Action RunAlphaBeta(const State& state, MinimaxSetting setting = MinimaxSetting())
+			Action RunAlphabeta(const State& state, Setting setting = Setting())
 			{
 				_setting = setting;
 				if (json_output_enabled())
 					return StartNegamaxIteration<true, true>(state, setting).first;
 				return StartNegamaxIteration<false, true>(state, setting).first;
+			}
+
+			EvalType GetEvalType(const State& state, Setting setting = Setting())
+			{
+				_setting = setting;
+				return StartNegamaxIteration<false, true>(state, setting).second;
 			}
 		};
 

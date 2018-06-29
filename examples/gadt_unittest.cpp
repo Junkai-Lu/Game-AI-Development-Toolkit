@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -145,13 +145,13 @@ namespace gadt
 				return ss.str();
 			}
 
-			EvalValue EvalForParent(const State& state, const AgentIndex winner)
+			int EvaluateState(const State& state, const AgentIndex winner)
 			{
 				if (winner == DRAW)
 				{
 					return 0;
 				}
-				return state.next_player == winner ? -999 : 999;
+				return state.next_player == winner ? INT32_MAX : -INT32_MAX;
 			}
 		}
 
@@ -199,7 +199,7 @@ namespace gadt
 			ut64 = ToUInt64(ToString(ut64));
 			GADT_ASSERT(ut64, UINT64_MAX);
 		}
-		void Testpoint()
+		void TestPoint()
 		{
 			//test signed point
 			BasicPoint<int64_t> point64(-100, -200);
@@ -456,8 +456,8 @@ namespace gadt
 			gadt::stl::StackAllocator<mcts::MctsNode<tic_tac_toe::State, tic_tac_toe::Action, tic_tac_toe::Result, true>, true> alloc(100);
 
 			auto p = alloc.construct(state, nullptr, func, mcts::MctsSetting());
-			GADT_ASSERT(node.action_num(), 9);
-			GADT_ASSERT(p->action_num(), 9);
+			GADT_ASSERT(node.action_count(), 9);
+			GADT_ASSERT(p->action_count(), 9);
 		}
 		void TestMctsSearch()
 		{
@@ -843,19 +843,25 @@ namespace gadt
 			const size_t max_depth = 10;
 			const bool enable_ab = false;
 			
-			minimax::MinimaxSearch<tic_tac_toe::State, tic_tac_toe::Action, true> minimax(
+			using Minimax = minimax::MinimaxSearch<tic_tac_toe::State, tic_tac_toe::Action, int64_t, INT64_MAX, true>;
+			Minimax minimax(
 				tic_tac_toe::UpdateState,
 				tic_tac_toe::MakeAction,
 				tic_tac_toe::DetemineWinner, 
-				tic_tac_toe::EvalForParent
+				tic_tac_toe::EvaluateState
 				);
 			minimax.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr);
 			//minimax.EnableJsonOutput();
 			//minimax.EnableLog();
 			tic_tac_toe::State state;
 			state.dot[0][0] = tic_tac_toe::WHITE;
-			tic_tac_toe::Action action = minimax.RunNegamax(state, { timeout, max_depth, false });
+			//state.dot[1][0] = tic_tac_toe::WHITE;
+			//state.dot[1][1] = tic_tac_toe::BLACK;
+			auto action = minimax.RunNegamax(state, typename Minimax::Setting{ timeout, max_depth });
 			GADT_ASSERT((action.x == 1 && action.y == 1), true);
+			action = minimax.RunAlphabeta(state, typename Minimax::Setting{ timeout, max_depth });
+			GADT_ASSERT((action.x == 1 && action.y == 1), true);
+			GADT_ASSERT(0, minimax.GetEvalType(state, typename Minimax::Setting{ timeout, max_depth }));
 		}
 		void TestRandomPool()
 		{
@@ -882,7 +888,7 @@ namespace gadt
 				tic_tac_toe::StateToResult,
 				tic_tac_toe::AllowUpdateValue
 			);
-			setting.thread_num = 4;
+			setting.thread_count = 4;
 			setting.simulation_times = 10000;
 			setting.timeout = 0;
 			setting.enable_action_policy = true;
@@ -897,7 +903,7 @@ namespace gadt
 
 		const std::vector<FuncPair> func_list = {
 			{ "convert"			,TestConvertFunc		},
-			{ "point"		,Testpoint			},
+			{ "point"			,TestPoint				},
 			{ "bitboard"		,TestBitBoard			},
 			{ "file"			,TestFilesystem			},
 			{ "index"			,TestIndex				},

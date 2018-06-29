@@ -240,10 +240,16 @@ namespace gadt
 					filesystem::create_directory(path);
 				}
 				path += "/";
-				path += timer::TimePoint().get_string();
+				path += timer::TimePoint().get_string("%Y-%m-%d-%H-%M-%S");
 				path += ".json";
 				std::ofstream ofs(path);
 				_visual_tree.output_json(ofs);
+			}
+
+			//clear info in visual tree.
+			inline void ClearVisualTree()
+			{
+				_visual_tree = VisualTree();
 			}
 
 		};

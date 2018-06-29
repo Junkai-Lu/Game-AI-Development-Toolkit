@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -37,6 +37,8 @@ namespace gadt
 		}
 	}
 
+	constexpr AgentIndex GADT_DEFAULT_NO_WINNER_INDEX = INT8_MAX;
+
 	struct GameAlgorithmSettingBase
 	{
 		double		timeout;			//timeout
@@ -45,7 +47,7 @@ namespace gadt
 	protected:
 		GameAlgorithmSettingBase() :
 			timeout(0),
-			no_winner_index(0)
+			no_winner_index(GADT_DEFAULT_NO_WINNER_INDEX)
 		{
 		}
 

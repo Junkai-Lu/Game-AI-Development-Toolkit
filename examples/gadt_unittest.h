@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -49,7 +49,7 @@ namespace gadt
 			{
 				BLACK = -1,
 				WHITE = 1,
-				EMPTY = 0,
+				EMPTY = GADT_DEFAULT_NO_WINNER_INDEX,
 				DRAW = 2
 			};
 

@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,8 @@ namespace gadt
 		namespace define
 		{
 			constexpr const size_t g_COMMAND_TYPE_NUMBER = 7;		//command type number.
-			constexpr const size_t g_MAX_COMMAND_LENGTH = 15;		//max length of the command. 
+			constexpr const size_t g_MAX_COMMAND_LENGTH = 20;		//max length of the command. 
+			constexpr const size_t g_MAX_COMMAND_DESC_LENGTH = 40;	//max length of the command. 
 
 			//list command, default is 'ls'
 			constexpr const char*  g_LIST_COMMAND_NAME = "ls";	
@@ -452,7 +453,7 @@ namespace gadt
 				{
 					constexpr size_t SYMBOL_WIDTH = 3;
 					constexpr size_t NAME_WIDTH = (define::g_MAX_COMMAND_LENGTH + 1) / 2;
-					constexpr size_t DESC_WIDTH = (define::g_MAX_COMMAND_LENGTH + 1);
+					constexpr size_t DESC_WIDTH = (define::g_MAX_COMMAND_DESC_LENGTH + 1);
 
 					std::cout << std::endl;
 					if (param == "-t")

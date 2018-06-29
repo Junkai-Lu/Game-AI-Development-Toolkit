@@ -39,7 +39,7 @@ namespace gadt
 		*/
 		struct MonteCarloSetting final: public GameAlgorithmSettingBase
 		{
-			size_t		thread_num;					//thread num.
+			size_t		thread_count;					//thread num.
 			bool		enable_action_policy;		//enable action policy(like Flat-UCB )
 			size_t		simulation_times;			//simulation_time;
 			size_t		simulation_warning_length;	//if the simulation length out of this value, it would throw a warning if is debug.
@@ -48,7 +48,7 @@ namespace gadt
 			//default setting constructor.
 			MonteCarloSetting() :
 				GameAlgorithmSettingBase(30,0),
-				thread_num(1),
+				thread_count(1),
 				enable_action_policy(true),
 				simulation_warning_length(1000)
 			{
@@ -57,13 +57,13 @@ namespace gadt
 			//custom setting constructor.
 			MonteCarloSetting(
 				double _timeout,
-				size_t _thread_num,
+				size_t _thread_count,
 				size_t _enable_action_policy,
-				AgentIndex _no_winner_index = 0,
+				AgentIndex _no_winner_index = GADT_DEFAULT_NO_WINNER_INDEX,
 				size_t _simulation_warning_length = 1000
 			) :
 				GameAlgorithmSettingBase(_timeout, no_winner_index),
-				thread_num(_thread_num),
+				thread_count(_thread_count),
 				enable_action_policy(_enable_action_policy),
 				simulation_warning_length(_simulation_warning_length)
 			{
@@ -77,7 +77,7 @@ namespace gadt
 				tb.set_width({ 12,6 });
 				tb.enable_title({ "MONTE CARLO SETTING" });
 				tb.set_cell_in_row(index++, { { "timeout" },{ ToString(timeout) } });
-				tb.set_cell_in_row(index++, { { "thread_num" },{ ToString(thread_num) } });
+				tb.set_cell_in_row(index++, { { "thread_count" },{ ToString(thread_count) } });
 				tb.set_cell_in_row(index++, { { "enable_action_policy" },{ ToString(enable_action_policy) } });
 				tb.set_cell_in_row(index++, { { "no_winner_index" },{ ToString(no_winner_index) } });
 				tb.set_cell_in_row(index++, { { "simulation_warning_length" },{ ToString(simulation_warning_length) } });
@@ -353,9 +353,21 @@ namespace gadt
 					logger() << std::endl << ">> Executing Monte Carlo Simulation......" << std::endl;
 				}
 
+				
+
 				//make actions
 				_func_package.MakeAction(state, action_list);
 				GADT_WARNING_IF(is_debug(), action_list.empty(), "empty action list for root node");
+
+				//return action if there is only one action in root node.
+				if (action_list.size() == 1)
+				{
+					if (log_enabled())
+					{
+						logger() << ">> Only one action is available. action = " << _log_controller.action_to_str_func()(action_list[0]) << std::endl;
+					}
+					return action_list[0];
+				}
 
 				//get child nodes
 				for (const Action& act : action_list)
@@ -368,7 +380,7 @@ namespace gadt
 
 				//create threads.
 				std::vector<std::thread> threads;
-				for (size_t thread_id = 0; thread_id < _setting.thread_num; thread_id++)
+				for (size_t thread_id = 0; thread_id < _setting.thread_count; thread_id++)
 				{
 					threads.push_back(std::thread([&]()->void {
 						if (_setting.enable_action_policy)

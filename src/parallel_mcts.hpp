@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -228,6 +228,7 @@ namespace gadt
 			//run lock-free mcts.
 			Action Run(const State& root_state) override
 			{
+				_setting = MctsSetting();
 				return ExcuteMCTS(root_state);
 			}
 

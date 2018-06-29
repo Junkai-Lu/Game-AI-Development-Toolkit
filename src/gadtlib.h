@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,6 @@ namespace gadt
 {
 	using AgentIndex = int8_t;//AgentIndex is the index of each player, default is int8_t. 0 is the default no-winner index.
 	using UcbValue = double;
-	using EvalValue = double;
 
 	//extern BasicUPoint.
 	template<typename IntType = uint64_t, typename std::enable_if<std::is_unsigned<IntType>::value, int>::type = 0>
@@ -525,7 +524,7 @@ namespace gadt
 			inline ConsoleColor GetTintByIndex(Index index) const
 			{
 				size_t remain = static_cast<size_t>(index) % 6;
-				return get_color(ConsoleColor::Blue + remain);
+				return get_color(static_cast<size_t>(ConsoleColor::Blue)+ remain);
 			}
 
 			//get deep color by index.
@@ -533,7 +532,7 @@ namespace gadt
 			inline ConsoleColor GetDeepByIndex(Index index) const
 			{
 				size_t remain = static_cast<size_t>(index) % 6;
-				return get_color(ConsoleColor::DeepBlue + remain);
+				return get_color(static_cast<size_t>(ConsoleColor::DeepBlue) + remain);
 			}
 
 			//get any color by index.
@@ -543,7 +542,7 @@ namespace gadt
 				size_t remain = static_cast<size_t>(index) % 12;
 				if (remain >= 6)
 					remain += 2;
-				return get_color(ConsoleColor::DeepBlue + remain);
+				return get_color(static_cast<size_t>(ConsoleColor::DeepBlue) + remain);
 			}
 		};
 
