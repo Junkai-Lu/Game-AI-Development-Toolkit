@@ -569,7 +569,7 @@ namespace gadt
 		}
 		void TestStlList()
 		{
-			using ActionList = gadt::stl::List<tic_tac_toe::Action, true>;
+			using ActionList = gadt::stl::List<tic_tac_toe::Action>;
 			ActionList list(1000);
 			for (size_t i = 0; i < 9; i++)
 			{
@@ -866,7 +866,7 @@ namespace gadt
 		void TestRandomPool()
 		{
 			const size_t ub = 20;
-			stl::RandomPool<size_t, true> pool(ub);
+			stl::RandomPool<size_t> pool(ub);
 			for (size_t i = 0; i < ub; i++)
 			{
 				pool.add(i, i);
@@ -900,6 +900,35 @@ namespace gadt
 			tic_tac_toe::Action action = mc.DoMonteCarlo(state, setting);
 			//GADT_ASSERT((action.x == 1 && action.y == 1), true);
 		}
+		void TestDynamicArray()
+		{
+			stl::DynamicArray<size_t> alloc0;
+			alloc0.allocate(128);
+			for (size_t i = 0; i < 40; i++)
+			{
+				alloc0.push_back(100);
+				alloc0.push_back(101);
+				alloc0.push_back(102);
+			}
+			stl::DynamicArray<size_t> alloc1(alloc0);
+			GADT_ASSERT(120, alloc1.size());
+			GADT_ASSERT(100, alloc1.front());
+			GADT_ASSERT(101, alloc1[1]);
+			GADT_ASSERT(102, alloc1.back());
+			alloc1.swap(0, 1);
+			GADT_ASSERT(101, alloc1[0]);
+			GADT_ASSERT(100, alloc1[1]);
+			for (size_t i = 0; i < alloc1.size(); i++)
+			{
+				if (alloc1[i] == 101)
+				{
+					alloc1.swap(i, alloc1.size() - 1);
+					alloc1.pop_back();
+					i--;
+				}
+			}
+			GADT_ASSERT(80, alloc1.size());
+		}
 
 		const std::vector<FuncPair> func_list = {
 			{ "convert"			,TestConvertFunc		},
@@ -918,7 +947,8 @@ namespace gadt
 			{ "table"			,TestTable				},
 			{ "random_pool"		,TestRandomPool			},
 			{ "minimax"			,TestMinimax			},
-			{ "monte_carlo"		,TestMonteCarlo			}
+			{ "monte_carlo"		,TestMonteCarlo			},
+			{ "dynamic_array"	,TestDynamicArray		}
 		};
 		void RunTest(FuncPair func_pair)
 		{

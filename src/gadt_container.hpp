@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -71,12 +71,12 @@ namespace gadt
 		* [T] is the class type of the link list.
 		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
 		*/
-		template<typename T, bool _is_debug = false>
+		template<typename T>
 		class List
 		{
 		public:
 			using Node = ListNode<T>;
-			using Allocator = gadt::stl::StackAllocator<Node, _is_debug>;
+			using Allocator = gadt::stl::StackAllocator<Node, GADT_STL_ENABLE_WARNING>;
 			using node_pointer = Node*;
 
 		private:
@@ -86,12 +86,6 @@ namespace gadt
 			node_pointer _last_node;
 			node_pointer _iterator;
 			size_t       _size;
-
-		private:
-			constexpr inline  bool is_debug() const
-			{
-				return _is_debug;
-			}
 
 		public:
 			List(size_t allocator_count) :
@@ -167,7 +161,7 @@ namespace gadt
 
 			void pop_back()
 			{
-				GADT_WARNING_IF(is_debug(), _last_node == nullptr, "no element in the back of link list");
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, _last_node == nullptr, "no element in the back of link list");
 				node_pointer temp = _last_node;
 				_last_node = _last_node->prev_node();
 				_last_node->set_next_node(nullptr);
@@ -176,7 +170,7 @@ namespace gadt
 
 			void pop_front()
 			{
-				GADT_WARNING_IF(is_debug(), _first_node == nullptr, "no element in the front of link list");
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, _first_node == nullptr, "no element in the front of link list");
 				node_pointer temp = _first_node;
 				_first_node = _first_node->next_node();
 				_first_node->set_prev_node(nullptr);
@@ -1182,26 +1176,20 @@ namespace gadt
 		* RandomPool is a container of elements which support to get element randomly by weigh.
 		*
 		* [T] is the type of element.
-		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
 		*/
-		template<typename T, bool _is_debug = false>
+		template<typename T>
 		class RandomPool
 		{
 		private:
 			using pointer = T*;
 			using reference = T&;
 			using Element = RandomPoolElement<T>;
-			using Allocator = stl::LinearAllocator<Element, _is_debug>;
+			using Allocator = stl::LinearAllocator<Element, GADT_STL_ENABLE_WARNING>;
 
 		private:
 
 			Allocator	_ele_alloc;
 			size_t		_accumulated_range;
-
-			constexpr inline bool is_debug() const
-			{
-				return _is_debug;
-			}
 
 		public:
 			//default constructor.
@@ -1281,7 +1269,7 @@ namespace gadt
 			//get random element.
 			inline const reference random() const
 			{
-				GADT_WARNING_IF(is_debug(), size() == 0, "random pool is empty.");
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, size() == 0, "random pool is empty.");
 				size_t rnd = rand() % _accumulated_range;
 				for (size_t i = 0; i < size(); i++)
 				{
@@ -1290,7 +1278,7 @@ namespace gadt
 						return _ele_alloc[i]->data;
 					}
 				}
-				GADT_WARNING_IF(is_debug(), true, "unsuccessful random pick up.");
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, true, "unsuccessful random pick up.");
 				return _ele_alloc[0]->data;
 			}
 
@@ -1304,6 +1292,216 @@ namespace gadt
 			{
 				return get_element(index);
 			}
+		};
+
+		/*
+		* DynamicArray is a array which allow user to dynamiclly allocate its size.
+		*
+		* [T] is the type of element.
+		*/
+		template<typename T>
+		class DynamicArray final
+		{
+		private:
+			using pointer = T * ;
+			using reference = T & ;
+
+			static const size_t		_size = sizeof(T);
+			size_t					_count;
+			pointer					_fir_element;
+			size_t					_length;
+
+		private:
+			//allocate memory
+			inline void alloc_memory(size_t count)
+			{
+				_fir_element = reinterpret_cast<T*>(calloc(count, _size));
+			}
+
+			//delete memory
+			inline void delete_memory()
+			{
+				//flush();
+				::free(_fir_element);
+				_fir_element = nullptr;
+				_length = 0;
+			}
+
+		public:
+
+			//default constructor
+			DynamicArray():
+				_count(0),
+				_fir_element(nullptr),
+				_length(0)
+			{
+			}
+
+			//constructor function with allocation.
+			DynamicArray(size_t count) :
+				_count(count),
+				_fir_element(nullptr),
+				_length(0)
+			{
+				alloc_memory(count);
+			}
+
+			//copy constructor function.
+			DynamicArray(const DynamicArray& target) :
+				_count(target._count),
+				_fir_element(nullptr),
+				_length(0)
+			{
+				if (target._fir_element != nullptr)
+				{
+					alloc_memory(_count);
+					::memcpy(_fir_element, target._fir_element, _size * _count);
+					_length = target._length;
+				}
+			}
+
+			//destructor function.
+			~DynamicArray()
+			{
+				delete_memory();
+			}
+
+			//allocate memory for uninitialized container.
+			bool allocate(size_t count)
+			{
+				if (_fir_element == nullptr)
+				{
+					alloc_memory(count);
+					_count = count;
+					return true;
+				}
+				return false;
+			}
+
+			//free space by ptr, return true if free successfully.
+			inline bool pop_back()
+			{
+				if (_length > 0)
+				{
+					_length--;
+					return true;
+				}
+				return false;
+			}
+
+			//copy source object to a empty space and return the pointer, return false if there are not available space.
+			bool push_back(const reference elem)//T* constructor(const T& source)
+			{
+				if (is_full() == false)
+				{
+					pointer ptr = _fir_element + _length;
+					_length++;
+					*ptr = elem;
+					return true;
+				}
+				return false;
+			}
+
+			//copy source object to a empty space and return the pointer, return false if there are not available space.
+			bool push_back(T&& elem)//T* constructor(const T& source)
+			{
+				if (is_full() == false)
+				{
+					pointer ptr = _fir_element + _length;
+					_length++;
+					*ptr = std::move(elem);
+					return true;
+				}
+				return false;
+			}
+
+			//get first element.
+			inline reference element(size_t index)
+			{
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, index >= _length, "out of range");
+				return *(_fir_element + index);
+			}
+
+			inline const reference at(size_t index) const
+			{
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, index >= _length, "out of range");
+				return *(_fir_element + index);
+			}
+
+			//get the element in front.
+			inline const reference front() const
+			{
+				return at(0);
+			}
+
+			//get the element in back.
+			inline const reference back() const
+			{
+				return at(_length - 1);
+			}
+
+			//swap element.
+			inline void swap(size_t fir_index, size_t sec_index)
+			{
+				T temp = element(fir_index);
+				element(fir_index) = element(sec_index);
+				element(sec_index) = temp;
+			}
+
+			//total size of alloc.
+			inline size_t max_size() const
+			{
+				return _count;
+			}
+
+			//remain size in the alloc.
+			inline size_t remain_size() const
+			{
+				return _count - _length;
+			}
+
+			//return size of the vector.
+			inline size_t size() const
+			{
+				return _length;
+			}
+
+			//return true if there is not available space in this vector.
+			inline bool is_full() const
+			{
+				return _count == _length;
+			}
+
+			//return true if this vector is empty.
+			inline bool is_empty() const
+			{
+				return _length == 0;
+			}
+
+			//flush all datas.
+			inline void flush()
+			{
+				while (pop_back()) {}
+			}
+
+			//pointer of first element.
+			pointer begin() const
+			{
+				return _fir_element;
+			}
+
+			//pointer of last element.
+			pointer end() const
+			{
+				return _fir_element + _length;
+			}
+
+			reference operator[](size_t index)
+			{
+				return element(index);
+			}
+
+
 		};
 
 	}
