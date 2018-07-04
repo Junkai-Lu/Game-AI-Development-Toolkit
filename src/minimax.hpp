@@ -307,7 +307,7 @@ namespace gadt
 			}
 
 			//start a negamax search.
-			template<bool JSON_ENABLED, bool ALPHABETA_ENABLED>
+			template<bool JSON_ENABLED, bool ALPHABETA_ENABLED, bool RETURN_WHEN_SINGLE_MOVE>
 			std::pair<Action, EvalType> StartNegamaxIteration(const State& state, Setting setting)
 			{
 				_setting = setting;
@@ -324,13 +324,13 @@ namespace gadt
 				}
 
 				//return action if there is only one action in root node.
-				if (root.action_count() == 1)
+				if (root.action_count() == 1 && RETURN_WHEN_SINGLE_MOVE)
 				{
 					if (log_enabled())
 					{
 						logger() << ">> Only one action is available. action = " << _log_controller.action_to_str_func()(root.action(0)) << std::endl;
 					}
-					return { root.action(0) ,EvalType() };
+					return { root.action(0) , EvalType() };
 				}
 
 				if (JSON_ENABLED)
@@ -411,8 +411,8 @@ namespace gadt
 			{
 				_setting = setting;
 				if(json_output_enabled())
-					return StartNegamaxIteration<true, false>(state, setting).first;
-				return StartNegamaxIteration<false, false>(state, setting).first;
+					return StartNegamaxIteration<true, false, true>(state, setting).first;
+				return StartNegamaxIteration<false, false, true>(state, setting).first;
 			}
 
 			//excute alpha-beta search.
@@ -420,14 +420,14 @@ namespace gadt
 			{
 				_setting = setting;
 				if (json_output_enabled())
-					return StartNegamaxIteration<true, true>(state, setting).first;
-				return StartNegamaxIteration<false, true>(state, setting).first;
+					return StartNegamaxIteration<true, true, true>(state, setting).first;
+				return StartNegamaxIteration<false, true, true>(state, setting).first;
 			}
 
 			EvalType GetEvalType(const State& state, Setting setting = Setting())
 			{
 				_setting = setting;
-				return StartNegamaxIteration<false, true>(state, setting).second;
+				return StartNegamaxIteration<false, true, false>(state, setting).second;
 			}
 		};
 

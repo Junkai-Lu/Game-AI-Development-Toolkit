@@ -24,6 +24,10 @@
 
 #pragma once
 
+#ifdef GADT_WARNING
+	#define GADT_ALLOCATOR_DEBUG_INFO
+#endif
+
 namespace gadt
 {
 	namespace stl
@@ -272,11 +276,19 @@ namespace gadt
 			pointer					_fir_element;
 			size_t					_length;
 
+#ifdef GADT_ALLOCATOR_DEBUG_INFO
+			std::vector<pointer>	_pointers;
+#endif
+
 		private:
 			//allocate memory
 			inline void alloc_memory(size_t count)
 			{
 				_fir_element = reinterpret_cast<T*>(calloc(count, _size));
+#ifdef GADT_ALLOCATOR_DEBUG_INFO
+				for (size_t i = 0; i < count; i++)
+					_pointers.push_back(_fir_element + i);
+#endif
 			}
 
 			//delete memory
@@ -311,7 +323,7 @@ namespace gadt
 				_length(0)
 			{
 				alloc_memory(_count);
-				for (size_t i = 0; i < _length; i++)
+				for (size_t i = 0; i < target._length; i++)
 				{
 					construct(*(target._fir_element + i));
 				}

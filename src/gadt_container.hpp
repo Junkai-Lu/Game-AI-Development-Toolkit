@@ -25,6 +25,10 @@
 
 #pragma once
 
+#ifdef GADT_WARNING
+	#define GADT_DYNAMIC_ARRAY_DEBUG_INFO
+#endif
+
 namespace gadt
 {
 	namespace stl
@@ -1311,11 +1315,19 @@ namespace gadt
 			pointer					_fir_element;
 			size_t					_length;
 
+#ifdef GADT_DYNAMIC_ARRAY_DEBUG_INFO
+			std::vector<pointer>	_pointers;
+#endif
+
 		private:
 			//allocate memory
 			inline void alloc_memory(size_t count)
 			{
 				_fir_element = reinterpret_cast<T*>(calloc(count, _size));
+#ifdef GADT_DYNAMIC_ARRAY_DEBUG_INFO
+				for (size_t i = 0; i < count; i++)
+					_pointers.push_back(_fir_element + i);
+#endif
 			}
 
 			//delete memory
