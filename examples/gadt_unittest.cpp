@@ -319,6 +319,10 @@ namespace gadt
 			GADT_ASSERT(8, temp_64.total());
 			temp_64 = bitboard::BitBoard64{0,1,2,3,4,5,6,7};
 			GADT_ASSERT(8, temp_64.total());
+			temp_64 &= bitboard::BitBoard64{ 0,1,2,3,4,5,6,7,8 };
+			GADT_ASSERT(8, temp_64.total());
+			temp_64 |= bitboard::BitBoard64{ 0,1,2,3,4,5,6,7,8 };
+			GADT_ASSERT(9, temp_64.total());
 
 			//test BitPoker
 			bitboard::BitPoker temp_poker;
@@ -355,6 +359,10 @@ namespace gadt
 			temp_poker = bitboard::BitPoker(0xFF);
 			GADT_ASSERT(30, temp_poker.total());
 			temp_poker = bitboard::BitPoker{ {0,3}, {1,2}, {2,3} };
+			GADT_ASSERT(8, temp_poker.total());
+			temp_poker += bitboard::BitPoker{ { 0,1 },{ 1,1 },{ 2,1 } };
+			GADT_ASSERT(11, temp_poker.total());
+			temp_poker -= bitboard::BitPoker{ { 0,1 },{ 1,1 },{ 2,1 } };
 			GADT_ASSERT(8, temp_poker.total());
 
 
@@ -394,6 +402,10 @@ namespace gadt
 			temp_mahjong = bitboard::BitMahjong(0x3F, 0);
 			GADT_ASSERT(14, temp_mahjong.total());
 			temp_mahjong = bitboard::BitMahjong{ { 0,3 },{ 1,2 },{ 2,3 } };
+			GADT_ASSERT(8, temp_mahjong.total());
+			temp_mahjong -= bitboard::BitMahjong{ { 0,1 },{ 1,1 },{ 2,1 } };
+			GADT_ASSERT(5, temp_mahjong.total());
+			temp_mahjong += bitboard::BitMahjong{ { 0,1 },{ 1,1 },{ 2,1 } };
 			GADT_ASSERT(8, temp_mahjong.total());
 
 			//test ValueVector

@@ -358,6 +358,18 @@ namespace gadt
 			//iter type.
 			using Iter = BitIter<size_t, BitBoard64>;
 
+			size_t get_total_by_count() const
+			{
+				size_t n = _data & 0x1;	//the velue of first pos.
+				gadt_int64 temp = _data;
+				for (size_t i = 1; i < 64; i++)
+				{
+					temp = temp >> 1;	//next pos;
+					n += temp & 0x1;	//plus value of current pos.
+				}
+				return n;
+			}
+
 			void refresh()
 			{
 #ifdef GADT_BITBOARD_DEBUG_INFO
@@ -365,6 +377,9 @@ namespace gadt
 				{
 					_debug_data[i] = get(i);
 				}
+#endif
+#ifdef GADT_BITBOARD_CONSTANT_TOTAL
+				_total = get_total_by_count();
 #endif
 			}
 
@@ -391,20 +406,7 @@ namespace gadt
 				, _total(0)
 #endif
 			{
-#ifdef GADT_BITBOARD_DEBUG_INFO
-				for (size_t i = 0; i < 64; i++)
-				{
-					_debug_data[i] = get(i);
-				}
-#endif
-
-#ifdef GADT_BITBOARD_CONSTANT_TOTAL
-				for (size_t i = 0; i < upper_bound(); i++)
-				{
-					if (get(i))
-						_total++;
-				}
-#endif
+				refresh();
 			}
 
 			//initilize BitBoard by list
@@ -527,16 +529,10 @@ namespace gadt
 			inline size_t total() const
 			{
 #ifdef GADT_BITBOARD_CONSTANT_TOTAL
+				GADT_WARNING_IF(GADT_BITBOARD_ENABLE_WARNING, get_total_by_count() != _total, "incorrect total value");
 				return _total;
 #else
-				size_t n = _data & 0x1;	//the velue of first pos.
-				gadt_int64 temp = _data;
-				for (size_t i = 1; i < 64; i++)
-				{
-					temp = temp >> 1;	//next pos;
-					n += temp & 0x1;	//plus value of current pos.
-				}
-				return n;
+				return get_total_by_count();
 #endif	
 			}
 
@@ -653,30 +649,22 @@ namespace gadt
 			inline void operator&=(gadt_int64 target)
 			{
 				_data &= target;
-#ifdef GADT_BITBOARD_DEBUG_INFO
 				refresh();
-#endif
 			}
 			inline void operator|=(gadt_int64 target)
 			{
 				_data |= target;
-#ifdef GADT_BITBOARD_DEBUG_INFO
 				refresh();
-#endif
 			}
 			inline void operator&=(const BitBoard64 target) 
 			{
 				_data &= target._data; 
-#ifdef GADT_BITBOARD_DEBUG_INFO
 				refresh();
-#endif
 			}
 			inline void operator|=(const BitBoard64 target) 
 			{
 				_data |= target._data; 
-#ifdef GADT_BITBOARD_DEBUG_INFO
 				refresh();
-#endif
 			}
 			inline size_t operator*(const BitBoard64 target) const
 			{
@@ -723,6 +711,21 @@ namespace gadt
 					_debug_data[i] = get(i);
 				}
 #endif
+#ifdef GADT_BITBOARD_CONSTANT_TOTAL
+				_total = get_total_by_count();
+#endif
+			}
+
+			size_t get_total_by_count() const
+			{
+				gadt_int64 temp = _data;
+				size_t t = 0;
+				for (size_t i = 0; i < _upper_bound; i++)
+				{
+					t += (temp & 0xF);
+					temp = temp >> 4;
+				}
+				return t;
 			}
 
 		public:
@@ -748,18 +751,7 @@ namespace gadt
 				, _total(0)
 #endif
 			{
-#ifdef GADT_BITBOARD_DEBUG_INFO
-				for (size_t i = 0; i < _upper_bound; i++)
-				{
-					_debug_data[i] = (uint8_t)get(i);
-				}
-#endif
-#ifdef GADT_BITBOARD_CONSTANT_TOTAL
-				for (size_t i = 0; i < upper_bound(); i++)
-				{
-					_total+= get(i);
-				}
-#endif
+				refresh();
 			}
 
 			//initilize BitBoard by list
@@ -898,14 +890,7 @@ namespace gadt
 #ifdef GADT_BITBOARD_CONSTANT_TOTAL
 				return _total;
 #else
-				gadt_int64 temp = _data;
-				size_t t = 0;
-				for (size_t i = 0; i < _upper_bound; i++)
-				{
-					t += (temp & 0xF);
-					temp = temp >> 4;
-				}
-				return t;
+				return get_total_by_count();
 #endif
 			}
 
@@ -1036,13 +1021,8 @@ namespace gadt
 					GADT_WARNING_IF(GADT_BITBOARD_ENABLE_WARNING, get(i) + target.get(i) > 0xF, ">> WARNING:: function BITGROUP::Plus overflow.");
 				}
 #endif
-#ifdef GADT_BITBOARD_DEBUG_INFO
-				for (size_t i = 0; i < _upper_bound; i++)
-				{
-					_debug_data[i] += target._debug_data[i];
-				}
-#endif
 				_data += target._data;
+				refresh();
 			}
 			inline void operator-=(const BitPoker target)
 			{
@@ -1052,27 +1032,18 @@ namespace gadt
 					GADT_WARNING_IF(GADT_BITBOARD_ENABLE_WARNING, get(i) < target.get(i), ">> WARNING:: function BITGROUP::Plus overflow.");
 				}
 #endif
-#ifdef GADT_BITBOARD_DEBUG_INFO
-				for (size_t i = 0; i < _upper_bound; i++)
-				{
-					_debug_data[i] -= target._debug_data[i];
-				}
-#endif
 				_data -= target._data;
+				refresh();
 			}
 			inline void operator&=(const BitPoker target)
 			{
 				_data &= target._data;
-#ifdef GADT_BITBOARD_DEBUG_INFO
 				refresh();
-#endif
 			}
 			inline void operator|=(const BitPoker target)
 			{
 				_data |= target._data;
-#ifdef GADT_BITBOARD_DEBUG_INFO
 				refresh();
-#endif
 			}
 			inline BitPoker operator+(const BitPoker target) const
 			{
@@ -1169,6 +1140,37 @@ namespace gadt
 			//iter type.
 			using Iter = BitIter<size_t, BitMahjong>;
 
+			void refresh()
+			{
+#ifdef GADT_BITBOARD_DEBUG_INFO
+				for (size_t i = 0; i < upper_bound(); i++)
+				{
+					_debug_data[i] = get(i);
+				}
+#endif
+#ifdef GADT_BITBOARD_CONSTANT_TOTAL
+				_total = get_total_by_count();
+#endif
+			}
+
+			size_t get_total_by_count() const
+			{
+				gadt_int64 temp = _fir_data;
+				size_t t = 0;
+				for (size_t i = 0; i < 21; i++)
+				{
+					t += (temp & 0x7);
+					temp = temp >> 3;
+				}
+				temp = _sec_data;
+				for (size_t i = 0; i < 21; i++)
+				{
+					t += (temp & 0x7);
+					temp = temp >> 3;
+				}
+				return t;
+			}
+
 		public:
 
 			inline BitMahjong() :
@@ -1194,18 +1196,7 @@ namespace gadt
 				, _total(0)
 #endif
 			{
-#ifdef GADT_BITBOARD_DEBUG_INFO
-				for (size_t i = 0; i < _upper_bound; i++)
-				{
-					_debug_data[i] = (uint8_t)get(i);
-				}
-#endif
-#ifdef GADT_BITBOARD_CONSTANT_TOTAL
-				for (size_t i = 0; i < upper_bound(); i++)
-				{
-					_total += get(i);
-				}
-#endif
+				refresh();
 			}
 
 			//initilize BitBoard by list
@@ -1216,16 +1207,11 @@ namespace gadt
 				, _total(0)
 #endif
 			{
-#ifdef GADT_BITBOARD_DEBUG_INFO
-				for (size_t i = 0; i < _upper_bound; i++)
-				{
-					_debug_data[i] = 0;
-				}
-#endif
 				for (size_t index : init_list)
 				{
 					push(index);
 				}
+				refresh();
 			}
 
 			//initilize BitBoard by pair list
@@ -1236,16 +1222,11 @@ namespace gadt
 				, _total(0)
 #endif
 			{
-#ifdef GADT_BITBOARD_DEBUG_INFO
-				for (size_t i = 0; i < _upper_bound; i++)
-				{
-					_debug_data[i] = 0;
-				}
-#endif
 				for (auto p : init_list)
 				{
 					set(p.first, p.second);
 				}
+				refresh();
 			}
 
 			//return whether any bit is true.
@@ -1351,20 +1332,7 @@ namespace gadt
 #ifdef GADT_BITBOARD_CONSTANT_TOTAL
 				return _total;
 #else
-				gadt_int64 temp = _fir_data;
-				size_t t = 0;
-				for (size_t i = 0; i < 21; i++)
-				{
-					t += (temp & 0x7);
-					temp = temp >> 3;
-				}
-				temp = _sec_data;
-				for (size_t i = 0; i < 21; i++)
-				{
-					t += (temp & 0x7);
-					temp = temp >> 3;
-				}
-				return t;
+				return get_total_by_count();
 #endif
 			}
 
@@ -1532,14 +1500,9 @@ namespace gadt
 					GADT_WARNING_IF(GADT_BITBOARD_ENABLE_WARNING, get(i) + target.get(i) > 0x7, "overflow.");
 				}
 #endif
-#ifdef GADT_BITBOARD_DEBUG_INFO
-				for (size_t i = 0; i < _upper_bound; i++)
-				{
-					_debug_data[i] += target._debug_data[i];
-				}
-#endif
 				_fir_data += target._fir_data;
 				_sec_data += target._sec_data;
+				refresh();
 			}
 			inline void operator-=(const BitMahjong target)
 			{
@@ -1549,14 +1512,9 @@ namespace gadt
 					GADT_WARNING_IF(GADT_BITBOARD_ENABLE_WARNING, get(i) < target.get(i), "overflow.");
 				}
 #endif
-#ifdef GADT_BITBOARD_DEBUG_INFO
-				for (size_t i = 0; i < _upper_bound; i++)
-				{
-					_debug_data[i] -= target._debug_data[i];
-				}
-#endif
 				_fir_data -= target._fir_data;
 				_sec_data -= target._sec_data;
+				refresh();
 			}
 			inline BitMahjong operator+(const BitMahjong target) const
 			{
@@ -1568,12 +1526,6 @@ namespace gadt
 #endif
 
 				BitMahjong temp(_fir_data + target._fir_data, _sec_data + target._sec_data);
-#ifdef GADT_BITBOARD_DEBUG_INFO
-				for (size_t i = 0; i < _upper_bound; i++)
-				{
-					temp._debug_data[i] = _debug_data[i] + target._debug_data[i];
-				}
-#endif
 				return temp;
 			}
 			inline BitMahjong operator-(const BitMahjong target) const
