@@ -285,8 +285,8 @@ namespace gadt
 			GADT_ASSERT(1, temp.total());
 			GADT_ASSERT(true, temp.get(51));
 			GADT_ASSERT(56, temp.upper_bound());
-
-
+			temp = bitboard::BitBoard<56>{ 0,1,2,3,4,5 };
+			GADT_ASSERT(6, temp.total());
 
 			//test BitBoard64
 			bitboard::BitBoard64 temp_64;
@@ -315,6 +315,10 @@ namespace gadt
 			GADT_ASSERT(1, temp_64.total());
 			GADT_ASSERT(true, temp_64.get(51));
 			GADT_ASSERT(64, temp_64.upper_bound());
+			temp_64 = bitboard::BitBoard64(0xFF);
+			GADT_ASSERT(8, temp_64.total());
+			temp_64 = bitboard::BitBoard64{0,1,2,3,4,5,6,7};
+			GADT_ASSERT(8, temp_64.total());
 
 			//test BitPoker
 			bitboard::BitPoker temp_poker;
@@ -348,6 +352,11 @@ namespace gadt
 			GADT_ASSERT(3, temp_poker.get(3));
 			temp_poker.increase(4);
 			GADT_ASSERT(1, temp_poker.get(4));
+			temp_poker = bitboard::BitPoker(0xFF);
+			GADT_ASSERT(30, temp_poker.total());
+			temp_poker = bitboard::BitPoker{ {0,3}, {1,2}, {2,3} };
+			GADT_ASSERT(8, temp_poker.total());
+
 
 			//test BitMahjong
 			bitboard::BitMahjong temp_mahjong;
@@ -382,6 +391,10 @@ namespace gadt
 			temp_mahjong.increase(25);
 			GADT_ASSERT(1, temp_mahjong.get(25));
 			GADT_ASSERT(7, temp_mahjong.total());
+			temp_mahjong = bitboard::BitMahjong(0x3F, 0);
+			GADT_ASSERT(14, temp_mahjong.total());
+			temp_mahjong = bitboard::BitMahjong{ { 0,3 },{ 1,2 },{ 2,3 } };
+			GADT_ASSERT(8, temp_mahjong.total());
 
 			//test ValueVector
 			bitboard::ValueVector<14> temp_vec;
@@ -843,7 +856,7 @@ namespace gadt
 			const size_t max_depth = 10;
 			const bool enable_ab = false;
 			
-			using Minimax = minimax::MinimaxSearch<tic_tac_toe::State, tic_tac_toe::Action, int64_t, INT64_MAX, true>;
+			using Minimax = minimax::MinimaxSearch<tic_tac_toe::State, tic_tac_toe::Action, int64_t, INT64_MAX, INT64_MIN, true>;
 			Minimax minimax(
 				tic_tac_toe::UpdateState,
 				tic_tac_toe::MakeAction,

@@ -120,13 +120,13 @@ namespace gadt
 		* [Action] is the game-action class, which is defined by the user.
 		* [is_debug] means some debug info would not be ignored if it is true. this may result in a little degradation of performance.
 		*/
-		template<typename State, typename Action, typename EvalType, EvalType MAX_EVAL, bool _is_debug>
+		template<typename State, typename Action, typename EvalType, bool _is_debug>
 		class MinimaxNode
 		{
 		public:
-			using pointer		= MinimaxNode<State, Action, EvalType, MAX_EVAL, _is_debug>*;
-			using reference		= MinimaxNode<State, Action, EvalType, MAX_EVAL, _is_debug>&;
-			using Node			= MinimaxNode<State, Action, EvalType, MAX_EVAL, _is_debug>;
+			using pointer		= MinimaxNode<State, Action, EvalType, _is_debug>*;
+			using reference		= MinimaxNode<State, Action, EvalType, _is_debug>&;
+			using Node			= MinimaxNode<State, Action, EvalType, _is_debug>;
 			using FuncPackage	= MinimaxFuncPackage<State, Action, EvalType, _is_debug>;
 			using Setting		= MinimaxSetting;
 			using ActionList	= typename FuncPackage::ActionList;
@@ -206,7 +206,7 @@ namespace gadt
 		* [Action] is the game-action class, which is defined by the user.
 		* [_is_debug] decides whether debug info would be ignored or not. which may cause slight degradation in performance if it is enabled.
 		*/
-		template<typename State, typename Action, typename EvalType = MinimaxEvalType, EvalType MAX_EVAL = INFINITY, bool _is_debug = false>
+		template<typename State, typename Action, typename EvalType = MinimaxEvalType, EvalType MAX_EVAL = INFINITY, EvalType MIN_EVAL = -INFINITY, bool _is_debug = false>
 		class MinimaxSearch final : public GameAlgorithmBase<State, Action, AgentIndex, _is_debug>
 		{
 
@@ -228,7 +228,7 @@ namespace gadt
 			using GameAlgorithmBase<State, Action, AgentIndex, _is_debug>::DisableJsonOutput;
 
 		public:
-			using Node			= MinimaxNode<State, Action, EvalType, MAX_EVAL, _is_debug>;
+			using Node			= MinimaxNode<State, Action, EvalType, _is_debug>;
 			using FuncPackage	= typename Node::FuncPackage;
 			using Setting		= typename Node::Setting;
 			using ActionList	= typename FuncPackage::ActionList;
@@ -279,9 +279,6 @@ namespace gadt
 				GADT_WARNING_IF(is_debug(), node.action_list().size() == 0, "MM101: empty action set");
 				
 				//pick up best value in child nodes.
-				State first_child_state = node.state();
-				_func_package.UpdateState(first_child_state, node.action_list()[0]);
-				Node first_child(first_child_state, node.depth() - 1, _func_package);
 				EvalType best_value = alpha;
 				for (size_t i = 0; i < node.action_list().size(); i++)
 				{
@@ -340,12 +337,7 @@ namespace gadt
 				std::vector<EvalType> eval_set(root.action_list().size(), EvalType());
 				size_t leaf_node_count = 0;
 
-				//create first node.
-				State first_child_state = state;
-				_func_package.UpdateState(first_child_state, root.action_list()[0]);
-				Node first_child(first_child_state, root.depth() - 1, _func_package);
-
-				EvalType best_value = static_cast<EvalType>(-MAX_EVAL);
+				EvalType best_value = static_cast<EvalType>(MIN_EVAL);
 				size_t best_action_index = 0;
 				for (size_t i = 0; i < root.action_list().size(); i++)
 				{
@@ -354,7 +346,7 @@ namespace gadt
 					_func_package.UpdateState(child_state, root.action_list()[i]);
 					Node child(child_state, root.depth() - 1, _func_package);
 					EvalType child_beta = (ALPHABETA_ENABLED ? -best_value : static_cast<EvalType>(MAX_EVAL));
-					eval_set[i] = -NegamaxEvaluateStates<JSON_ENABLED, ALPHABETA_ENABLED>(child, static_cast<EvalType>(-MAX_EVAL), child_beta , root_visual_node, leaf_node_count);
+					eval_set[i] = -NegamaxEvaluateStates<JSON_ENABLED, ALPHABETA_ENABLED>(child, static_cast<EvalType>(MIN_EVAL), child_beta , root_visual_node, leaf_node_count);
 
 					if (eval_set[i] > best_value)
 					{

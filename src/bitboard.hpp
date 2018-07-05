@@ -397,6 +397,14 @@ namespace gadt
 					_debug_data[i] = get(i);
 				}
 #endif
+
+#ifdef GADT_BITBOARD_CONSTANT_TOTAL
+				for (size_t i = 0; i < upper_bound(); i++)
+				{
+					if (get(i))
+						_total++;
+				}
+#endif
 			}
 
 			//initilize BitBoard by list
@@ -744,6 +752,12 @@ namespace gadt
 				for (size_t i = 0; i < _upper_bound; i++)
 				{
 					_debug_data[i] = (uint8_t)get(i);
+				}
+#endif
+#ifdef GADT_BITBOARD_CONSTANT_TOTAL
+				for (size_t i = 0; i < upper_bound(); i++)
+				{
+					_total+= get(i);
 				}
 #endif
 			}
@@ -1184,6 +1198,12 @@ namespace gadt
 				for (size_t i = 0; i < _upper_bound; i++)
 				{
 					_debug_data[i] = (uint8_t)get(i);
+				}
+#endif
+#ifdef GADT_BITBOARD_CONSTANT_TOTAL
+				for (size_t i = 0; i < upper_bound(); i++)
+				{
+					_total += get(i);
 				}
 #endif
 			}
