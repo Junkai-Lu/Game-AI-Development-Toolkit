@@ -6,5 +6,6 @@
 /.gitignore
 /Game-AI-Development-Toolkit
 /Debug
+/build
 /Release
 /x64

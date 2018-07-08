@@ -597,8 +597,10 @@ namespace gadt
 		class TimePoint
 		{
 		private:
-			clock_t _clock;
+
+			std::chrono::system_clock::time_point _created_time;
 			time_t _time;
+
 		public:
 
 			inline TimePoint()
@@ -612,14 +614,18 @@ namespace gadt
 			//set this time point to current time.
 			inline void reset()
 			{
-				_clock = clock();
-				_time = time(NULL);
+				_created_time = std::chrono::system_clock::now();
+				_time = clock();
 			}
 
 			//get the seconds since this time point was created.
 			inline double time_since_created() const
 			{
-				return (double)(clock() - _clock) / CLOCKS_PER_SEC;
+				using namespace std::chrono;
+				auto now = system_clock::now();
+				auto duration = duration_cast<microseconds>(now - _created_time);
+				std::cout << double(duration.count()) << std::endl;
+				return double(duration.count()) *microseconds::period::num / microseconds::period::den;
 			}
 		};
 	}

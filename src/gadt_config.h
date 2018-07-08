@@ -36,6 +36,7 @@
 	#endif
 	#include <sys/stat.h>  
 	#include <sys/types.h>
+	#include <string.h>
 	#include <errno.h> 
 	#include <unistd.h>
 	#include <dirent.h>
@@ -65,6 +66,8 @@
 #include <functional>
 #include <algorithm>
 #include <type_traits>
+#include <chrono>
+#include <unordered_map>
 
 //extra libaries.
 #include "../lib/json11/json11.hpp"
