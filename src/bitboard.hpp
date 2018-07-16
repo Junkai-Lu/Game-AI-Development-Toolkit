@@ -829,9 +829,9 @@ namespace gadt
 				GADT_WARNING_IF(GADT_BITBOARD_ENABLE_WARNING, value >= 8, "out of value.");
 #ifdef GADT_BITBOARD_CONSTANT_TOTAL
 				if (get(index) > value)
-					_total -= (get(index) - value);
+					_total -= (get(index) - (size_t)value);
 				else
-					_total += (value - get(index));
+					_total += ((size_t)value - get(index));
 #endif
 
 #ifdef GADT_BITBOARD_DEBUG_INFO
@@ -1256,9 +1256,9 @@ namespace gadt
 				GADT_WARNING_IF(GADT_BITBOARD_ENABLE_WARNING, value >= 8, "out of value.");
 #ifdef GADT_BITBOARD_CONSTANT_TOTAL
 				if (get(index) > value)
-					_total -= (get(index) - value);
+					_total -= (get(index) - (size_t)value);
 				else
-					_total += (value - get(index));
+					_total += ((size_t)value - get(index));
 #endif
 #ifdef GADT_BITBOARD_DEBUG_INFO
 				_debug_data[index] = (uint8_t)value;

@@ -58,11 +58,11 @@ namespace gadt
 			MonteCarloSetting(
 				double _timeout,
 				size_t _thread_count,
-				size_t _enable_action_policy,
+				bool _enable_action_policy,
 				AgentIndex _no_winner_index = GADT_DEFAULT_NO_WINNER_INDEX,
 				size_t _simulation_warning_length = 1000
 			) :
-				GameAlgorithmSettingBase(_timeout, no_winner_index),
+				GameAlgorithmSettingBase(_timeout, _no_winner_index),
 				thread_count(_thread_count),
 				enable_action_policy(_enable_action_policy),
 				simulation_warning_length(_simulation_warning_length)
@@ -466,12 +466,13 @@ namespace gadt
 			}
 
 			MonteCarloSimulation(const FuncPackage& func_package) :
+				GameAlgorithmBase<State, Action, Result, _is_debug>("Monte Carlo"),
 				_func_package(func_package),
 				_setting()
 			{
 			}
 
-			Action DoMonteCarlo(const State state, MonteCarloSetting setting)
+			Action Run(const State state, MonteCarloSetting setting)
 			{
 				_setting = setting;
 				return ExecuteMonteCarlo(state);

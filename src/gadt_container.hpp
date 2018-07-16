@@ -1299,7 +1299,7 @@ namespace gadt
 		};
 
 		/*
-		* DynamicArray is a array which allow user to dynamiclly allocate its size.
+		* StaticArray is a array which allow user to dynamiclly allocate its size.
 		*
 		* [T] is the type of element.
 		*/
@@ -1516,5 +1516,173 @@ namespace gadt
 
 		};
 
+		/*
+		* StaticArray is a array which allow user to staticly allocate its size.
+		*
+		* [T] is the type of element.
+		* [_COUNT] is the size of the array.
+		*/
+		template<typename T, size_t _MAX_SIZE>
+		class StaticArray final
+		{
+		private:
+			using pointer = T *;
+			using reference = T &;
+
+			T _elems[_MAX_SIZE];
+			size_t	_size;
+
+		public:
+
+			//default constructor
+			StaticArray() :
+				_size(0)
+			{
+			}
+
+			StaticArray(const T& default_value)
+			{
+				for (size_t i = 0; i < _MAX_SIZE; i++)
+				{
+					_elems[i] = default_value;
+				}
+			}
+
+			//copy constructor function.
+			StaticArray(const StaticArray& target) :
+				_size(0)
+			{
+				::memcpy(_elems, target._elems, _size * _MAX_SIZE);
+				_size = target._size;
+			}
+
+			//free space by ptr, return true if free successfully.
+			inline bool pop_back()
+			{
+				if (_size > 0)
+				{
+					_size--;
+					return true;
+				}
+				return false;
+			}
+
+			//copy source object to a empty space and return the pointer, return false if there are not available space.
+			bool push_back(const reference elem)//T* constructor(const T& source)
+			{
+				if (is_full() == false)
+				{
+					_elems[_size] = elem;
+					_size++;
+					return true;
+				}
+				return false;
+			}
+
+			//copy source object to a empty space and return the pointer, return false if there are not available space.
+			bool push_back(T&& elem)//T* constructor(const T& source)
+			{
+				if (is_full() == false)
+				{
+					_elems[_size] = std::move(elem);
+					_size++;
+					return true;
+				}
+				return false;
+			}
+
+			//get first element.
+			inline reference element(size_t index)
+			{
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, index >= _size, "out of range");
+				return _elems[index];
+			}
+
+			//get the element in front.
+			inline reference front()
+			{
+				return element(0);
+			}
+
+			//get the element in back.
+			inline reference back()
+			{
+				return element(_size - 1);
+			}
+
+			//swap element.
+			inline void swap(size_t fir_index, size_t sec_index)
+			{
+				T temp = element(fir_index);
+				element(fir_index) = element(sec_index);
+				element(sec_index) = temp;
+			}
+
+			//total size of alloc.
+			inline size_t max_size() const
+			{
+				return _MAX_SIZE;
+			}
+
+			//remain size in the alloc.
+			inline size_t remain_size() const
+			{
+				return max_size() - _size;
+			}
+
+			//return size of the vector.
+			inline size_t size() const
+			{
+				return _size;
+			}
+
+			//return true if there is not available space in this vector.
+			inline bool is_full() const
+			{
+				return _MAX_SIZE == _size;
+			}
+
+			//return true if this vector is empty.
+			inline bool is_empty() const
+			{
+				return _size == 0;
+			}
+
+			//pointer of first element.
+			inline pointer begin()
+			{
+				return &front();
+			}
+
+			//pointer of last element.
+			inline pointer end()
+			{
+				return &(_elems[0]) + _MAX_SIZE;
+			}
+
+			inline reference operator[](size_t index)
+			{
+				return element(index);
+			}
+
+			//get random value and remove it.
+			T get_random_and_swap_to_end_then_pop()
+			{
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, _size <= 0, "overflow");
+				size_t rnd = rand() % _size;
+				T temp = _elems[rnd];
+				swap(rnd, size() - 1);
+				pop_back();
+				return temp;
+			}
+
+			//get random value.
+			T get_random() const
+			{
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, _size <= 0, "overflow");
+				size_t rnd = rand() % _size;
+				return _elems[rnd];
+			}
+		};
 	}
 }

@@ -54,7 +54,7 @@ namespace gadt
 		inline operator bool() = delete;
 
 		//convert to singed point
-		template<typename T = uint64_t, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
+		template<typename T = size_t, typename std::enable_if<std::is_unsigned<T>::value, int>::type = 0>
 		inline BasicUPoint<T> to_unsigned() const
 		{
 			return { T(x),T(y) };

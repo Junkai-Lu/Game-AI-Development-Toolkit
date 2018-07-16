@@ -922,7 +922,7 @@ namespace gadt
 			state.dot[0][0] = tic_tac_toe::WHITE;
 			mc.InitLog(tic_tac_toe::StateToStr, tic_tac_toe::ActionToStr);
 			//mc.EnableLog();
-			tic_tac_toe::Action action = mc.DoMonteCarlo(state, setting);
+			tic_tac_toe::Action action = mc.Run(state, setting);
 			//GADT_ASSERT((action.x == 1 && action.y == 1), true);
 		}
 		void TestDynamicArray()
