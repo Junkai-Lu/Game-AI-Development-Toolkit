@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -73,6 +73,6 @@ namespace gadt
 
 		using RenjuMCTS = mcts::MonteCarloTreeSearch<RenjuState, RenjuAction, RenjuResult, true>;
 
-		void DefineRenjuShell(shell::GameShell& shell);
+		void DefineRenjuShell(shell::page::PagePtr<int> page_ptr);
 	}
 }

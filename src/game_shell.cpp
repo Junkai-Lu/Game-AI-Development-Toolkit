@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -28,36 +28,6 @@ namespace gadt
 		//shell defination.
 		namespace define
 		{
-			//get the name of command type.
-			std::string GetCommandTypeName(size_t i)
-			{
-				static const char* type_name[g_COMMAND_TYPE_NUMBER] = {
-					"DEFAULT COMMAND",
-					"DATA COMMAND",
-					"PARAMS COMMAND",
-					"DATA_AND_PARAMS_COMMAND",
-					"BOOL_PARAMS COMMAND",
-					"BOOL_DATA_AND_PARAMS_COMMAND",
-					"CHILD_PAGE"
-				};
-				return std::string(type_name[i]);
-			}
-
-			//get the symbol of command type.
-			std::string GetCommandTypeSymbol(size_t i)
-			{
-				static const char* type_symbol[g_COMMAND_TYPE_NUMBER] = {
-					"[F]",
-					"[F]",
-					"[F]",
-					"[F]",
-					"[F]",
-					"[F]",
-					"[P]"
-				};
-				return std::string(type_symbol[i]);
-			}
-
 			//default params check func.
 			bool DefaultParamsCheck(const ParamsList & list)
 			{
@@ -65,15 +35,62 @@ namespace gadt
 			}
 
 			//default no params check func.
-			bool DefaultNoParamsCheck(const ParamsList& list)
+			bool DefaultNoParamsCheck(const ParamsList & list)
 			{
-				return list.size() == 0 ? true : false;
+				return DefaultParamsCountCheck<0>(list);
 			}
 		}
 
 		//shell command class.
 		namespace command
 		{
+			//get the name of command type.
+			std::string GetCommandTypeName(CommandType type)
+			{
+				static const char* type_name[define::GADT_SHELL_COMMAND_TYPE_COUNT] = {
+					"DEFAULT COMMAND",
+					"DATA COMMAND",
+					"PARAMS COMMAND",
+					"DATA_AND_PARAMS_COMMAND",
+					"BOOL_PARAMS COMMAND",
+					"BOOL_DATA_AND_PARAMS_COMMAND"
+				};
+				return std::string(type_name[static_cast<size_t>(type)]);
+			}
+
+			//get the symbol of command type.
+			std::string GetCommandTypeSymbol(CommandType type)
+			{
+				static const char* type_symbol[define::GADT_SHELL_COMMAND_TYPE_COUNT] = {
+					"[F]",
+					"[F]",
+					"[F]",
+					"[F]",
+					"[F]",
+					"[F]"
+				};
+				return std::string(type_symbol[static_cast<size_t>(type)]);
+			}
+
+			//default constructor.
+			CommandParser::CommandParser() :
+				_is_legal(false),
+				_is_relative(true),
+				_commands(),
+				_params()
+			{
+			}
+
+			//constructor function by command string.
+			CommandParser::CommandParser(std::string original_command) :
+				_is_legal(false),
+				_is_relative(true),
+				_commands(),
+				_params()
+			{
+				_is_legal = ParseOriginalCommand(original_command);
+			}
+
 			//CommandParser
 			bool CommandParser::CheckStringLegality(std::string str)
 			{
@@ -86,10 +103,38 @@ namespace gadt
 				}
 				return true;
 			}
+
+			//get next state of current parser.
+			CommandParser CommandParser::GetNext() const
+			{
+				auto temp = _commands;
+				if (temp.size() > 0)
+				{
+					temp.pop_front();
+				}
+				return CommandParser(_is_legal, _is_relative, temp, _params);
+			}
+
+			//get parser of the path.
+			CommandParser CommandParser::GetPathParser() const
+			{
+				auto temp = _commands;
+				if (temp.size() > 0)
+				{
+					temp.pop_back();
+				}
+				return CommandParser(_is_legal, _is_relative, temp, std::vector<std::string>());
+			}
+
 			bool CommandParser::ParseParameters(std::string params_str)
 			{
 				if (params_str.length() == 0) { return true; }
-				if (params_str[0] == ' ') { return ParseParameters(params_str.substr(1, params_str.length() - 1)); }
+				while (params_str[0] == ' ')
+				{
+					params_str = params_str.substr(1, params_str.length() - 1);
+					if (params_str.length() == 0)
+						return true;
+				}
 
 				size_t divide_pos = params_str.find(" ");
 				if (divide_pos != std::string::npos)
@@ -100,12 +145,12 @@ namespace gadt
 					{
 						return false;
 					}
-					_params.push_back(param);
+					add_parameter(param);
 					return ParseParameters(remains);
 				}
 				if (CheckStringLegality(params_str))
 				{
-					_params.push_back(params_str);
+					add_parameter(params_str);
 					return true;
 				}
 				return false;
@@ -113,7 +158,17 @@ namespace gadt
 			bool CommandParser::ParseCommands(std::string cmd_str)
 			{
 				if (cmd_str.length() == 0) { return true; }
-				if (cmd_str[0] == ' ') { return ParseParameters(cmd_str.substr(1, cmd_str.length() - 1)); }
+				while (cmd_str[0] == ' ')
+				{
+					cmd_str = cmd_str.substr(1, cmd_str.length() - 1);
+					if (cmd_str.length() == 0)
+						return true;
+				}
+				if (cmd_str[0] == '/')
+				{
+					_is_relative = false;
+				}
+
 				size_t divide_pos = cmd_str.find("/");
 				if (divide_pos != std::string::npos)
 				{
@@ -123,12 +178,12 @@ namespace gadt
 					{
 						return false;
 					}
-					_commands.push_back(cmd);
+					add_command(cmd);
 					return ParseCommands(remains);
 				}
 				if (CheckStringLegality(cmd_str))
 				{
-					_commands.push_back(cmd_str);
+					add_command(cmd_str);
 					return true;
 				}
 				return false;
@@ -152,12 +207,133 @@ namespace gadt
 		namespace page
 		{
 			//ShellPageBase
-			ShellPageBase::ShellPageBase(::gadt::shell::GameShell* belonging_shell, std::string name) :
+			ShellPageBase::ShellPageBase(PageBasePtr parent_page, ShellPageBase::ShellPtr belonging_shell, std::string name, InfoFunc info_func) :
+				_parent_page(parent_page),
 				_belonging_shell(belonging_shell),
 				_name(name),
+				_info_func(info_func),
 				_index(AllocPageIndex()),
-				_info_func([]()->void {})
+				_child_pages()
 			{
+			}
+
+			//get root page of current page.
+			PageBasePtr ShellPageBase::GetRootPage()
+			{
+				if (parent_page() == nullptr)
+					return this;
+				return parent_page()->GetRootPage();
+			}
+
+			//get relative path page. return nullptr if page not found.
+			PageBasePtr ShellPageBase::GetRelativePathPage(command::CommandParser parser)
+			{
+				PageBasePtr temp_page_ptr = this;
+				if (parser.is_relative() == false)
+				{
+					temp_page_ptr = GetRootPage();
+				}
+				for (size_t i = 0; i < define::GADT_SHELL_MAX_PAGE_LAYER; i++)
+				{
+					if (parser.no_commands())
+					{
+						return temp_page_ptr;
+					}
+					else
+					{
+						std::string page_name = parser.fir_command();
+						if (page_name == define::GADT_SHELL_PAGE_LAST_STR && temp_page_ptr->parent_page() != nullptr)
+						{
+							temp_page_ptr = temp_page_ptr->parent_page();
+							parser.to_next_command();
+						}
+						else if (page_name == define::GADT_SHELL_PAGE_THIS_STR)
+						{
+							//temp_page_ptr = temp_page_ptr->parent_page();
+							parser.to_next_command();
+						}
+						else if (temp_page_ptr->ExistChildPage(page_name))
+						{
+							temp_page_ptr = temp_page_ptr->GetChildPagePtr(page_name);
+							parser.to_next_command();
+						}
+						else
+						{
+							parser.clear();
+							return nullptr;
+						}
+					}
+				}
+				return nullptr;
+			}
+
+			//print path of current page 
+			void ShellPageBase::PrintPath() const
+			{
+				if (parent_page() == nullptr)
+				{
+					console::Cprintf(name(), console::ConsoleColor::Yellow);
+				}
+				else
+				{
+					parent_page()->PrintPath();
+					console::Cprintf(name(), console::ConsoleColor::Green);
+				}
+				std::cout << "/";
+			}
+
+			//return true if the page exist.
+			bool ShellPageBase::ExistChildPage(std::string name) const
+			{
+				if (_child_pages.count(name) > 0)
+					return true;
+				return false;
+			}
+
+			//get child page pointer by name.
+			PageBasePtr ShellPageBase::GetChildPagePtr(std::string name) const
+			{
+				if (ExistChildPage(name))
+				{
+					return _child_pages.at(name).ptr.get();
+				}
+				return nullptr;
+			}
+
+			//get child page description by name.
+			std::string ShellPageBase::GetChildPageDesc(std::string name) const
+			{
+				if (ExistChildPage(name))
+				{
+					return _child_pages.at(name).desc;
+				}
+				return "";
+			}
+
+			//get child page help description by name.
+			std::string ShellPageBase::GetChildPageHelpDesc(std::string name) const
+			{
+				if (ExistChildPage(name))
+				{
+					return _child_pages.at(name).help_desc;
+				}
+				return "";
+			}
+
+			//return true if command name is legal.
+			bool ShellPageBase::CheckCommandNameLegality(std::string command) const
+			{
+				if (command.size() > define::GADT_SHELL_COMMAND_MAX_NAME_LENGTH)
+				{
+					console::PrintError("command '" + command + "' out of max length");
+					return false;
+				}
+				if (!command::CommandParser::CheckStringLegality(command))
+				{
+					console::PrintError("illegal command name '" + command + "'.");
+					return false;
+				}
+				return true;
 			}
 		}
 
@@ -166,38 +342,32 @@ namespace gadt
 
 		//public constructor function
 		GameShell::GameShell(std::string name) :
-			_page_table(),
 			_name(name),
-			_info_func([]()->void {}),
-			_shell_cmd(this,"shell_cmd")
+			_shell_cmd(nullptr, this, "shell_cmd", []() {}),
+			_root_page(nullptr, this, "root", DefaultInfoFunc),
+			_focus_page(&_root_page)
 		{
-			ShellCmdInit();
+			InitializeShellCommands();
+		}
+
+		//default info func of game shell.
+		void GameShell::DefaultInfoFunc()
+		{
+			timer::TimePoint tp;
+			console::Cprintf("=============================================\n", console::ConsoleColor::Gray);
+			console::Cprintf("       Game AI Development Toolkit\n", console::ConsoleColor::Yellow);
+			console::Cprintf("       Copyright @ Junkai-Lu 2018 \n", console::ConsoleColor::Yellow);
+			console::Cprintf("=============================================", console::ConsoleColor::Gray);
+			console::PrintEndLine<2>();
 		}
 
 		//print current dir.
-		void GameShell::PrintDir() const
+		void GameShell::PrintFocusPath() const
 		{
 			//print shell name.
 			console::Cprintf(GameShell::focus_game()->name(), console::ConsoleColor::Purple);
 			std::cout << " @ ";
-			//console::Cprintf(_name, console::ConsoleColor::Yellow);
-
-			//print dir
-			bool is_first = false;
-			for (auto page_name : _dir_list)
-			{
-				if (is_first == true)
-				{
-					std::cout << "/";
-					console::Cprintf(page_name, console::ConsoleColor::Green);
-				}
-				else
-				{
-					console::Cprintf(page_name, console::ConsoleColor::Yellow);
-					is_first = true;
-				}
-			}
-			std::cout << "/";
+			focus_page()->PrintPath();
 		}
 
 		//print input tips.
@@ -205,7 +375,7 @@ namespace gadt
 		{
 			if (focus_game() != nullptr)
 			{
-				focus_game()->PrintDir();
+				focus_game()->PrintFocusPath();
 				if (tip != "")
 				{
 					std::cout << "/";
@@ -219,13 +389,12 @@ namespace gadt
 			}
 		}
 
-		//return to root page
-		void GameShell::ReturnToPreviousPage()
+		std::string GameShell::GetInput()
 		{
-			if (_dir_list.size() > 1)
-			{
-				_dir_list.pop_back();
-			}
+			char buffer[256];
+			std::cin.clear();
+			std::cin.getline(buffer, 256);
+			return std::string(buffer);
 		}
 
 		//clear screen
@@ -238,17 +407,16 @@ namespace gadt
 			console::Cprintf("<" + focus_page()->_name + ">", console::ConsoleColor::Yellow);
 			console::Cprintf(" ]\n", console::ConsoleColor::DeepYellow);
 			std::cout << ">> ";
-			console::Cprintf(std::string("use '") + std::string(define::g_HELP_COMMAND_NAME) + std::string("' to get more command\n\n"), console::ConsoleColor::DeepGreen);
+			console::Cprintf(std::string("use '") + std::string(define::GADT_SHELL_COMMAND_HELP_NAME) + std::string("' to get more command\n\n"), console::ConsoleColor::DeepGreen);
 		}
 
 		//initialize shell commands.
-		void GameShell::ShellCmdInit()
+		void GameShell::InitializeShellCommands()
 		{
 			using CommandPtr = typename page::ShellPage<int>::CommandPtr;
 			using ParamsCommand = typename page::ShellPage<int>::ParamsCommand;
-			using ChildPageCommand = typename page::ShellPage<int>::ChildPageCommand;
 
-			auto ListCommandFunc = [&](const ParamsList& params)->void{
+			auto ListCommandFunc = [&](const ParamsList& params)->void {
 				if (params.size() == 0)
 				{
 					focus_page()->PrintCommandList("-n");
@@ -258,7 +426,7 @@ namespace gadt
 					focus_page()->PrintCommandList(params[0]);
 				}
 			};
-			auto ListCommandCond = [](const ParamsList& params)->bool{
+			auto ListCommandCond = [](const ParamsList& params)->bool {
 				if (params.size() == 0)
 				{
 					return true;
@@ -269,10 +437,10 @@ namespace gadt
 					{
 						return true;
 					}
-					console::PrintMessage("'" + std::string(define::g_LIST_COMMAND_NAME) + "' only accept -n or -t as parameter");
+					console::PrintMessage("'" + std::string(define::GADT_SHELL_COMMAND_LIST_NAME) + "' only accept -n or -t as parameter");
 					return false;
 				}
-				console::PrintMessage("'" + std::string(define::g_LIST_COMMAND_NAME) + "' only accept one paramater");
+				console::PrintMessage("'" + std::string(define::GADT_SHELL_COMMAND_LIST_NAME) + "' only accept one paramater");
 				return false;
 			};
 
@@ -294,7 +462,7 @@ namespace gadt
 				else if (params.size() == 1)
 				{
 					std::string name = params.front();
-					if (this->focus_page()->ExistFunc(name))
+					if (this->focus_page()->ExistCommand(name) || this->focus_page()->ExistChildPage(name))
 					{
 						return true;
 					}
@@ -304,57 +472,58 @@ namespace gadt
 						return false;
 					}
 				}
-				console::PrintMessage(std::string("'") + define::g_HELP_COMMAND_NAME + "' only accept one parameter.");
+				console::PrintMessage(std::string("'") + define::GADT_SHELL_COMMAND_HELP_NAME + "' only accept one parameter.");
 				return false;
 			};
 
-			auto root_command = CommandPtr(new ChildPageCommand(
-				define::g_ROOT_COMMAND_NAME, 
-				define::g_ROOT_COMMAND_DESC, 
-				this, 
-				define::g_ROOT_COMMAND_NAME
+			auto cd_command = CommandPtr(new ParamsCommand(
+				define::GADT_SHELL_COMMAND_CD_NAME,
+				define::GADT_SHELL_COMMAND_CD_DESC,
+				[&](const ParamsList& params)->void { 
+					ChangeDirectory(params[0]); 
+				},
+				define::DefaultParamsCountCheck<1>
 			));
-			auto return_command = CommandPtr(new ChildPageCommand(
-				define::g_RETURN_COMMAND_NAME, 
-				define::g_RETURN_COMMAND_DESC, 
-				this,
-				define::g_RETURN_COMMAND_NAME
-			));
+			/*auto bat_command = CommandPtr(new ParamsCommand(
+				define::GADT_SHELL_COMMAND_BAT_NAME,
+				define::GADT_SHELL_COMMAND_BAT_DESC,
+				[&](const ParamsList& params)->void { set_focus_page(nullptr); },
+				define::DefaultParamsCountCheck<1>
+			));*/
 			auto exit_command = CommandPtr(new ParamsCommand(
-				define::g_EXIT_COMMAND_NAME, 
-				define::g_EXIT_COMMAND_DESC, 
-				[&](const ParamsList& params)->void { this->_dir_list.clear(); },
+				define::GADT_SHELL_COMMAND_EXIT_NAME,
+				define::GADT_SHELL_COMMAND_EXIT_DESC,
+				[&](const ParamsList& params)->void { set_focus_page(nullptr); },
 				define::DefaultNoParamsCheck
 			));
 			auto list_command = CommandPtr(new ParamsCommand(
-				define::g_LIST_COMMAND_NAME, 
-				define::g_LIST_COMMAND_DESC, 
-				ListCommandFunc, 
+				define::GADT_SHELL_COMMAND_LIST_NAME,
+				define::GADT_SHELL_COMMAND_LIST_DESC,
+				ListCommandFunc,
 				ListCommandCond
 			));
 			auto help_command = CommandPtr(new ParamsCommand(
-				define::g_HELP_COMMAND_NAME,
-				define::g_HELP_COMMAND_DESC,
+				define::GADT_SHELL_COMMAND_HELP_NAME,
+				define::GADT_SHELL_COMMAND_HELP_DESC,
 				HelpCommandFunc,
 				HelpCommandCond
 			));
 			auto clear_command = CommandPtr(new ParamsCommand(
-				define::g_CLEAR_COMMAND_NAME, 
-				define::g_CLEAR_COMMAND_DESC, 
-				[&](const ParamsList& data)->void { this->ClearScreen(); }, 
+				define::GADT_SHELL_COMMAND_CLEAR_NAME,
+				define::GADT_SHELL_COMMAND_CLEAR_DESC,
+				[&](const ParamsList& data)->void { this->ClearScreen(); },
 				define::DefaultNoParamsCheck
 			));
 
-			_shell_cmd.InsertCommand(define::g_ROOT_COMMAND_NAME	, root_command);
-			_shell_cmd.InsertCommand(define::g_RETURN_COMMAND_NAME	, return_command);
-			_shell_cmd.InsertCommand(define::g_EXIT_COMMAND_NAME	, exit_command);
-			_shell_cmd.InsertCommand(define::g_LIST_COMMAND_NAME	, list_command);
-			_shell_cmd.InsertCommand(define::g_HELP_COMMAND_NAME	, help_command);
-			_shell_cmd.InsertCommand(define::g_CLEAR_COMMAND_NAME	, clear_command);
+			_shell_cmd.add_command(define::GADT_SHELL_COMMAND_CD_NAME, cd_command);
+			_shell_cmd.add_command(define::GADT_SHELL_COMMAND_EXIT_NAME, exit_command);
+			_shell_cmd.add_command(define::GADT_SHELL_COMMAND_LIST_NAME, list_command);
+			_shell_cmd.add_command(define::GADT_SHELL_COMMAND_HELP_NAME, help_command);
+			_shell_cmd.add_command(define::GADT_SHELL_COMMAND_CLEAR_NAME, clear_command);
 		}
 
 		//execute command in focus page.
-		void GameShell::ExecuteCommandInFocusPage(std::string command, const ParamsList& params)
+		void GameShell::ExecuteCommand(page::PageBasePtr page_ptr, std::string command, const ParamsList& params)
 		{
 			if (_shell_cmd.ExistCommand(command))
 			{
@@ -362,86 +531,66 @@ namespace gadt
 			}
 			else
 			{
-				focus_page()->ExecuteCommand(command, params);
+				page_ptr->ExecuteCommand(command, params);
 			}
 		}
 
-		//enter page by name.
-		void GameShell::EnterPage(std::string name)
+		//run single command.
+		bool GameShell::RunSingleCommand(std::string command_str)
 		{
-			if (name == define::g_RETURN_COMMAND_NAME)
+			command::CommandParser parser(command_str);
+			if (parser.no_commands() || !parser.is_legal())
 			{
-				ReturnToPreviousPage();
+				console::PrintError("inavailable command!");
+				return false;
 			}
-			else if (name == define::g_ROOT_COMMAND_NAME)
+			auto target_page_ptr = focus_page()->GetRelativePathPage(parser.GetPathParser());
+			if (target_page_ptr != nullptr)
 			{
-				ReturnToRootPage();
+				std::string cmd_name = parser.fir_command();
+				if (target_page_ptr->ExistCommand(cmd_name) || exist_shell_cmd(cmd_name))
+				{
+					ExecuteCommand(target_page_ptr, parser.fir_command(), parser.params());
+					//if (!no_focus_page())//exit command was executed.
+					//	set_focus_page(temp_page_ptr);
+					return true;
+				}
+				else
+				{
+					console::PrintError("command " + cmd_name + " not found");
+				}
 			}
 			else
 			{
-				_dir_list.push_back(name);
+				console::PrintError(name() + ": unexcepted command: " + command_str);
 			}
+			return false;
 		}
 
-		//start from appointed page.
-		void GameShell::StartFromPage(std::string name, std::string init_command)
+		//start from root.
+		void GameShell::Run(std::string init_command)
 		{
-			if (page_exist(name))
+			be_focus();
+			ClearScreen();
+			
+			std::string command = init_command;
+			for (;;)
 			{
-				be_focus();
-				_dir_list.push_back(name);
-				ClearScreen();
-				command::CommandParser parser(init_command);
-				for (;;)
+				if (no_focus_page())
 				{
-					if (_dir_list.empty())
-					{
-						return;
-					}
-					if (parser.no_commands() || !parser.is_legal())
-					{
-						InputTip();
-						std::string original_command = GetInput();
-						parser.refresh(original_command);
-						if (parser.is_legal() == false)
-						{
-							console::PrintError("inavailable command!");
-							parser.clear();
-						}
-					}
-					else
-					{
-						//is the last command, excute it.
-						if (parser.is_last_command())
-						{
-							ExecuteCommandInFocusPage(parser.fir_command(), parser.params());
-							parser.clear();
-						}
-						else
-						{
-							//enter next page.
-							std::string page_name = parser.fir_command();
-							if (page_exist(page_name) && 
-								(
-									focus_page()->ExistChildPage(page_name) ||
-									page_name == define::g_RETURN_COMMAND_NAME ||
-									page_name == define::g_ROOT_COMMAND_NAME
-								)
-								)
-							{
-								EnterPage(page_name);
-								parser.to_next_command();
-							}
-							else
-							{
-								console::PrintError("page " + page_name + " not found");
-								parser.clear();
-							}
-						}
-					}
+					return;//exit command was executed.
+				}
+				if (command.empty())
+				{
+					InputTip();
+					command = GetInput();
+				}
+				else
+				{
+					RunSingleCommand(command);
+					command.clear();
 				}
 			}
-			console::PrintError("page " + name + "not found");
 		}
 	}
 }

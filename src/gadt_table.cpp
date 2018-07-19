@@ -124,16 +124,6 @@ namespace gadt
 		{
 		}
 
-		////constructor function with initializer list(string).
-		//Table::Table(size_t column_size, size_t row_size, std::initializer_list<std::initializer_list<std::string>> list) :
-		//	_cells(column_size, row_size, list),
-		//	_column_width(column_size, TABLE_DEFAULT_WIDTH),
-		//	_enable_title(false),
-		//	_title_cell(),
-		//	_table_color(ConsoleColor::Gray)
-		//{
-		//}
-
 		//print table
 		void Table::Print(TableFrame frame_mode, TableIndex index_mode)
 		{
@@ -153,6 +143,9 @@ namespace gadt
 			*11: inner horizon line
 			*12: inner vectical line
 			*/
+
+			if (number_of_columns() == 0 || number_of_rows() == 0)
+				return;
 
 			std::vector<std::string> FRAME;
 			

@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,9 @@ namespace gadt
 {
 	namespace breakthrough
 	{
-		void DefineBreakthroughShell(shell::GameShell & shell)
+		void DefineBreakthroughShell(shell::page::PagePtr<int> page_ptr)
 		{
-			auto bt = shell.CreateShellPage<BtState>("breakthrough");
+			auto bt = page_ptr->CreateChildPage<BtState>("breakthrough", "breakthrough game");
 			bt->AddFunction("print", "print state", [](BtState& state)->void {state.Print(); });
 			bt->AddFunction("random", "get random action", [](BtState& state)->void {
 				BtActionGenerator generator(state);

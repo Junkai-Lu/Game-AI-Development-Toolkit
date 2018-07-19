@@ -45,34 +45,13 @@ void ShellDefine()
 {
 	shell::GameShell gadt("GADT");
 
-	//Define Root Page.
-	gadt.SetDefaultInfoFunc([]()->void{
-		console::Cprintf("=============================================\n", console::ConsoleColor::Gray);
-		console::Cprintf("       Game AI Development Toolkit\n", console::ConsoleColor::Yellow);
-		console::Cprintf("       Copyright @ Junkai-Lu 2018\n", console::ConsoleColor::Yellow);
-		console::Cprintf("=============================================", console::ConsoleColor::Gray);
-		console::PrintEndLine<2>();
-	});
+	auto test = gadt.root()->CreateChildPage("test", "start unit test");
+	auto game = gadt.root()->CreateChildPage("game", "game examples");
+	auto doc  = gadt.root()->CreateChildPage("doc", "lib documents");
 
-	auto* root = gadt.CreateShellPage("root");
-	auto* test = gadt.CreateShellPage("test");
-	auto* game = gadt.CreateShellPage("game");
-	auto* doc  = gadt.CreateShellPage("doc");
-	auto* mcts = gadt.CreateShellPage("mcts");
-
-
-	root->AddChildPage("test", "start unit test");
-	root->AddChildPage("game", "game examples");
-	root->AddChildPage("doc", "lib documents");
-
-	breakthrough::DefineBreakthroughShell(gadt);
-	renju::DefineRenjuShell(gadt);
-	ewn::DefineEwnShell(gadt);
-	
-
-	game->AddChildPage("renju", "renju game");
-	game->AddChildPage("ewn", "EinSteinwürfeltnicht! game");
-	game->AddChildPage("breakthrough", "breakthrough game");
+	breakthrough::DefineBreakthroughShell(game);
+	renju::DefineRenjuShell(game);
+	ewn::DefineEwnShell(game);
 
 	//Unit Test Page
 	for (auto p : unittest::func_list)
@@ -87,12 +66,9 @@ void ShellDefine()
 			unittest::RunTest(p);
 		}
 	});
-	test->AddChildPage("mcts", "monte carlo tree search test");
-	mcts->AddFunction("node", "node part", [](){unittest::TestMctsNode(); });
-	mcts->AddFunction("search","search part", [](){unittest::TestMctsSearch(); });
 
 	//Start Shell
-	gadt.StartFromPage("root","test/");
+	gadt.Run();
 }
 
 int main()

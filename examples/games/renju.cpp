@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -119,9 +119,9 @@ namespace gadt
 			PrintRenjuState(temp);
 		}
 
-		void DefineRenjuShell(shell::GameShell& shell)
+		void DefineRenjuShell(shell::page::PagePtr<int> page_ptr)
 		{
-			auto* renju = shell.CreateShellPage<RenjuState>("renju", 1);
+			auto renju = page_ptr->CreateChildPage<RenjuState>("renju", "renju game", 1);
 			renju->AddFunction("print", "print state", [](RenjuState& state) {
 				PrintRenjuState(state);
 			});

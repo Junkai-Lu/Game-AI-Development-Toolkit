@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -216,9 +216,9 @@ namespace gadt
 			return false;
 		}
 
-		void DefineEwnShell(shell::GameShell& shell)
+		void DefineEwnShell(shell::page::PagePtr<int> page_ptr)
 		{
-			auto ewn = shell.CreateShellPage<EwnState>("ewn", Formation{ 1,2,3,4,5,6 }, Formation{ 1,2,3,4,5,6 });
+			auto ewn = page_ptr->CreateChildPage<EwnState>("ewn","EinSteinwürfeltnicht! game",  Formation{ 1,2,3,4,5,6 }, Formation{ 1,2,3,4,5,6 });
 
 			ewn->AddFunction("print", "print state", [](EwnState& state)->void {state.Print(); });
 

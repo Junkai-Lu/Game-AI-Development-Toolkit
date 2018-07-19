@@ -624,7 +624,6 @@ namespace gadt
 				using namespace std::chrono;
 				auto now = system_clock::now();
 				auto duration = duration_cast<microseconds>(now - _created_time);
-				std::cout << double(duration.count()) << std::endl;
 				return double(duration.count()) *microseconds::period::num / microseconds::period::den;
 			}
 		};

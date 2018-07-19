@@ -38,69 +38,83 @@ namespace gadt
 		//shell defination.
 		namespace define
 		{
-			constexpr const size_t g_COMMAND_TYPE_NUMBER = 7;		//command type number.
-			constexpr const size_t g_MAX_COMMAND_LENGTH = 20;		//max length of the command. 
-			constexpr const size_t g_MAX_COMMAND_DESC_LENGTH = 40;	//max length of the command. 
+			constexpr const size_t GADT_SHELL_COMMAND_TYPE_COUNT = 6;		//command type number.
+			constexpr const size_t GADT_SHELL_COMMAND_MAX_NAME_LENGTH = 20;	//max length of the command. 
+			constexpr const size_t GADT_SHELL_COMMAND_MAX_DESC_LENGTH = 40;	//max length of the command. 
+			constexpr const size_t GADT_SHELL_MAX_PAGE_LAYER = 256;			//max page layer. 
+
+			constexpr const char*  GADT_SHELL_PAGE_LAST_STR = "..";
+			constexpr const char*  GADT_SHELL_PAGE_THIS_STR = ".";
+
+			constexpr const char*  GADT_SHELL_COMMAND_SYMBOL = "[F]";
+			constexpr const char*  GADT_SHELL_PAGE_SYMBOL = "[P]";
 
 			//list command, default is 'ls'
-			constexpr const char*  g_LIST_COMMAND_NAME = "ls";	
-			constexpr const char*  g_LIST_COMMAND_DESC = "get command list";
+			constexpr const char*  GADT_SHELL_COMMAND_LIST_NAME = "ls";	
+			constexpr const char*  GADT_SHELL_COMMAND_LIST_DESC = "get command list";
 
 			//help command, default is 'help'
-			constexpr const char*  g_HELP_COMMAND_NAME = "help";	
-			constexpr const char*  g_HELP_COMMAND_DESC = "get all shell command";
-
-			//command that return to previous page, default is '..'
-			constexpr const char*  g_RETURN_COMMAND_NAME = "..";	
-			constexpr const char*  g_RETURN_COMMAND_DESC = "return to previous menu.";
-
-			//command that return to root page, default is '.'
-			constexpr const char*  g_ROOT_COMMAND_NAME = ".";		
-			constexpr const char*  g_ROOT_COMMAND_DESC = "return to root page.";
+			constexpr const char*  GADT_SHELL_COMMAND_HELP_NAME = "help";	
+			constexpr const char*  GADT_SHELL_COMMAND_HELP_DESC = "get all shell command";
 
 			//clean screen command, default is 'clear'
-			constexpr const char*  g_CLEAR_COMMAND_NAME = "clear";	
-			constexpr const char*  g_CLEAR_COMMAND_DESC = "clean screen.";
+			constexpr const char*  GADT_SHELL_COMMAND_CLEAR_NAME = "clear";	
+			constexpr const char*  GADT_SHELL_COMMAND_CLEAR_DESC = "clean screen.";
 
 			//command that exit the program, default is 'exit'
-			constexpr const char*  g_EXIT_COMMAND_NAME = "exit";
-			constexpr const char*  g_EXIT_COMMAND_DESC = "exit program.";
+			constexpr const char*  GADT_SHELL_COMMAND_EXIT_NAME = "exit";
+			constexpr const char*  GADT_SHELL_COMMAND_EXIT_DESC = "exit program.";
 
-			//get the name of command type.
-			std::string GetCommandTypeName(size_t i);
+			//command that is uese to change directory, default is 'cd'
+			constexpr const char*  GADT_SHELL_COMMAND_CD_NAME = "cd";
+			constexpr const char*  GADT_SHELL_COMMAND_CD_DESC = "change directory.";
+
+			//command that is uese to run batch file, default is 'bat'
+			constexpr const char*  GADT_SHELL_COMMAND_BAT_NAME = "bat";
+			constexpr const char*  GADT_SHELL_COMMAND_BAT_DESC = "run batch file.";
+
 			
-			//get the symbol of command type.
-			std::string GetCommandTypeSymbol(size_t i);
 
 			//default params check func.
 			bool DefaultParamsCheck(const ParamsList& list);
 
+			//default params count check func.
+			template<size_t COUNT>
+			bool DefaultParamsCountCheck(const ParamsList& list)
+			{
+				return list.size() == COUNT ? true : false;
+			}
+
 			//default no params check func.
 			bool DefaultNoParamsCheck(const ParamsList& list);
-
-
 		}
 
 		//shell command class.
 		namespace command
 		{
 			//command type
-			enum CommandType :uint8_t
+			enum class CommandType :uint8_t
 			{
 				DEFAULT_COMMAND = 0,
 				DATA_COMMAND = 1,
 				PARAMS_COMMAND = 2,
 				DATA_AND_PARAMS_COMMAND = 3,
 				BOOL_PARAMS_COMMAND = 4,
-				BOOL_DATA_AND_PARAMS_COMMAND = 5,
-				CHILD_PAGE_COMMAND = 6
+				BOOL_DATA_AND_PARAMS_COMMAND = 5
 			};
+
+			//get the name of command type.
+			std::string GetCommandTypeName(CommandType type);
+
+			//get the symbol of command type.
+			std::string GetCommandTypeSymbol(CommandType type);
 
 			//Command Parser.
 			class CommandParser
 			{
 			private:
 				bool		_is_legal;
+				bool		_is_relative;
 				DirList		_commands;
 				ParamsList	_params;
 
@@ -116,34 +130,15 @@ namespace gadt
 				bool ParseOriginalCommand(std::string original_command);
 
 				//constructor by initialized.
-				CommandParser(bool is_legal, const std::list<std::string>& commands, const std::vector<std::string>& params) :
+				CommandParser(bool is_legal, bool is_relative, const std::list<std::string>& commands, const std::vector<std::string>& params) :
 					_is_legal(is_legal),
+					_is_relative(is_relative),
 					_commands(commands),
 					_params(params)
 				{
 				}
 
 			public:
-
-				//return true if the string is legal
-				static bool CheckStringLegality(std::string str);
-
-				//default constructor.
-				CommandParser() :
-					_is_legal(false),
-					_commands(),
-					_params()
-				{
-				}
-
-				//constructor function by command string.
-				CommandParser(std::string original_command) :
-					_is_legal(false),
-					_commands(),
-					_params()
-				{
-					_is_legal = ParseOriginalCommand(original_command);
-				}
 
 				//constructor function by parent command parser
 				inline void to_next_command()
@@ -165,11 +160,31 @@ namespace gadt
 					return _is_legal;
 				}
 
+				//return true if the parser is relative path.
+				inline bool is_relative() const
+				{
+					return _is_relative;
+				}
+
 				//refresh parser.
 				inline void refresh(std::string original_command)
 				{
 					clear();
 					_is_legal = ParseOriginalCommand(original_command);
+				}
+
+				//add command if it is not empty
+				inline void add_command(std::string cmd)
+				{
+					if (cmd.length() > 0)
+						_commands.push_back(cmd);
+				}
+
+				//add parameter if it is not empty
+				inline void add_parameter(std::string param)
+				{
+					if (param.length() > 0)
+						_params.push_back(param);
 				}
 
 				//return true if the command is the only command
@@ -221,16 +236,32 @@ namespace gadt
 					return "";
 				}
 
-				//get next state of current parser.
-				CommandParser GetNext() const
+				//get the last command.
+				inline std::string last_command() const
 				{
-					auto temp = _commands;
-					if (temp.size() > 0)
+					if (_is_legal && _commands.size() > 0)
 					{
-						temp.pop_front();
+						return _commands.back();
 					}
-					return CommandParser(_is_legal, temp, _params);
+					return "";
 				}
+
+			public:
+
+				//default constructor.
+				CommandParser();
+
+				//constructor function by command string.
+				CommandParser(std::string original_command);
+
+				//return true if the string is legal
+				static bool CheckStringLegality(std::string str);
+
+				//get next state of current parser.
+				CommandParser GetNext() const;
+
+				//get parser of the path.
+				CommandParser GetPathParser() const;
 			};
 
 			//Command Data Base
@@ -323,47 +354,68 @@ namespace gadt
 			template<typename DataType>
 			class BoolDataAndParamsCommand;
 
-			//child page record.
+			//information of single command.
 			template<typename DataType>
-			class ChildPageCommand;
+			struct CommandInfo
+			{
+				CommandType type;
+				std::string desc;
+				std::string help_desc;
+				std::unique_ptr<CommandBase<DataType>> ptr;
+			};
 		}
 
 		//shell pages class
 		namespace page
 		{
+			class ShellPageBase;
+
+			template<typename DataType>
+			class ShellPage;
+
+			using PageBasePtr = ShellPageBase*;
+			using PageBaseHandle = std::unique_ptr<ShellPageBase>;
+
+			//information of single page.
+			struct PageInfo
+			{
+				std::string desc;
+				std::string help_desc;
+				PageBaseHandle ptr;
+			};
+
 			//ShellPageBase
 			class ShellPageBase
 			{
 				friend class ::gadt::shell::GameShell;
-			public:
+			
+			protected:
+				
+				using ShellPtr		= GameShell * ;
+				using PageTable		= std::map<std::string, PageInfo>;
 				using InfoFunc		= std::function<void()>;
 				using CommandParser	= command::CommandParser;
 
 			private:
-				GameShell*		_belonging_shell;	//the game shell this page belong to.
-				std::string		_name;				//name, each name correspond to one page in a game shell.
-				size_t			_index;				//page index, each page have a unique index.
-				ShellPageBase*	_call_source;		//call source point to the page that call this page.
+
+				const PageBasePtr	_parent_page;		//parent page of this page.
+				const ShellPtr		_belonging_shell;	//the game shell this page belong to.
+				std::string			_name;				//name, each name correspond to one page in a game shell.
+				InfoFunc			_info_func;			//info function. would be called before show menu.
+				size_t				_index;				//page index, each page have a unique index.
+				PageTable			_child_pages;	//child pages of this page.
 
 			protected:
 
-				InfoFunc _info_func;			//info function. would be called before show menu.
-
-				inline void set_call_source(ShellPageBase* call_source)
+				inline PageBasePtr parent_page() const
 				{
-					_call_source = call_source;
+					return _parent_page;
 				}
 
 				//get belonging shell.
-				inline GameShell* belonging_shell() const
+				inline ShellPtr belonging_shell() const
 				{
 					return _belonging_shell;
-				}
-
-				//get call source.
-				inline ShellPageBase* call_source() const
-				{
-					return _call_source;
 				}
 
 				//get page name.
@@ -378,6 +430,32 @@ namespace gadt
 					return _index;
 				}
 
+				//information function
+				inline InfoFunc info_func() const
+				{
+					return _info_func;
+				}
+
+				//add child page to child pages.
+				inline void add_child_page(std::string page_name, PageBaseHandle& page_ptr, std::string desc, std::string help_desc)
+				{
+					_child_pages.insert(std::pair<std::string, PageInfo>(page_name, PageInfo{ desc, help_desc, std::move(page_ptr) }));
+				}
+
+				//return child pages.
+				inline const PageTable& child_pages() const
+				{
+					return _child_pages;
+				}
+
+			protected:
+
+				//create a new page.
+				ShellPageBase(PageBasePtr parent_page ,ShellPtr belonging_shell, std::string name, InfoFunc info_func);
+
+				//copy constructor function is disallowed.
+				ShellPageBase(ShellPageBase& sb) = delete;
+
 				//allocate page index.
 				static inline size_t AllocPageIndex()
 				{
@@ -385,11 +463,29 @@ namespace gadt
 					return page_index++;
 				}
 
-				//create a new page.
-				ShellPageBase(GameShell* belonging_shell, std::string name);
+				//get root page of current page.
+				PageBasePtr GetRootPage();
 
-				//copy constructor function is disallowed.
-				ShellPageBase(ShellPageBase& sb) = delete;
+				//get relative path page. return nullptr if page not found.
+				PageBasePtr GetRelativePathPage(command::CommandParser parser);
+
+				//print path of current page 
+				void PrintPath() const;
+
+				//return true if the page exist.
+				bool ExistChildPage(std::string name) const;
+
+				//get child page pointer by name.
+				PageBasePtr GetChildPagePtr(std::string name) const;
+
+				//get child page description by name.
+				std::string GetChildPageDesc(std::string name) const;
+
+				//get child page help description by name.
+				std::string GetChildPageHelpDesc(std::string name) const;
+
+				//return true if command name is legal.
+				bool CheckCommandNameLegality(std::string command) const;
 
 				//execute command.
 				virtual void ExecuteCommand(std::string command, const ParamsList&) = 0;
@@ -400,20 +496,17 @@ namespace gadt
 				//return true if the command exist.
 				virtual bool ExistCommand(std::string name) const = 0;
 
-				//return true if the function exist.
-				virtual bool ExistFunc(std::string name) const = 0;
-
-				//return true if the page exist.
-				virtual bool ExistChildPage(std::string name) const = 0;
-
 			public:
 
 				virtual ~ShellPageBase() = default;
 
 				//add info function about this page, the func would be execute before the page works. 
-				inline void SetInfoFunc(InfoFunc info_func)
+				void SetInfoFunc(InfoFunc info_func, bool recursively = true)
 				{
 					_info_func = info_func;
+					if (recursively)
+						for (auto& child_page : _child_pages)
+							child_page.second.ptr->SetInfoFunc(info_func, recursively);
 				}
 			};
 
@@ -424,6 +517,9 @@ namespace gadt
 			private:
 				friend class ::gadt::shell::GameShell;
 
+				using ShellPageBase::ShellPtr;
+				using ShellPageBase::PageTable;
+				
 				using CommandBase					= command::CommandBase<DataType>;
 				using DefaultCommand				= command::DefaultCommand<DataType>;
 				using DataCommand					= command::DataCommand<DataType>;
@@ -431,7 +527,6 @@ namespace gadt
 				using DataAndParamsCommand			= command::DataAndParamsCommand<DataType>;
 				using BoolParamsCommand				= command::BoolParamsCommand<DataType>;
 				using BoolDataAndParamsCommand		= command::BoolDataAndParamsCommand<DataType>;
-				using ChildPageCommand				= command::ChildPageCommand<DataType>;
 				using CommandPtr					= std::unique_ptr<CommandBase>;
 				using DefaultCommandFunc			= typename CommandBase::DefaultCommandFunc;
 				using DataCommandFunc				= typename CommandBase::DataCommandFunc;
@@ -439,38 +534,54 @@ namespace gadt
 				using DataAndParamsCommandFunc		= typename CommandBase::DataAndParamsCommandFunc;
 				using BoolParamsCommandFunc			= typename CommandBase::BoolParamsCommandFunc;
 				using BoolDataAndParamsCommandFunc	= typename CommandBase::BoolDataAndParamsCommandFunc;
-				
+
 			private:
 
 				DataType _data;											//data of the page.
 				std::map<std::string, CommandPtr>		_command_list;	//command list
 				std::vector<std::vector<std::string>>	_cmd_name_list;	//list of commands by names.
-
+				
 			private:
+
+				//data operator
+				inline DataType& data()
+				{
+					return _data;
+				}
+
+				
+				//insert command.
+				inline void add_command(std::string name, CommandPtr& cmd_data_ptr)
+				{
+					_cmd_name_list[static_cast<size_t>(cmd_data_ptr.get()->type())].push_back(name);
+					_command_list.insert(std::pair<std::string, CommandPtr>(name, std::move(cmd_data_ptr)));
+				}
+
+			protected:
 
 				//print command list
 				void PrintCommandList(std::string param) const override
 				{
 					constexpr size_t SYMBOL_WIDTH = 3;
-					constexpr size_t NAME_WIDTH = (define::g_MAX_COMMAND_LENGTH + 1) / 2;
-					constexpr size_t DESC_WIDTH = (define::g_MAX_COMMAND_DESC_LENGTH + 1);
+					constexpr size_t NAME_WIDTH = (define::GADT_SHELL_COMMAND_MAX_NAME_LENGTH + 1) / 2;
+					constexpr size_t DESC_WIDTH = (define::GADT_SHELL_COMMAND_MAX_DESC_LENGTH + 1);
 
 					std::cout << std::endl;
 					if (param == "-t")
 					{
-						for (size_t i = 0; i < define::g_COMMAND_TYPE_NUMBER; i++)
+						for (size_t i = 0; i < define::GADT_SHELL_COMMAND_TYPE_COUNT; i++)
 						{
-
+							command::CommandType cmd_type = static_cast<command::CommandType>(i);
 							if (_cmd_name_list[i].size() > 0)
 							{
 								std::cout << ">> ";
-								console::Cprintf("[" + define::GetCommandTypeName(i) + "]", console::ConsoleColor::Yellow);
-								std::cout << std::endl;
+								console::Cprintf("[" + command::GetCommandTypeName(cmd_type) + "]", console::ConsoleColor::Yellow);
+								console::PrintEndLine();
 								console::Table tb(3, _cmd_name_list[i].size());
 								tb.set_width({ SYMBOL_WIDTH,NAME_WIDTH,DESC_WIDTH });
 								for (size_t n = 0; n < _cmd_name_list[i].size(); n++)
 								{
-									std::string type = define::GetCommandTypeSymbol(i);
+									std::string type = command::GetCommandTypeSymbol(cmd_type);
 									std::string name = _cmd_name_list[i].at(n);
 									std::string desc = _command_list.at(name)->desc();
 									tb.set_cell_in_row(n,{
@@ -488,22 +599,51 @@ namespace gadt
 					{
 						std::cout << ">> ";
 						console::Cprintf("[ COMMANDS ]", console::ConsoleColor::Yellow);
-						std::cout << std::endl;
-						console::Table tb(3, _command_list.size());
-						tb.set_width({ SYMBOL_WIDTH,NAME_WIDTH,DESC_WIDTH });
-						size_t n = 0;
-						for (const auto& pair: _command_list)
+						console::PrintEndLine();
+
+						struct CommandInfo
 						{
-							std::string name = pair.first;
-							std::string desc = pair.second.get()->desc();
-							std::string type = define::GetCommandTypeSymbol(pair.second.get()->type());
-							tb.set_cell_in_row(n, {
-								{ type,console::ConsoleColor::Gray },
-								{ name,console::ConsoleColor::Red },
-								{ desc,console::ConsoleColor::White }
+							std::string name;
+							std::string desc;
+							std::string type;
+							bool is_page;
+						};
+						std::vector<CommandInfo> cmds;
+
+						for (const auto& pair : _command_list)
+							cmds.push_back(CommandInfo{ pair.first, pair.second.get()->desc(), define::GADT_SHELL_COMMAND_SYMBOL, false });
+		
+						for (const auto& pair : child_pages())
+							cmds.push_back(CommandInfo{ pair.first, pair.second.desc, define::GADT_SHELL_PAGE_SYMBOL, true });
+						
+						std::sort(cmds.begin(), cmds.end(), [&](const CommandInfo& fir, const CommandInfo sec)->bool {
+							if (fir.name == sec.name)
+							{
+								if (sec.is_page)
+									return false;
+							}
+							else if (fir.name > sec.name)
+							{
+								return false;
+							}	
+							return true;
+						});
+
+						console::Table tb(3, cmds.size());
+						size_t max_desc_length = 0;
+						for (size_t i = 0; i < cmds.size(); i++)
+						{
+							tb.set_cell_in_row(i, {
+								{ cmds[i].type,console::ConsoleColor::Gray, console::TableAlign::Middle },
+								{ cmds[i].name,(cmds[i].is_page ? console::ConsoleColor::Blue : console::ConsoleColor::Red)},
+								{ cmds[i].desc,console::ConsoleColor::White }
 							});
-							n++;
+							if (cmds[i].desc.length() > max_desc_length)
+								max_desc_length = cmds[i].desc.length();
 						}
+						max_desc_length = (max_desc_length + 1) / 2 + 2;
+						if (max_desc_length > DESC_WIDTH) { max_desc_length = DESC_WIDTH; }
+						tb.set_width({ SYMBOL_WIDTH,NAME_WIDTH, max_desc_length });
 						tb.Print(console::TableFrame::CircleAndTight, console::TableIndex::Disable);
 						std::cout << std::endl;
 					}
@@ -515,88 +655,29 @@ namespace gadt
 					return _command_list.count(command) > 0;
 				}
 
-				//return true if the function exist.
-				bool ExistFunc(std::string name) const override
-				{
-					if (ExistCommand(name))
-					{
-						if (_command_list.at(name).get()->type() != command::CHILD_PAGE_COMMAND)
-						{
-							return true;
-						}
-					}
-					return false;
-				}
-
-				//return true if the page exist.
-				bool ExistChildPage(std::string name) const override
-				{
-					if (ExistCommand(name))
-					{
-						if (_command_list.at(name).get()->type() == command::CHILD_PAGE_COMMAND)
-						{
-							return true;
-						}
-					}
-					return false;
-				}
-
-				//data operator
-				inline DataType& data()
-				{
-					return _data;
-				}
-
-				//return true if the command is legal.
-				inline bool CheckCommandNameLegality(std::string command)
-				{
-					if (command.size() > define::g_MAX_COMMAND_LENGTH)
-					{
-						console::PrintError("command '" + command + "' out of max length");
-						return false;
-					}
-					if (!command::CommandParser::CheckStringLegality(command))
-					{
-						console::PrintError("illegal command name '" + command + "'.");
-						return false;
-					}
-					return true;
-				}
-
-				//insert command.
-				inline void InsertCommand(std::string name, CommandPtr& cmd_data_ptr)
-				{
-					_cmd_name_list[cmd_data_ptr.get()->type()].push_back(name);
-					_command_list.insert(std::pair<std::string, CommandPtr>(name, std::move(cmd_data_ptr)));
-				}
+			public:
 
 				//default function.
-				ShellPage(GameShell* belonging_shell, std::string name) :
-					ShellPageBase(belonging_shell, name),
+				ShellPage(PageBasePtr parent_page, ShellPtr belonging_shell, std::string name, InfoFunc info_func) :
+					ShellPageBase(parent_page, belonging_shell, name, info_func),
 					_data(),
 					_command_list(),
-					_cmd_name_list(define::g_COMMAND_TYPE_NUMBER)
+					_cmd_name_list(define::GADT_SHELL_COMMAND_TYPE_COUNT)
 				{
 				}
 
-				//create a new shell page.
+				//create a new shell page and initialize data.
 				template<class... Types>
-				ShellPage(GameShell* belonging_shell, std::string name, Types&&... args) :
-					ShellPageBase(belonging_shell, name),
+				ShellPage(PageBasePtr parent_page, ShellPtr belonging_shell, std::string name, InfoFunc info_func, Types&&... args) :
+					ShellPageBase(parent_page, belonging_shell, name, info_func),
 					_data(std::forward<Types>(args)...),
 					_command_list(),
-					_cmd_name_list(define::g_COMMAND_TYPE_NUMBER)
+					_cmd_name_list(define::GADT_SHELL_COMMAND_TYPE_COUNT)
 				{
 				}
 
 				//copy constructor is disallowed.
 				ShellPage(ShellPage&) = delete;
-
-				
-
-			public:
-
-				
 
 				//execute command by name
 				void ExecuteCommand(std::string command, const ParamsList& params) override
@@ -620,7 +701,7 @@ namespace gadt
 				}
 
 				/*
-				* overloaded AddFunction.
+				* overrided AddFunction.
 				* add DefaultCommand which do not have any parameters.
 				*
 				* [name] is the name of command.
@@ -632,12 +713,12 @@ namespace gadt
 					if (CheckCommandNameLegality(name))
 					{
 						auto command_ptr = CommandPtr(new DefaultCommand(name, desc, func));
-						InsertCommand(name, command_ptr);
+						add_command(name, command_ptr);
 					}
 				}
 
 				/*
-				* overloaded AddFunction.
+				* overrided AddFunction.
 				* add DataCommand that allows to operator binded data without parameters
 				*
 				* [name] is the name of command.
@@ -649,12 +730,12 @@ namespace gadt
 					if (CheckCommandNameLegality(name))
 					{
 						auto command_ptr = CommandPtr(new DataCommand(name, desc, func));
-						InsertCommand(name, command_ptr);
+						add_command(name, command_ptr);
 					}
 				}
 
 				/*
-				* overloaded AddFunction.
+				* overrided AddFunction.
 				* add ParamsCommand which allows to be executed with parameters.
 				*
 				* [name] is the name of command.
@@ -667,12 +748,12 @@ namespace gadt
 					if (CheckCommandNameLegality(name))
 					{
 						auto command_ptr = CommandPtr(new ParamsCommand(name, desc, func, check));
-						InsertCommand(name, command_ptr);
+						add_command(name, command_ptr);
 					}
 				}
 
 				/*
-				* overloaded AddFunction.
+				* overrided AddFunction.
 				* add DataAndParamsCommand which allows to operator binded data with parameters.
 				*
 				* [name] is the name of command.
@@ -685,12 +766,12 @@ namespace gadt
 					if (CheckCommandNameLegality(name))
 					{
 						auto command_ptr = CommandPtr(new DataAndParamsCommand(name, desc, func, check));
-						InsertCommand(name, command_ptr);
+						add_command(name, command_ptr);
 					}
 				}
 
 				/*
-				* overloaded AddFunction.
+				* overrided AddFunction.
 				* add BoolParamsCommand which allows to be executed with parameters with a boolean return value.
 				*
 				* [name] is the name of command.
@@ -703,12 +784,12 @@ namespace gadt
 					if (CheckCommandNameLegality(name))
 					{
 						auto command_ptr = CommandPtr(new BoolParamsCommand(name, desc, func));
-						InsertCommand(name, command_ptr);
+						add_command(name, command_ptr);
 					}
 				}
 
 				/*
-				* overloaded AddFunction.
+				* overrided AddFunction.
 				* add BoolDataAndParamsCommand which allows to operator binded data with parameters with a boolean return value.
 				*
 				* [name] is the name of command.
@@ -721,28 +802,76 @@ namespace gadt
 					if (CheckCommandNameLegality(name))
 					{
 						auto command_ptr = CommandPtr(new BoolDataAndParamsCommand(name, desc, func));
-						InsertCommand(name, command_ptr);
+						add_command(name, command_ptr);
 					}
 				}
 
 				/*
-				* AddChildPage.
-				* add one page as the child page of current page.
+				* CreateChildPage.
+				* create a page as the child page of current page.
 				*
 				* [child_name] is the name of child page.
 				* [desc] is description of the command.
 				*/
-				inline void AddChildPage(std::string child_name, std::string desc)
+				template<typename ChildDataType = int>
+				ShellPage<ChildDataType>* CreateChildPage(std::string page_name, std::string page_desc)
 				{
-					if (CheckCommandNameLegality(child_name))
+					if (!ExistChildPage(page_name))
 					{
-						auto child_page_ptr = CommandPtr(new ChildPageCommand(child_name, desc, belonging_shell(), child_name));
-						InsertCommand(child_name, child_page_ptr);
+						if (CheckCommandNameLegality(page_name))
+						{
+							auto ptr = new ShellPage<ChildDataType>(this, belonging_shell(), page_name, info_func());
+							auto ptr_handle = PageBaseHandle(ptr);
+							add_child_page(page_name, ptr_handle, page_desc, page_desc);
+							return ptr;
+						}
+						else
+						{
+							console::PrintError("unexcepted page name: " + page_name);
+						}
 					}
+					else
+					{
+						console::PrintError("repeatly create page " + page_name);
+					}
+					return nullptr;
+				}
+
+				/*
+				* CreateChildPage.
+				* create child page with initilized value, default data type is <int>
+				*
+				* [child_name] is the name of child page.
+				* [desc] is description of the command.
+				*/
+				template<typename ChildDataType, class... Types>
+				ShellPage<ChildDataType>* CreateChildPage(std::string page_name, std::string page_desc, Types&&... args)
+				{
+					if (!ExistChildPage(page_name))
+					{
+						if (CheckCommandNameLegality(page_name))
+						{
+							auto ptr = new ShellPage<ChildDataType>(this, belonging_shell(), page_name, info_func(), std::forward<Types>(args)...);
+							auto ptr_handle = PageBaseHandle(ptr);
+							add_child_page(page_name, ptr_handle, page_desc, page_desc);
+							return ptr;
+						}
+						else
+						{
+							console::PrintError("repeatly create page " + page_name);
+						}
+					}
+					else
+					{
+						console::PrintError("unexcepted page name: " + page_name);
+					}
+					return nullptr;
 				}
 			};
-		}
 
+			template<typename DataType>
+			using PagePtr = ShellPage<DataType>*;
+		}
 
 		/*
 		* GameShell a unix-style shell. allow user to add function and pages.
@@ -753,42 +882,27 @@ namespace gadt
 		{
 			friend ::gadt::shell::page::ShellPageBase;
 		private:
+
 			using CommandParser = ::gadt::shell::command::CommandParser;
 			using ShellPageBase = ::gadt::shell::page::ShellPageBase;
 
-			using InfoFunc = typename ShellPageBase::InfoFunc;
-			using PagePtr = std::shared_ptr<ShellPageBase>;
-			using DirList = std::list<std::string>;
-
 		private:
 			//global variable
-			static GameShell* _g_focus_game;				//focus page, that is used for show path.									
-			std::map<std::string, PagePtr>	_page_table;	//page table.
-			DirList							_dir_list;		//list of dirs.
-			std::string						_name;			//name of the shell.
-			InfoFunc						_info_func;		//default info func.
-			page::ShellPage<int>			_shell_cmd;		//shell_cmd
+			static GameShell* _g_focus_game;		//focus page, that is used for show path.
+
+			std::string				_name;			//name of the shell.
+			page::ShellPage<int>	_shell_cmd;		//shell_cmd
+			page::ShellPage<int>	_root_page;		//root_page.
+			page::PageBasePtr		_focus_page;	//focus page.
+
+			//std::map<std::string, PagePtr>	_page_table;	//page table.
 
 		private:
-			//print current dir.
-			void PrintDir() const;
-
-			//print input tips.
-			void InputTip(std::string tip = "");
-
-			//get input line by string format.
-			std::string GetInput()
-			{
-				char buffer[256];
-				std::cin.clear();
-				std::cin.getline(buffer, 256);
-				return std::string(buffer);
-			}
-
+			
 			//return true if the page name exist.
 			inline bool page_exist(std::string name) const
 			{
-				return _page_table.count(name) > 0 || name == define::g_RETURN_COMMAND_NAME || name == define::g_ROOT_COMMAND_NAME;
+				return focus_page()->ExistChildPage(name);
 			}
 
 			//to be the focus.
@@ -797,40 +911,31 @@ namespace gadt
 				_g_focus_game = this;
 			}
 
-			//add page
-			inline void add_page(std::string name, std::shared_ptr<ShellPageBase> new_page)
-			{
-				_page_table[name] = new_page;
-			}
-
-			//return to previous page.
-			void ReturnToPreviousPage();
-
-			//return to root page
-			inline void ReturnToRootPage()
-			{
-				std::string temp = _dir_list.front();
-				_dir_list.clear();
-				_dir_list.push_back(temp);
-			}
-
-			//clear screen
-			void ClearScreen() const;
-
-			//initialize shell commands.
-			void ShellCmdInit();
-
-			//execute command in focus page.
-			void ExecuteCommandInFocusPage(std::string command, const ParamsList& params);
-
 			//get focus_page of this shell.
-			inline ShellPageBase* focus_page() const
+			inline page::PageBasePtr focus_page() const
 			{
-				if (_dir_list.size() > 0)
+				return _focus_page;
+			}
+
+			//return true if focus page is nullptr(means exit.)
+			inline bool no_focus_page() const
+			{
+				return _focus_page == nullptr;
+			}
+
+			//set focus page.
+			inline void set_focus_page(page::PageBasePtr page_ptr)
+			{
+				if (page_ptr->belonging_shell() == this)
 				{
-					return _page_table.at(_dir_list.back()).get();
+					_focus_page = page_ptr;
 				}
-				return nullptr;
+			}
+
+			//return true if command exist in shell command list.
+			inline bool exist_shell_cmd(std::string name) const
+			{
+				return _shell_cmd.ExistCommand(name);
 			}
 
 			//global function
@@ -839,11 +944,53 @@ namespace gadt
 				return _g_focus_game;
 			}
 
+		private:
+
+			//default info func of game shell.
+			static void DefaultInfoFunc();
+
+			void ChangeDirectory(std::string path)
+			{
+				command::CommandParser parser(path);
+				auto temp_page_ptr = focus_page()->GetRelativePathPage(parser);
+				if (temp_page_ptr != nullptr)
+					set_focus_page(temp_page_ptr);
+				else
+					console::Cprintf(name() + ": cd " + path + " : No such page.", console::ConsoleColor::White);
+			}
+
+			//print current dir.
+			void PrintFocusPath() const;
+
+			//print input tips.
+			void InputTip(std::string tip = "");
+
+			//get input line by string format.
+			std::string GetInput();
+
+			//clear screen
+			void ClearScreen() const;
+
+			//initialize shell commands.
+			void InitializeShellCommands();
+
+			//execute command in focus page.
+			void ExecuteCommand(page::PageBasePtr page_ptr, std::string command, const ParamsList& params);
+
+			//run single command.
+			bool RunSingleCommand(std::string command_str);
+
 		public:
 			//get name of shell.
 			inline std::string name() const
 			{
 				return _name;
+			}
+
+			//get root page.
+			inline page::ShellPage<int>* root()
+			{
+				return &_root_page;
 			}
 
 			//public constructor function
@@ -852,49 +999,8 @@ namespace gadt
 			//copy constructor is disallowed.
 			GameShell(GameShell&) = delete;
 
-			//start from appointed page.
-			void StartFromPage(std::string name, std::string init_command = "");
-
-			//enter page by name.
-			void EnterPage(std::string name);
-
-			//set info func for all pages
-			inline void SetDefaultInfoFunc(InfoFunc info_func)
-			{
-				_info_func = info_func;
-			}
-
-			//create shell page, default data type is <int>
-			template<typename DataType = int>
-			page::ShellPage<DataType>* CreateShellPage(std::string page_name)
-			{
-				if (page_exist(page_name))
-				{
-					console::PrintError("repeation of create page " + page_name);
-					console::SystemPause();
-					return nullptr;
-				}
-				std::shared_ptr<page::ShellPage<DataType>> ptr(new page::ShellPage<DataType>(this, page_name));
-				add_page(page_name, ptr);
-				ptr.get()->SetInfoFunc(_info_func);
-				return ptr.get();
-			}
-
-			//create shell page with initilized value, default data type is <int>
-			template<typename DataType, class... Types>
-			page::ShellPage<DataType>* CreateShellPage(std::string page_name, Types&&... args)
-			{
-				if (page_exist(page_name))
-				{
-					console::PrintError("repeation of create page " + page_name);
-					console::SystemPause();
-					return nullptr;
-				}
-				std::shared_ptr<page::ShellPage<DataType>> ptr(new page::ShellPage<DataType>(this, page_name, std::forward<Types>(args)...));
-				add_page(page_name, ptr);
-				ptr.get()->SetInfoFunc(_info_func);
-				return ptr.get();
-			}
+			//start from root.
+			void Run(std::string init_command = "");
 		};
 
 		namespace command
@@ -912,7 +1018,7 @@ namespace gadt
 			public:
 
 				DefaultCommand(std::string name, std::string desc, CommandFunc default_command_func) :
-					CommandBase<DataType>(DEFAULT_COMMAND, name, desc, define::DefaultNoParamsCheck),
+					CommandBase<DataType>(CommandType::DEFAULT_COMMAND, name, desc, define::DefaultNoParamsCheck),
 					_default_command_func(default_command_func)
 				{
 				}
@@ -935,7 +1041,7 @@ namespace gadt
 
 			public:
 				DataCommand(std::string name, std::string desc, CommandFunc no_params_command_func) :
-					CommandBase<DataType>(DATA_COMMAND, name, desc, define::DefaultNoParamsCheck),
+					CommandBase<DataType>(CommandType::DATA_COMMAND, name, desc, define::DefaultNoParamsCheck),
 					_no_params_command_func(no_params_command_func)
 				{
 				}
@@ -959,7 +1065,7 @@ namespace gadt
 			public:
 
 				ParamsCommand(std::string name,std::string desc, CommandFunc params_command_func,ParamsCheckFunc check) :
-					CommandBase<DataType>(PARAMS_COMMAND, name, desc, check),
+					CommandBase<DataType>(CommandType::PARAMS_COMMAND, name, desc, check),
 					_params_command_func(params_command_func)
 				{
 				}
@@ -982,7 +1088,7 @@ namespace gadt
 
 			public:
 				DataAndParamsCommand(std::string name, std::string desc, CommandFunc data_params_command_func, ParamsCheckFunc params_check ) :
-					CommandBase<DataType>(DATA_AND_PARAMS_COMMAND, name, desc, params_check),
+					CommandBase<DataType>(CommandType::DATA_AND_PARAMS_COMMAND, name, desc, params_check),
 					_data_params_command_func(data_params_command_func)
 				{
 				}
@@ -1006,7 +1112,7 @@ namespace gadt
 			public:
 
 				BoolParamsCommand(std::string name, std::string desc, CommandFunc bool_params_command_func) :
-					CommandBase<DataType>(BOOL_PARAMS_COMMAND, name, desc, define::DefaultParamsCheck),
+					CommandBase<DataType>(CommandType::BOOL_PARAMS_COMMAND, name, desc, define::DefaultParamsCheck),
 					_bool_params_command_func(bool_params_command_func)
 				{
 				}
@@ -1033,7 +1139,7 @@ namespace gadt
 
 			public:
 				BoolDataAndParamsCommand(std::string name, std::string desc, CommandFunc bool_data_params_command_func) :
-					CommandBase<DataType>(BOOL_DATA_AND_PARAMS_COMMAND, name, desc, define::DefaultParamsCheck),
+					CommandBase<DataType>(CommandType::BOOL_DATA_AND_PARAMS_COMMAND, name, desc, define::DefaultParamsCheck),
 					_bool_data_params_command_func(bool_data_params_command_func)
 				{
 				}
@@ -1045,29 +1151,6 @@ namespace gadt
 					{
 						console::PrintError("run " + this->name() + " failed.");
 					}
-				}
-			};
-
-			//child page command record
-			template<typename DataType>
-			class ChildPageCommand :public CommandBase<DataType>
-			{
-			private:
-				::gadt::shell::GameShell* _belonging_shell;
-				std::string _page_name;
-
-			public:
-
-				ChildPageCommand(std::string name, std::string desc, GameShell* belonging_shell, std::string page_name) :
-					CommandBase<DataType>(CHILD_PAGE_COMMAND, name, desc, [](const ParamsList& list)->bool {return list.size() == 0 ? true : false; }),
-					_belonging_shell(belonging_shell),
-					_page_name(page_name)
-				{
-				}
-
-				void Run(DataType& data, const ParamsList& params) override
-				{
-					_belonging_shell->EnterPage(_page_name);
 				}
 			};
 		}
