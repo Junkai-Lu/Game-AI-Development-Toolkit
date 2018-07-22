@@ -629,6 +629,12 @@ namespace gadt
 		};
 	}
 
+	namespace os
+	{
+		//get number of processors.
+		size_t SysNumberOfProcessors();
+	}
+
 	namespace func
 	{
 		//get the index of max element in vector.

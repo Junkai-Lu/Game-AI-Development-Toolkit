@@ -126,68 +126,45 @@ namespace gadt
 				return CommandParser(_is_legal, _is_relative, temp, std::vector<std::string>());
 			}
 
+			//parse the command.
 			bool CommandParser::ParseParameters(std::string params_str)
 			{
-				if (params_str.length() == 0) { return true; }
-				while (params_str[0] == ' ')
+				auto param_list = DivideString(params_str, " ");
+				for (auto param : param_list)
 				{
-					params_str = params_str.substr(1, params_str.length() - 1);
-					if (params_str.length() == 0)
-						return true;
-				}
-
-				size_t divide_pos = params_str.find(" ");
-				if (divide_pos != std::string::npos)
-				{
-					std::string param = params_str.substr(0, divide_pos);
-					std::string remains = params_str.substr(divide_pos + 1, params_str.length() - divide_pos);
-					if (CheckStringLegality(param) == false)
-					{
-						return false;
-					}
 					add_parameter(param);
-					return ParseParameters(remains);
 				}
-				if (CheckStringLegality(params_str))
-				{
-					add_parameter(params_str);
-					return true;
-				}
-				return false;
+				return true;
 			}
+
+			//parse command
 			bool CommandParser::ParseCommands(std::string cmd_str)
 			{
-				if (cmd_str.length() == 0) { return true; }
-				while (cmd_str[0] == ' ')
+				auto cmd_list = DivideString(cmd_str, "/");
+				size_t begin = 0;
+				if (cmd_list.size() != 0)
 				{
-					cmd_str = cmd_str.substr(1, cmd_str.length() - 1);
-					if (cmd_str.length() == 0)
-						return true;
-				}
-				if (cmd_str[0] == '/')
-				{
-					_is_relative = false;
-				}
-
-				size_t divide_pos = cmd_str.find("/");
-				if (divide_pos != std::string::npos)
-				{
-					std::string cmd = cmd_str.substr(0, divide_pos);
-					std::string remains = cmd_str.substr(divide_pos + 1, cmd_str.length() - divide_pos);
-					if (CheckStringLegality(cmd) == false)
+					if (cmd_list[0].empty())
 					{
-						return false;
+						_is_relative = false;//absolute path.
+						begin = 1;
 					}
-					add_command(cmd);
-					return ParseCommands(remains);
 				}
-				if (CheckStringLegality(cmd_str))
+				for (size_t i = begin; i < cmd_list.size(); i++)
 				{
-					add_command(cmd_str);
-					return true;
+					if (CheckStringLegality(cmd_list[i]) == true)
+					{
+						add_command(cmd_list[i]);
+					}
+					else
+					{
+						return false;//find illegal command
+					}
 				}
-				return false;
+				return true;
 			}
+
+			//divide origin command into command and parameters.
 			bool CommandParser::ParseOriginalCommand(std::string original_command)
 			{
 				size_t space_pos = original_command.find(" ");
@@ -200,6 +177,46 @@ namespace gadt
 				}
 				//no params, parse commands.
 				return ParseCommands(original_command);
+			}
+
+			//remove space behind or after the string.
+			std::string CommandParser::RemoveSpace(std::string str)
+			{
+				for (;;)
+				{
+					if (str.length() == 0)
+						return str;
+					else if (str[0] == ' ')
+						str = str.substr(1, str.length() - 1);
+					else if (str.back() == ' ')
+						str.pop_back();
+					else
+						return str;
+				}
+				return str;
+			}
+
+			//divide single string into multi string by separator.
+			std::vector<std::string> CommandParser::DivideString(std::string str, std::string separator)
+			{
+				std::vector<std::string> result;
+				str = RemoveSpace(str);
+				while (str.length() != 0)
+				{
+					size_t divide_pos = str.find(separator);
+					if (divide_pos != std::string::npos)
+					{
+						std::string single_str = RemoveSpace(str.substr(0, divide_pos));
+						result.push_back(single_str);
+						str = str.substr(divide_pos + separator.length(), str.length() - divide_pos);
+					}
+					else
+					{
+						result.push_back(RemoveSpace(str));
+						break;
+					}
+				}
+				return result;
 			}
 		}
 
@@ -479,10 +496,13 @@ namespace gadt
 			auto cd_command = CommandPtr(new ParamsCommand(
 				define::GADT_SHELL_COMMAND_CD_NAME,
 				define::GADT_SHELL_COMMAND_CD_DESC,
-				[&](const ParamsList& params)->void { 
-					ChangeDirectory(params[0]); 
+				[&](const ParamsList& params)->void {
+					std::stringstream ss;
+					for (auto p : params)
+						ss << p;
+					ChangeDirectory(ss.str()); 
 				},
-				define::DefaultParamsCountCheck<1>
+				define::DefaultParamsCheck
 			));
 			/*auto bat_command = CommandPtr(new ParamsCommand(
 				define::GADT_SHELL_COMMAND_BAT_NAME,

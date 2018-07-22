@@ -140,6 +140,12 @@ namespace gadt
 
 			public:
 
+				//remove space behind or after the string.
+				static std::string RemoveSpace(std::string str);
+
+				//divide single string into multi string by separator.
+				static std::vector<std::string> DivideString(std::string str, std::string separator);
+
 				//constructor function by parent command parser
 				inline void to_next_command()
 				{
@@ -954,9 +960,14 @@ namespace gadt
 				command::CommandParser parser(path);
 				auto temp_page_ptr = focus_page()->GetRelativePathPage(parser);
 				if (temp_page_ptr != nullptr)
+				{
 					set_focus_page(temp_page_ptr);
+				}
 				else
+				{
 					console::Cprintf(name() + ": cd " + path + " : No such page.", console::ConsoleColor::White);
+					console::PrintEndLine();
+				}	
 			}
 
 			//print current dir.

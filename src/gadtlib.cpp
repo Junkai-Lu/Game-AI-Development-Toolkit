@@ -162,6 +162,21 @@ namespace gadt
 
 	}
 
+	namespace os
+	{
+		//get number of processors.
+		size_t SysNumberOfProcessors()
+		{
+#ifdef __GADT_MSVC
+			SYSTEM_INFO sysInfo;
+			GetSystemInfo(&sysInfo);
+			return (size_t)sysInfo.dwNumberOfProcessors;
+#else
+			return (size_t)sysconf(_SC_NPROCS_ONLN));;
+#endif
+		}
+	}
+
 	namespace func
 	{
 		size_t GetManhattanDistance(Point fir, Point sec)
@@ -170,3 +185,5 @@ namespace gadt
 		}
 	}
 }
+
+

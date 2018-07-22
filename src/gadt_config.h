@@ -36,6 +36,7 @@
 	#endif
 	#include <sys/stat.h>  
 	#include <sys/types.h>
+	#include "sys/sysinfo.h"
 	#include <string.h>
 	#include <errno.h> 
 	#include <unistd.h>
