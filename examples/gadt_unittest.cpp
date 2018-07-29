@@ -954,37 +954,24 @@ namespace gadt
 			}
 			GADT_ASSERT(80, alloc1.size());
 		}
-
-		const std::vector<FuncPair> func_list = {
-			{ "convert"			,TestConvertFunc		},
-			{ "point"			,TestPoint				},
-			{ "bitboard"		,TestBitBoard			},
-			{ "file"			,TestFilesystem			},
-			{ "index"			,TestIndex				},
-			{ "mcts_node"		,TestMctsNode			},
-			{ "mcts"			,TestMctsSearch			},
-			{ "visual_tree"		,TestVisualTree			},
-			{ "allocator"		,TestStlAllocator		},
-			{ "linear_alloc"	,TestStlLinearAlloc		},
-			{ "list"			,TestStlList			},
-			{ "static_matrix"	,TestStlStaticMatrix	},
-			{ "dynamic_matrix"	,TestStlDynamicMatrix	},
-			{ "table"			,TestTable				},
-			{ "random_pool"		,TestRandomPool			},
-			{ "minimax"			,TestMinimax			},
-			{ "monte_carlo"		,TestMonteCarlo			},
-			{ "dynamic_array"	,TestDynamicArray		}
-		};
-		void RunTest(FuncPair func_pair)
+		void TestPodFileIO()
 		{
-			cout << endl << ">> test start, target = ";
-			console::Cprintf(func_pair.first, console::ConsoleColor::Green);
-			timer::TimePoint tp;
-			cout << endl;
-			func_pair.second();
-			cout << ">> test complete, time = ";
-			console::Cprintf(tp.time_since_created(), console::ConsoleColor::Red);
-			cout << endl;
+			std::string file_name = "IoTest.dat";
+			io::FileWriter<tic_tac_toe::Action> writer(file_name);
+			tic_tac_toe::Action actions[10];
+			for (size_t i = 1; i < 11; i++)
+				actions[i - 1] = { i, i, tic_tac_toe::BLACK };
+			writer.save_single(tic_tac_toe::Action());
+			writer.save(actions, 10);
+			writer.close();
+			io::FileLoader<tic_tac_toe::Action> loader(file_name);
+			auto vec = loader.load(10);
+			vec.push_back(loader.load_next());
+			loader.close();
+			GADT_ASSERT(vec.size(), 11);
+			for (size_t i = 0; i < 11; i++)
+				GADT_ASSERT(vec[i].x, i);
+			filesystem::remove_file(file_name);
 		}
 	}
 }

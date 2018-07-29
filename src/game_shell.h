@@ -31,6 +31,8 @@ namespace gadt
 		//declartion.
 		class GameShell;
 		class ShellPageBase;
+		class TestPage;
+
 		using DirList = std::list<std::string>;
 		using ParamsList = std::vector<std::string>;
 		using ParamsCheckFunc = std::function<bool(const ParamsList&)>;
@@ -522,6 +524,7 @@ namespace gadt
 			{
 			private:
 				friend class ::gadt::shell::GameShell;
+				friend class ::gadt::shell::TestPage;
 
 				using ShellPageBase::ShellPtr;
 				using ShellPageBase::PageTable;
@@ -1012,6 +1015,61 @@ namespace gadt
 
 			//start from root.
 			void Run(std::string init_command = "");
+		};
+
+		/*
+		* TestPage is a specified page that can be used by unit test.
+		*
+		* [parent_page] is parent page of generated test page.
+		* [name] is the name of generated test page.
+		*/
+		class TestPage
+		{
+		private:
+
+			using FuncType = std::function<void()>;
+			using FuncItem = std::pair<std::string, FuncType>;
+			using FuncList = std::vector<FuncItem>;
+
+			page::ShellPage<FuncList>* _test_page;
+
+		private:
+
+			//run test and report time.
+			static void RunTest(const FuncItem& item);
+
+			//add 'all' test function.
+			void AddTestAll();
+
+		public:
+
+			//return true if test page is not a nullptr.
+			inline bool is_initialized() const
+			{
+				return _test_page != nullptr;
+			}
+
+		public:
+
+			template<typename DataType>
+			TestPage(page::ShellPage<DataType>* parent_page, std::string page_name, std::string page_desc):
+				_test_page(nullptr)
+			{
+				if (parent_page != nullptr)
+					_test_page = parent_page->CreateChildPage<FuncList>(page_name, page_desc);
+				AddTestAll();
+			}
+
+			TestPage(const TestPage& tp) = delete;
+
+			//add function by name and function, which would generate a default description. 
+			void AddFunction(std::string name, FuncType func);
+
+			//add function by name, description and function.
+			void AddFunction(std::string name, std::string desc, FuncType func);
+
+			//add multi functions by name and function, which would generate a default description. 
+			void AddFunctionList(std::initializer_list<FuncItem> init_list);
 		};
 
 		namespace command

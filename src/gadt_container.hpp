@@ -1520,7 +1520,7 @@ namespace gadt
 		* StaticArray is a array which allow user to staticly allocate its size.
 		*
 		* [T] is the type of element.
-		* [_COUNT] is the size of the array.
+		* [_MAX_SIZE] is the size of the array.
 		*/
 		template<typename T, size_t _MAX_SIZE>
 		class StaticArray final
@@ -1664,24 +1664,87 @@ namespace gadt
 			{
 				return element(index);
 			}
+		};
 
-			//get random value and remove it.
-			T get_random_and_swap_to_end_then_pop()
+		/*
+		* ElementPool allows user to push elements and get them randomly.
+		*
+		* [T] is the type of element.
+		* [_MAX_SIZE] is the size of the array.
+		*/
+		template<typename T, size_t _MAX_SIZE>
+		class ElementPool final
+		{
+		private:
+			StaticArray<T, _MAX_SIZE> _elements;
+
+		public:
+
+			//push new element into pool
+			void push(const T& elem)
 			{
-				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, _size <= 0, "overflow");
-				size_t rnd = rand() % _size;
-				T temp = _elems[rnd];
-				swap(rnd, size() - 1);
-				pop_back();
+				_elements.push_back(elem);
+			}
+
+			//get a random element and pop it from the pool.
+			T random_pop()
+			{
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, is_empty(), "overflow");
+				size_t rnd = rand() % size();
+				T temp = _elements[rnd];
+				_elements.swap(rnd, size() - 1);
+				_elements.pop_back();
 				return temp;
 			}
 
-			//get random value.
-			T get_random() const
+			//get a random element.
+			const T& random() const
 			{
-				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, _size <= 0, "overflow");
-				size_t rnd = rand() % _size;
-				return _elems[rnd];
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, is_empty(), "overflow");
+				size_t rnd = rand() % size();
+				return _elements[rnd];
+			}
+
+			//current size of the pool
+			size_t size() const
+			{
+				return _elements.size();
+			}
+
+			//max size of the pool.
+			size_t max_size() const
+			{
+				return _elements.max_size();
+			}
+
+			//return true if the pool is full.
+			bool is_full() const
+			{
+				return _elements.is_full();
+			}
+
+			//return true if the pool is empty.
+			bool is_empty() const
+			{
+				return _elements.is_empty();
+			}
+
+		public:
+
+			ElementPool():
+				_elements()
+			{
+			}
+
+			ElementPool(const ElementPool& target) :
+				_elements(target._elements)
+			{
+			}
+
+			ElementPool(std::initializer_list<T> elems)
+			{
+				for (auto elem : elems)
+					push(elem);
 			}
 		};
 	}

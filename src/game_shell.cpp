@@ -612,5 +612,62 @@ namespace gadt
 				}
 			}
 		}
-	}
+
+		//run test and report time.
+		void TestPage::RunTest(const FuncItem & item)
+		{
+			using namespace console;
+			console::PrintEndLine();
+			console::Cprintf(">> test start, target = ", ConsoleColor::White);
+			console::Cprintf(item.first, console::ConsoleColor::Green);
+			timer::TimePoint tp;
+			console::PrintEndLine();
+			item.second();
+			console::Cprintf(">> test complete, time = ", ConsoleColor::White);
+			console::Cprintf(tp.time_since_created(), console::ConsoleColor::Red);
+			console::PrintEndLine();
+		}
+
+		//add 'all' test function.
+		void TestPage::AddTestAll()
+		{
+			if (is_initialized())
+			{
+				_test_page->AddFunction("all", "run all test function", [&](FuncList& functions)->void {
+					for (const auto& p : functions)
+					{
+						RunTest(p);
+					}
+				});
+			}
+		}
+
+		//add function by name and function, which would generate a default description. 
+		void TestPage::AddFunction(std::string name, FuncType func)
+		{
+			AddFunction(name, "test " + name, func);
+		}
+
+		//add function by name, description and function.
+		void TestPage::AddFunction(std::string name, std::string desc, FuncType func)
+		{
+			if (is_initialized())
+			{
+				_test_page->data().push_back({ name, func });
+				const size_t size = _test_page->data().size();
+				_test_page->AddFunction(name, desc, [=](FuncList& func_list)->void {
+					RunTest(func_list[size - 1]);
+				});
+			}
+		}
+
+		//add multi functions by name and function, which would generate a default description.
+		void TestPage::AddFunctionList(std::initializer_list<FuncItem> init_list)
+		{
+			for (const auto& pair : init_list)
+			{
+				AddFunction(pair.first, pair.second);
+			}
+		}
+}
 }

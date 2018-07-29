@@ -45,7 +45,6 @@
 	#error "unsupported compiler, please check complier or delete this error in 'gadt_config.h'"
 #endif
 
-
 #include <cstdio>
 #include <stdlib.h>
 #include <math.h>

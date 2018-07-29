@@ -33,7 +33,7 @@
 #include "../src/minimax.hpp"
 #include "../src/mcts.hpp"
 #include "../src/parallel_mcts.hpp"
-
+#include "../src/gadt_io.h"
 
 #pragma once
 
@@ -90,12 +90,24 @@ namespace gadt
 			bool AllowUpdateValue(const State& state, Result winner);
 		}
 
-		void TestMctsNode();
-		void TestMctsSearch();
-		void TestTable();
-
-		typedef std::pair<std::string, std::function<void()>> FuncPair;
-		extern const std::vector<FuncPair> func_list;
-		void RunTest(FuncPair func_pair);
+		void TestConvertFunc();
+		void TestPoint();
+		void TestBitBoard ();
+		void TestFilesystem ();
+		void TestIndex ();
+		void TestMctsNode ();
+		void TestMctsSearch ();
+		void TestVisualTree ();
+		void TestStlAllocator ();
+		void TestStlLinearAlloc ();
+		void TestStlList ();
+		void TestStlStaticMatrix ();
+		void TestStlDynamicMatrix ();
+		void TestTable ();
+		void TestRandomPool ();
+		void TestMinimax ();
+		void TestMonteCarlo ();
+		void TestDynamicArray ();
+		void TestPodFileIO();
 	}
 }

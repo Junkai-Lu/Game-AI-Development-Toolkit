@@ -43,32 +43,44 @@ using std::endl;
 
 void ShellDefine()
 {
+	//create shell
 	shell::GameShell gadt("GADT");
 
-	auto test = gadt.root()->CreateChildPage("test", "start unit test");
+	//add subpage.
 	auto game = gadt.root()->CreateChildPage("game", "game examples");
 	auto doc  = gadt.root()->CreateChildPage("doc", "lib documents");
 
-	breakthrough::DefineBreakthroughShell(game);
-	renju::DefineRenjuShell(game);
+	//add game examples 
 	ewn::DefineEwnShell(game);
+	renju::DefineRenjuShell(game);
+	breakthrough::DefineBreakthroughShell(game);
 
-	//Unit Test Page
-	for (auto p : unittest::func_list)
-	{
-		test->AddFunction(p.first, "test lib " + p.first, [=](){
-			unittest::RunTest(p);
+	//add unit test page
+	shell::TestPage test(gadt.root(), "test", "unit test");
+	test.AddFunctionList({
+		{ "convert"			,unittest::TestConvertFunc },
+		{ "point"			,unittest::TestPoint },
+		{ "bitboard"		,unittest::TestBitBoard },
+		{ "file"			,unittest::TestFilesystem },
+		{ "index"			,unittest::TestIndex },
+		{ "mcts_node"		,unittest::TestMctsNode },
+		{ "mcts"			,unittest::TestMctsSearch },
+		{ "visual_tree"		,unittest::TestVisualTree },
+		{ "allocator"		,unittest::TestStlAllocator },
+		{ "linear_alloc"	,unittest::TestStlLinearAlloc },
+		{ "list"			,unittest::TestStlList },
+		{ "static_matrix"	,unittest::TestStlStaticMatrix },
+		{ "dynamic_matrix"	,unittest::TestStlDynamicMatrix },
+		{ "table"			,unittest::TestTable },
+		{ "random_pool"		,unittest::TestRandomPool },
+		{ "minimax"			,unittest::TestMinimax },
+		{ "monte_carlo"		,unittest::TestMonteCarlo },
+		{ "dynamic_array"	,unittest::TestDynamicArray },
+		{ "pod_io"			,unittest::TestPodFileIO }
 		});
-	}
-	test->AddFunction("all","run all test", [](){
-		for (auto p : unittest::func_list)
-		{
-			unittest::RunTest(p);
-		}
-	});
 
-	//Start Shell
-	gadt.Run();
+	//start shell
+	gadt.Run("cd test");
 }
 
 int main()
