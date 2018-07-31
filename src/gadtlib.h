@@ -615,7 +615,8 @@ namespace gadt
 			inline void reset()
 			{
 				_created_time = std::chrono::system_clock::now();
-				_time = clock();
+				auto now = std::chrono::system_clock::now();
+				_time = std::chrono::system_clock::to_time_t(now);
 			}
 
 			//get the seconds since this time point was created.

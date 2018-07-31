@@ -1676,14 +1676,23 @@ namespace gadt
 		class ElementPool final
 		{
 		private:
+			using pointer = T * ;
+			using reference = T & ;
+
 			StaticArray<T, _MAX_SIZE> _elements;
 
 		public:
 
 			//push new element into pool
-			void push(const T& elem)
+			void push(const reference elem)
 			{
 				_elements.push_back(elem);
+			}
+
+			//push new element into pool
+			void push(T&& elem)
+			{
+				_elements.push_back(std::move(elem));
 			}
 
 			//get a random element and pop it from the pool.

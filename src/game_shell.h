@@ -1025,13 +1025,14 @@ namespace gadt
 		*/
 		class TestPage
 		{
-		private:
+		public:
 
 			using FuncType = std::function<void()>;
 			using FuncItem = std::pair<std::string, FuncType>;
 			using FuncList = std::vector<FuncItem>;
+			using PagePtr = page::ShellPage<FuncList>*;
 
-			page::ShellPage<FuncList>* _test_page;
+			PagePtr _test_page;
 
 		private:
 
@@ -1055,8 +1056,8 @@ namespace gadt
 			TestPage(page::ShellPage<DataType>* parent_page, std::string page_name, std::string page_desc):
 				_test_page(nullptr)
 			{
-				if (parent_page != nullptr)
-					_test_page = parent_page->CreateChildPage<FuncList>(page_name, page_desc);
+				if(parent_page != nullptr)
+					_test_page = (parent_page->template CreateChildPage<FuncList>(page_name, page_desc));
 				AddTestAll();
 			}
 

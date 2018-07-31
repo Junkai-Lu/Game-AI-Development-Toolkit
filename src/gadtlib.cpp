@@ -172,7 +172,7 @@ namespace gadt
 			GetSystemInfo(&sysInfo);
 			return (size_t)sysInfo.dwNumberOfProcessors;
 #else
-			return (size_t)sysconf(_SC_NPROCS_ONLN));;
+			return (size_t)sysconf(_SC_NPROCESSORS_ONLN);;
 #endif
 		}
 	}
