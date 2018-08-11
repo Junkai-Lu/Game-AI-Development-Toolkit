@@ -92,7 +92,10 @@ namespace gadt
 
 		void TestConvertFunc();
 		void TestPoint();
-		void TestBitBoard ();
+		void TestBitBoard();
+		void TestBitBoard64();
+		void TestBitArray();
+		void TestBitArraySet();
 		void TestFilesystem ();
 		void TestIndex ();
 		void TestMctsNode ();

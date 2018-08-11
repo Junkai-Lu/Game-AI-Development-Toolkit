@@ -763,6 +763,9 @@ namespace gadt
 
 		//get manhattan distance between two point.
 		size_t GetManhattanDistance(Point fir, Point sec);
+
+		//return a random check code that consist of 0~9,a~z and A~Z
+		std::string GetCheckCode(size_t length);
 		
 	}
 }

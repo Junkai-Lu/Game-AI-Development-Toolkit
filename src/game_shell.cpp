@@ -607,6 +607,7 @@ namespace gadt
 				}
 				else
 				{
+
 					RunSingleCommand(command);
 					command.clear();
 				}
