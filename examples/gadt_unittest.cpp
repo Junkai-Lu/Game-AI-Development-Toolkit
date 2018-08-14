@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2018 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -982,6 +982,17 @@ namespace gadt
 			for (size_t i = 0; i < 11; i++)
 				GADT_ASSERT(vec[i].x, i);
 			filesystem::remove_file(file_name);
+		}
+		void TestArgConvertor()
+		{
+			args::ArgConvertor<std::string, int, int> ac({ "1","2", "3" });
+			auto res = ac.ExecuteFunctionWithReturn<int>([](std::string, int a, int b)->int { return a + b; });
+			GADT_ASSERT(res, 5);
+			int aaa = 0;
+			ac.ExecuteFunction([&](std::string, int a, int b)->void {
+				aaa = a + b;
+			});
+			GADT_ASSERT(aaa, 5);
 		}
 	}
 }

@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2018 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -58,28 +58,29 @@ void ShellDefine()
 	//add unit test page
 	shell::TestPage test(gadt.root(), "test", "unit test");
 	test.AddFunctionList({
-		{ "convert"			,unittest::TestConvertFunc },
-		{ "point"			,unittest::TestPoint },
-		{ "bitboard"		,unittest::TestBitBoard },
-		{ "bitboard64"		,unittest::TestBitBoard64 },
-		{ "bitarray"		,unittest::TestBitArray },
-		{ "bitarrayset"		,unittest::TestBitArraySet },
-		{ "file"			,unittest::TestFilesystem },
-		{ "index"			,unittest::TestIndex },
-		{ "mcts_node"		,unittest::TestMctsNode },
-		{ "mcts"			,unittest::TestMctsSearch },
-		{ "visual_tree"		,unittest::TestVisualTree },
-		{ "allocator"		,unittest::TestStlAllocator },
-		{ "linear_alloc"	,unittest::TestStlLinearAlloc },
-		{ "list"			,unittest::TestStlList },
-		{ "static_matrix"	,unittest::TestStlStaticMatrix },
+		{ "convert"			,unittest::TestConvertFunc		},
+		{ "point"			,unittest::TestPoint			},
+		{ "bitboard"		,unittest::TestBitBoard			},
+		{ "bitboard64"		,unittest::TestBitBoard64		},
+		{ "bitarray"		,unittest::TestBitArray			},
+		{ "bitarrayset"		,unittest::TestBitArraySet		},
+		{ "file"			,unittest::TestFilesystem		},
+		{ "index"			,unittest::TestIndex			},
+		{ "mcts_node"		,unittest::TestMctsNode			},
+		{ "mcts"			,unittest::TestMctsSearch		},
+		{ "visual_tree"		,unittest::TestVisualTree		},
+		{ "allocator"		,unittest::TestStlAllocator		},
+		{ "linear_alloc"	,unittest::TestStlLinearAlloc	},
+		{ "list"			,unittest::TestStlList			},
+		{ "static_matrix"	,unittest::TestStlStaticMatrix	},
 		{ "dynamic_matrix"	,unittest::TestStlDynamicMatrix },
-		{ "table"			,unittest::TestTable },
-		{ "random_pool"		,unittest::TestRandomPool },
-		{ "minimax"			,unittest::TestMinimax },
-		{ "monte_carlo"		,unittest::TestMonteCarlo },
-		{ "dynamic_array"	,unittest::TestDynamicArray },
-		{ "pod_io"			,unittest::TestPodFileIO }
+		{ "table"			,unittest::TestTable			},
+		{ "random_pool"		,unittest::TestRandomPool		},
+		{ "minimax"			,unittest::TestMinimax			},
+		{ "monte_carlo"		,unittest::TestMonteCarlo		},
+		{ "dynamic_array"	,unittest::TestDynamicArray		},
+		{ "pod_io"			,unittest::TestPodFileIO		},
+		{ "arg_convertor"	,unittest::TestArgConvertor		}
 		});
 
 	//start shell

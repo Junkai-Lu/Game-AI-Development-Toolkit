@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2018 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -129,7 +129,7 @@ namespace gadt
 			//parse the command.
 			bool CommandParser::ParseParameters(std::string params_str)
 			{
-				auto param_list = DivideString(params_str, " ");
+				auto param_list = DivideString(params_str, define::GADT_SHELL_SEPARATOR_PARAMETER);
 				for (auto param : param_list)
 				{
 					add_parameter(param);
@@ -140,7 +140,7 @@ namespace gadt
 			//parse command
 			bool CommandParser::ParseCommands(std::string cmd_str)
 			{
-				auto cmd_list = DivideString(cmd_str, "/");
+				auto cmd_list = DivideString(cmd_str, define::GADT_SHELL_SEPARATOR_PATH);
 				size_t begin = 0;
 				if (cmd_list.size() != 0)
 				{
@@ -167,7 +167,7 @@ namespace gadt
 			//divide origin command into command and parameters.
 			bool CommandParser::ParseOriginalCommand(std::string original_command)
 			{
-				size_t space_pos = original_command.find(" ");
+				size_t space_pos = original_command.find(define::GADT_SHELL_SEPARATOR_PARAMETER);
 				if (space_pos != std::string::npos)
 				{
 					//find space, divide command into command part and param part.
@@ -207,7 +207,10 @@ namespace gadt
 					if (divide_pos != std::string::npos)
 					{
 						std::string single_str = RemoveSpace(str.substr(0, divide_pos));
-						result.push_back(single_str);
+						if (single_str.empty() == false)
+						{
+							result.push_back(single_str);
+						}
 						str = str.substr(divide_pos + separator.length(), str.length() - divide_pos);
 					}
 					else
@@ -378,6 +381,35 @@ namespace gadt
 			console::PrintEndLine<2>();
 		}
 
+		//load and run (multi) batch command
+		void GameShell::LoadBatCommand(const ParamsList & params)
+		{
+			for (auto file_path : params)
+			{
+				if (filesystem::exist_file(file_path))
+				{
+					std::string cmd = filesystem::load_file_as_string(file_path);
+					for (auto& c : cmd)
+					{
+						if (c == '\r')
+							c = ' ';
+						if (c == '\n')
+							c = ' ';
+					}
+					if (cmd.empty())//do not execute empty file.
+						continue;
+					bool res = RunMultiCommand(cmd);
+					if (res == false)
+						return;
+				}
+				else
+				{
+					console::PrintError("file '" + file_path + "' not found.");
+					return;
+				}
+			}
+		}
+
 		//print current dir.
 		void GameShell::PrintFocusPath() const
 		{
@@ -504,12 +536,12 @@ namespace gadt
 				},
 				define::DefaultParamsCheck
 			));
-			/*auto bat_command = CommandPtr(new ParamsCommand(
+			auto bat_command = CommandPtr(new ParamsCommand(
 				define::GADT_SHELL_COMMAND_BAT_NAME,
 				define::GADT_SHELL_COMMAND_BAT_DESC,
-				[&](const ParamsList& params)->void { set_focus_page(nullptr); },
-				define::DefaultParamsCountCheck<1>
-			));*/
+				[&](const ParamsList& params)->void { LoadBatCommand(params); },
+				define::DefaultParamsCheck
+			));
 			auto exit_command = CommandPtr(new ParamsCommand(
 				define::GADT_SHELL_COMMAND_EXIT_NAME,
 				define::GADT_SHELL_COMMAND_EXIT_DESC,
@@ -536,6 +568,7 @@ namespace gadt
 			));
 
 			_shell_cmd.add_command(define::GADT_SHELL_COMMAND_CD_NAME, cd_command);
+			_shell_cmd.add_command(define::GADT_SHELL_COMMAND_BAT_NAME, bat_command);
 			_shell_cmd.add_command(define::GADT_SHELL_COMMAND_EXIT_NAME, exit_command);
 			_shell_cmd.add_command(define::GADT_SHELL_COMMAND_LIST_NAME, list_command);
 			_shell_cmd.add_command(define::GADT_SHELL_COMMAND_HELP_NAME, help_command);
@@ -587,6 +620,18 @@ namespace gadt
 			return false;
 		}
 
+		//run multi command.
+		bool GameShell::RunMultiCommand(std::string command_str)
+		{
+			auto multi_cmd = CommandParser::DivideString(command_str, define::GADT_SHELL_SEPARATOR_COMMAND);
+			for (auto single_command : multi_cmd)
+			{
+				if (RunSingleCommand(single_command) == false)
+					return false;
+			}
+			return true;
+		}
+
 		//start from root.
 		void GameShell::Run(std::string init_command)
 		{
@@ -607,8 +652,7 @@ namespace gadt
 				}
 				else
 				{
-
-					RunSingleCommand(command);
+					RunMultiCommand(command);
 					command.clear();
 				}
 			}

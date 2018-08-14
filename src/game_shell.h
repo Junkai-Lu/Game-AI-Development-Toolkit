@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2018 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -52,30 +52,32 @@ namespace gadt
 			constexpr const char*  GADT_SHELL_PAGE_SYMBOL = "[P]";
 
 			//list command, default is 'ls'
-			constexpr const char*  GADT_SHELL_COMMAND_LIST_NAME = "ls";	
-			constexpr const char*  GADT_SHELL_COMMAND_LIST_DESC = "get command list";
+			constexpr const char* GADT_SHELL_COMMAND_LIST_NAME = "ls";	
+			constexpr const char* GADT_SHELL_COMMAND_LIST_DESC = "get command list";
 
 			//help command, default is 'help'
-			constexpr const char*  GADT_SHELL_COMMAND_HELP_NAME = "help";	
-			constexpr const char*  GADT_SHELL_COMMAND_HELP_DESC = "get all shell command";
+			constexpr const char* GADT_SHELL_COMMAND_HELP_NAME = "help";	
+			constexpr const char* GADT_SHELL_COMMAND_HELP_DESC = "get all shell command";
 
 			//clean screen command, default is 'clear'
-			constexpr const char*  GADT_SHELL_COMMAND_CLEAR_NAME = "clear";	
-			constexpr const char*  GADT_SHELL_COMMAND_CLEAR_DESC = "clean screen.";
+			constexpr const char* GADT_SHELL_COMMAND_CLEAR_NAME = "clear";	
+			constexpr const char* GADT_SHELL_COMMAND_CLEAR_DESC = "clean screen.";
 
 			//command that exit the program, default is 'exit'
-			constexpr const char*  GADT_SHELL_COMMAND_EXIT_NAME = "exit";
-			constexpr const char*  GADT_SHELL_COMMAND_EXIT_DESC = "exit program.";
+			constexpr const char* GADT_SHELL_COMMAND_EXIT_NAME = "exit";
+			constexpr const char* GADT_SHELL_COMMAND_EXIT_DESC = "exit program.";
 
 			//command that is uese to change directory, default is 'cd'
-			constexpr const char*  GADT_SHELL_COMMAND_CD_NAME = "cd";
-			constexpr const char*  GADT_SHELL_COMMAND_CD_DESC = "change directory.";
+			constexpr const char* GADT_SHELL_COMMAND_CD_NAME = "cd";
+			constexpr const char* GADT_SHELL_COMMAND_CD_DESC = "change directory.";
 
 			//command that is uese to run batch file, default is 'bat'
-			constexpr const char*  GADT_SHELL_COMMAND_BAT_NAME = "bat";
-			constexpr const char*  GADT_SHELL_COMMAND_BAT_DESC = "run batch file.";
+			constexpr const char* GADT_SHELL_COMMAND_BAT_NAME = "bat";
+			constexpr const char* GADT_SHELL_COMMAND_BAT_DESC = "run batch file.";
 
-			
+			constexpr const char* GADT_SHELL_SEPARATOR_PATH = "/";
+			constexpr const char* GADT_SHELL_SEPARATOR_PARAMETER = " ";
+			constexpr const char* GADT_SHELL_SEPARATOR_COMMAND = ";";
 
 			//default params check func.
 			bool DefaultParamsCheck(const ParamsList& list);
@@ -973,6 +975,9 @@ namespace gadt
 				}	
 			}
 
+			//load and run (multi) batch command
+			void LoadBatCommand(const ParamsList& params);
+
 			//print current dir.
 			void PrintFocusPath() const;
 
@@ -993,6 +998,9 @@ namespace gadt
 
 			//run single command.
 			bool RunSingleCommand(std::string command_str);
+
+			//run multi command.
+			bool RunMultiCommand(std::string command_str);
 
 		public:
 			//get name of shell.
