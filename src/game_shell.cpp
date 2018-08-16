@@ -28,16 +28,6 @@ namespace gadt
 		//GameShell
 		GameShell* GameShell::_g_focus_game = nullptr;
 
-		//public constructor function
-		GameShell::GameShell(std::string name) :
-			_name(name),
-			_shell_cmd(nullptr, this, "shell_cmd", []() {}),
-			_root_page(nullptr, this, "root", DefaultInfoFunc),
-			_focus_page(&_root_page)
-		{
-			InitializeShellCommands();
-		}
-
 		//default info func of game shell.
 		void GameShell::DefaultInfoFunc()
 		{
@@ -300,7 +290,25 @@ namespace gadt
 			return true;
 		}
 
-		//start from root.
+		/*
+		* Create game shell and give it a name.
+		*/
+		GameShell::GameShell(std::string name) :
+			_name(name),
+			_shell_cmd(nullptr, this, "shell_cmd", []() {}),
+			_root_page(nullptr, this, "root", DefaultInfoFunc),
+			_focus_page(&_root_page)
+		{
+			InitializeShellCommands();
+		}
+
+		/*
+		* Start shell.
+		*
+		* [init_command] is the default command that would be executed after shell started.
+		*
+		* No return value.
+		*/
 		void GameShell::Run(std::string init_command)
 		{
 			be_focus();

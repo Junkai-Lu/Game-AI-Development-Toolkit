@@ -10,7 +10,6 @@ namespace gadt
 		class GameShell;
 		class TestPage;
 
-		//shell pages class
 		namespace page
 		{
 			template<typename DataType>
@@ -20,7 +19,9 @@ namespace gadt
 			using PageBasePtr = ShellPageBase * ;
 			using PageBaseHandle = std::unique_ptr<ShellPageBase>;
 
-			//information of single page.
+			/*
+			* PageInfo is used to save some informations about a page, like description and help description.
+			*/
 			struct PageInfo
 			{
 				std::string desc;
@@ -28,7 +29,10 @@ namespace gadt
 				PageBaseHandle ptr;
 			};
 
-			//ShellPageBase
+			/*
+			* ShellPageBase is the base class of ShellPage.
+			* it is a virtual class.
+			*/
 			class ShellPageBase
 			{
 				friend class ::gadt::shell::GameShell;
@@ -144,7 +148,15 @@ namespace gadt
 
 				virtual ~ShellPageBase() = default;
 
-				//add info function about this page, the func would be execute before the page works. 
+				/*
+				* Set a info function, that would be executed when entering this page.
+				* this function can be used to print page information or something else.
+				*
+				* [info_func] is added function, its type is std::function<void()>;
+				* [recursively] means all the child pages would be set same function or not.
+				*
+				* No return value.
+				*/
 				void SetInfoFunc(InfoFunc info_func, bool recursively = true)
 				{
 					_info_func = info_func;
@@ -154,7 +166,11 @@ namespace gadt
 				}
 			};
 
-			//Shell Page
+			/*
+			* ShellPage is the basic unit of GShell, it can contain some function commands and child pages.
+			* each page would contain a binded data that can be decided by template parameter.
+			* binded data can be operated by added functions, which allows flexible interactions defined by users.
+			*/
 			template<typename DataType>
 			class ShellPage final :public ShellPageBase
 			{
@@ -199,7 +215,6 @@ namespace gadt
 				{
 					return _data;
 				}
-
 
 				//insert command.
 				inline void add_command(std::string name, CommandPtr& cmd_data_ptr)
@@ -308,7 +323,16 @@ namespace gadt
 
 			public:
 
-				//default function.
+				/*
+				* Initialize ShellPage and call the default constructor function of DataType.
+				*
+				* [parent_page] is a pointer to the parent page, which can be nullptr.
+				* [belonging_shell] is a pointer to belonged shell. which can not be nullptr.
+				* [name] is the name of this page, which can be seen as the identity of page that assign by user.
+				* [info_func] is a function that woule be executed when entering this page.
+				* 
+				* No return value.
+				*/
 				ShellPage(PageBasePtr parent_page, ShellPtr belonging_shell, std::string name, InfoFunc info_func) :
 					ShellPageBase(parent_page, belonging_shell, name, info_func),
 					_data(),
@@ -317,7 +341,19 @@ namespace gadt
 				{
 				}
 
-				//create a new shell page and initialize data.
+				/*
+				* Initialize ShellPage and initialize DataType with extra args.
+				*
+				* <Types...> are the types of extra args that used for initialize DataType.
+				*
+				* [parent_page] is a pointer to the parent page, which can be nullptr.
+				* [belonging_shell] is a pointer to belonged shell. which can not be nullptr.
+				* [name] is the name of this page, which can be seen as the identity of page that assign by user.
+				* [info_func] is a function that woule be executed when entering this page.
+				* [args...] are extra args that used for initialize DataType.
+				*
+				* No return value.
+				*/
 				template<class... Types>
 				ShellPage(PageBasePtr parent_page, ShellPtr belonging_shell, std::string name, InfoFunc info_func, Types&&... args) :
 					ShellPageBase(parent_page, belonging_shell, name, info_func),
@@ -327,10 +363,19 @@ namespace gadt
 				{
 				}
 
-				//copy constructor is disallowed.
+				/*
+				* Copy constructor is disallowed.
+				*/
 				ShellPage(ShellPage&) = delete;
 
-				//execute command by name
+				/*
+				* Execute a function in this page with or without parameters.
+				*
+				* [command] is the function name that was passed when adding function.
+				* [params] is vector of string which contains all the inputed parameters by user.
+				*
+				* No return value.
+				*/
 				void ExecuteCommand(std::string command, const ParamsList& params) override
 				{
 					if (ExistCommand(command))
@@ -352,11 +397,13 @@ namespace gadt
 				}
 
 				/*
-				* Add DefaultCommand which do not have any parameters.
+				* Add a function command that don't need any parameters.
 				*
 				* [name] is the name of command.
-				* [func] is the added function, type = void()
-				* [desc] is description of the command.
+				* [desc] is the description of command.
+				* [func] is the added function, whose type is std::function<void()>;.
+				* 
+				* No return value.
 				*/
 				void AddFunction(std::string name, std::string desc, DefaultCommandFunc func)
 				{
@@ -368,11 +415,13 @@ namespace gadt
 				}
 
 				/*
-				* Add DataCommand that allows to operator binded data without parameters
+				* Add a function command which allow users to operator binded data without parameters.
 				*
 				* [name] is the name of command.
-				* [func] is the added function, type = void(DataType&)
-				* [desc] is description of the command.
+				* [desc] is the description of command.
+				* [func] is the added function, whose type is std::function<void(DataType&)>.
+				*
+				* No return value.
 				*/
 				void AddFunction(std::string name, std::string desc, DataCommandFunc func)
 				{
@@ -384,46 +433,59 @@ namespace gadt
 				}
 
 				/*
-				* Add ParamsCommand which allows to be executed with parameters.
+				* Add a function command which allow users to execute function by inputed parameters.
+				* note that user need to convert and examine those inputed parameters by themselves.
+				* check_func would be used for examining inputed parameters.
+				* the inputed function would be called only if parameter examination success.
 				*
 				* [name] is the name of command.
-				* [func] is the added function, type = void(const ParamsList&)
-				* [desc] is description of the command.
-				* [check] is the parameters check function, type = bool(const ParamsList&)
+				* [desc] is the description of command.
+				* [func] is the added function, and its type is std::function<void(const ParamsList&)>.
+				* [check_func] is the parameter examination function, whose type is std::function<bool(const ParamsList&)>
+				*
+				* No return value.
 				*/
-				void AddFunction(std::string name, std::string desc, ParamsCommandFunc func, ParamsCheckFunc check)
+				void AddFunction(std::string name, std::string desc, ParamsCommandFunc func, ParamsCheckFunc check_func)
 				{
 					if (CheckCommandNameLegality(name))
 					{
-						auto command_ptr = CommandPtr(new ParamsCommand(name, desc, func, check));
+						auto command_ptr = CommandPtr(new ParamsCommand(name, desc, func, check_func));
 						add_command(name, command_ptr);
 					}
 				}
 
 				/*
-				* Add DataAndParamsCommand which allows to operator binded data with parameters.
+				* Add a function command which allow users to executed function by binded data and inputed parameters.
+				* note that user need to convert and examine those inputed parameters by themselves.
+				* check_func would be used for examining inputed parameters.
+				* the inputed function would be called only if parameter examination success.
 				*
 				* [name] is the name of command.
-				* [func] is the added function, type = void(DataType&, const ParamsList&)
-				* [desc] is description of the command.
-				* [check] is the parameters check function, type = bool(const ParamsList&)
+				* [desc] is the description of command.
+				* [func] is the added function, and its type is std::function<void(DataType&, const ParamsList&)>.
+				* [check_func] is the parameter examination function, whose type is std::function<bool(const ParamsList&)>
+				*
+				* No return value.
 				*/
-				void AddFunction(std::string name, std::string desc, DataAndParamsCommandFunc func, ParamsCheckFunc check)
+				void AddFunction(std::string name, std::string desc, DataAndParamsCommandFunc func, ParamsCheckFunc check_func)
 				{
 					if (CheckCommandNameLegality(name))
 					{
-						auto command_ptr = CommandPtr(new DataAndParamsCommand(name, desc, func, check));
+						auto command_ptr = CommandPtr(new DataAndParamsCommand(name, desc, func, check_func));
 						add_command(name, command_ptr);
 					}
 				}
 
 				/*
-				* Add BoolParamsCommand which allows to be executed with parameters with a boolean return value.
+				* Add a function command which allow users to execute a bool-return function by inputed parameters.
+				* note that user need to convert and examine those inputed parameters by themselves.
+				* if the return of added function is false, GShell would told users that they inputed some unexpected parameters.
 				*
 				* [name] is the name of command.
-				* [func] is the added function, type = bool(const ParamsList&)
-				* [desc] is description of the command.
-				* [check] is the parameters check function, type = bool(const ParamsList&)
+				* [desc] is the description of command.
+				* [func] is the added function, and its type is std::function<bool(const ParamsList&)>.
+				*
+				* No return value.
 				*/
 				void AddFunction(std::string name, std::string desc, BoolParamsCommandFunc func)
 				{
@@ -435,12 +497,15 @@ namespace gadt
 				}
 
 				/*
-				* Add BoolDataAndParamsCommand which allows to operator binded data with parameters with a boolean return value.
+				* Add a function command which allow users to execute a bool-return function by binded data and inputed parameters.
+				* note that user need to convert and examine those inputed parameters by themselves.
+				* if the return of added function is false, GShell would told users that they inputed some unexpected parameters.
 				*
 				* [name] is the name of command.
-				* [func] is the added function, type = bool(DataType&, const ParamsList&)
-				* [desc] is description of the command.
-				* [check] is the parameters check function, type = bool(const ParamsList&)
+				* [desc] is the description of command.
+				* [func] is the added function, and its type is std::function<bool(DataType&, const ParamsList&)>.
+				*
+				* No return value.
 				*/
 				void AddFunction(std::string name, std::string desc, BoolDataAndParamsCommandFunc func)
 				{
@@ -451,6 +516,21 @@ namespace gadt
 					}
 				}
 
+				/*
+				* Add a function command which allow users to execute a function by inputed fixed-types parameters.
+				* the inputed parameters would be converted to expected types that decleared in template parameters, then 
+				* converted parameters would be used for calling the added function if convert success. 
+				* note that user need to examine the legality of those inputed parameters by themselves.
+				* e.g. if the template prameters are <double, int>, the type of added function is std::function<void(double, int)>.
+				*
+				* <Args...> are the expected argument types of added function.
+				*
+				* [name] is the name of command.
+				* [desc] is the description of command.
+				* [func] is the added function, and its type is std::function<void(Args...)>.
+				*
+				* No return value.
+				*/
 				template<class... Args>
 				void AddFunctionWithArgs(std::string name, std::string desc, typename Identity<std::function<void(Args...)>>::type func)
 				{
@@ -461,6 +541,21 @@ namespace gadt
 					}
 				}
 
+				/*
+				* Add a function command which allow users to execute a function by binded data and inputed fixed-types parameters.
+				* the inputed parameters would be converted to expected types that decleared in template parameters, then
+				* converted parameters would be used for calling the added function if convert success.
+				* note that user need to examine the legality of those inputed parameters by themselves.
+				* e.g. if the template prameters are <double, int>, the type of added function is std::function<void(DataType&, double, int)>.
+				*
+				* <Args...> are the expected argument types of added function.
+				*
+				* [name] is the name of command.
+				* [desc] is the description of command.
+				* [func] is the added function, and its type is std::function<void(DataType&, Args...)>.
+				*
+				* No return value.
+				*/
 				template<class... Args>
 				void AddFunctionWithArgs(std::string name, std::string desc, typename Identity<std::function<void(DataType&, Args...)>>::type func)
 				{
@@ -472,11 +567,14 @@ namespace gadt
 				}
 
 				/*
-				* CreateChildPage.
-				* create a page as the child page of current page.
+				* Create a new child page and initialize its bind data by default constructor.
 				*
-				* [child_name] is the name of child page.
-				* [desc] is description of the command.
+				* <ChildDataType> is the type of binded data of created child page. default is int.
+				*
+				* [page_name] is the name of child page.
+				* [page_descdesc] is the description of child page.
+				*
+				* Return: a pointer to created child page.
 				*/
 				template<typename ChildDataType = int>
 				ShellPage<ChildDataType>* CreateChildPage(std::string page_name, std::string page_desc)
@@ -503,11 +601,15 @@ namespace gadt
 				}
 
 				/*
-				* CreateChildPage.
-				* create child page with initilized value, default data type is <int>
+				* Create a new child page and initialize its bind data by parameters.
 				*
-				* [child_name] is the name of child page.
-				* [desc] is description of the command.
+				* <ChildDataType> is the type of binded data of created child page. default is int.
+				*
+				* [page_name] is the name of child page.
+				* [page_descdesc] is the description of child page.
+				* [args...] are parameters that used for initialize binded data of created page.
+				*
+				* Return: a pointer to created child page.
 				*/
 				template<typename ChildDataType, class... Types>
 				ShellPage<ChildDataType>* CreateChildPage(std::string page_name, std::string page_desc, Types&&... args)
@@ -539,10 +641,8 @@ namespace gadt
 		}
 
 		/*
-		* TestPage is a specified page that can be used by unit test.
-		*
-		* [parent_page] is parent page of generated test page.
-		* [name] is the name of generated test page.
+		* TestPage is a specified shell page that used for unit test.
+		* this page allow users to add multi test function, and run them all by a single command 'all'.
 		*/
 		class TestPage
 		{
@@ -551,7 +651,6 @@ namespace gadt
 			using FuncType = std::function<void()>;
 			using FuncItem = std::pair<std::string, FuncType>;
 			using FuncList = std::vector<FuncItem>;
-			using FuncItemInitList = std::initializer_list<FuncItem>;
 			using PagePtr = page::ShellPage<FuncList>*;
 
 			PagePtr _test_page;
@@ -589,7 +688,9 @@ namespace gadt
 
 		public:
 
-			//return true if test page is not a nullptr.
+			/*
+			* Return true if the test page created success.
+			*/
 			inline bool is_initialized() const
 			{
 				return _test_page != nullptr;
@@ -597,6 +698,15 @@ namespace gadt
 
 		public:
 
+			/*
+			* Create a child test page in a parent page.
+			*
+			* <DataType> is the type of binded data of parent page.
+			*
+			* [parent_page] is a pointer to parent page.
+			* [page_name] is the name of child test page.
+			* [page_desc] is the description of child test page.
+			*/ 
 			template<typename DataType>
 			TestPage(page::ShellPagePtr<DataType> parent_page, std::string page_name, std::string page_desc) :
 				_test_page(nullptr)
@@ -606,15 +716,33 @@ namespace gadt
 				AddTestAll();
 			}
 
+			/*
+			* Copy constructor is disallowed.
+			*/
 			TestPage(const TestPage& tp) = delete;
 
-			//add function by name and function, which would generate a default description. 
+			/*
+			* Add a test function which would be give a default description by its name.
+			*
+			* [name] is the name of test function.
+			* [func] is the added function, and its type is std::function<void()>.
+			*
+			* No return value.
+			*/
 			void AddFunction(std::string name, FuncType func)
 			{
 				AddFunction(name, "test " + name, func);
 			}
 
-			//add function by name, description and function.
+			/*
+			* Add a test function and set its name and description.
+			*
+			* [name] is the name of test function.
+			* [desc] is the description of test function.
+			* [func] is the added function, and its type is std::function<void()>.
+			*
+			* No return value.
+			*/
 			void AddFunction(std::string name, std::string desc, FuncType func)
 			{
 				if (is_initialized())
@@ -627,10 +755,17 @@ namespace gadt
 				}
 			}
 
-			//add multi functions by name and function, which would generate a default description. 
-			void AddFunctionList(FuncItemInitList init_list)
+			/*
+			* Add multi test function and give them default description by their names.
+			* e.g the func_list can be { {"A", FuncA }, { "B", FuncB } }.
+			*
+			* [func_list] is initialize_list of std::pair<std::string, std::function<void()>>.
+			*
+			* No return value.
+			*/
+			void AddFunctionList(std::initializer_list<FuncItem> func_list)
 			{
-				for (auto pair : init_list)
+				for (auto pair : func_list)
 				{
 					AddFunction(pair.first, pair.second);
 				}

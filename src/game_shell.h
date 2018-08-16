@@ -31,16 +31,16 @@ namespace gadt
 	{
 		/*
 		* GameShell a unix-style shell. allow user to add function and pages.
-		*
-		* [name] is the name of the shell.
+		* the root page would be created defaultly. use .root() member functuon to get it.
+		* start shell by call Run() member function, whose parameter can be a command and it would be executed after shell start.
+		* 
+		* GameShell(std::string name) is the only constructor function, which need a name as its parameter.
 		*/
 		class GameShell final
 		{
-			//friend ::gadt::shell::page::ShellPageBase;
 		private:
 
 			using CommandParser = ::gadt::shell::command::CommandParser;
-			//using ShellPageBase = ::gadt::shell::page::ShellPageBase;
 
 		private:
 			//global variable
@@ -148,26 +148,47 @@ namespace gadt
 			bool RunMultiCommand(std::string command_str);
 
 		public:
-			//get name of shell.
+			/*
+			* Get the name of shell, which was decied when shell created.
+			*
+			* return: a string.
+			*/
 			inline std::string name() const
 			{
 				return _name;
 			}
 
-			//get root page.
+			/*
+			* Get the root page of shell, which is a inner member of GameShell.
+			*
+			* return: a pointer to ::gadt::shell::page::ShellPage<int>.
+			*/
 			inline page::ShellPage<int>* root()
 			{
 				return &_root_page;
 			}
 
-			//public constructor function
+		public:
+
+			/*
+			* Create game shell and give it a name.
+			*/
 			GameShell(std::string name);
 
-			//copy constructor is disallowed.
+			/*
+			* Copy constructor is disallowed.
+			*/
 			GameShell(GameShell&) = delete;
 
-			//start from root.
+			/*
+			* Start shell.
+			*
+			* [init_command] is the default command that would be executed after shell started.
+			*
+			* No return value.
+			*/
 			void Run(std::string init_command = "");
 		};
+
 	}
 }

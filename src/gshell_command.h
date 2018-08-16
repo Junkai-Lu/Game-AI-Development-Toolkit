@@ -527,7 +527,7 @@ namespace gadt
 					args::ArgConvertor<Args...> args(params);
 					if (args.parse_success())
 					{
-						//args.template ExecuteFunction<DataType&>(_data_args_command_func, data);
+						args.template ExecuteFunction<DataType&>(_data_args_command_func, data);
 					}
 					else
 					{
@@ -546,5 +546,6 @@ namespace gadt
 				std::unique_ptr<CommandBase<DataType>> ptr;
 			};
 		}
+
 	}
 }
