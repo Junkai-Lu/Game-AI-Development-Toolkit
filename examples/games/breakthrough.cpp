@@ -25,7 +25,7 @@ namespace gadt
 {
 	namespace breakthrough
 	{
-		void DefineBreakthroughShell(shell::page::PagePtr<int> page_ptr)
+		void DefineBreakthroughShell(shell::page::ShellPagePtr<int> page_ptr)
 		{
 			auto bt = page_ptr->CreateChildPage<BtState>("breakthrough", "breakthrough game");
 			bt->AddFunction("print", "print state", [](BtState& state)->void {state.Print(); });

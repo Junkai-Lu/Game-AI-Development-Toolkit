@@ -49,6 +49,8 @@ void ShellDefine()
 	//add subpage.
 	auto game = gadt.root()->CreateChildPage("game", "game examples");
 	auto doc  = gadt.root()->CreateChildPage("doc", "lib documents");
+	gadt.root()->AddFunctionWithArgs<std::string, int, int>("default", "default version", [](std::string, int, int)->void { std::cout << "hello"; });
+	gadt.root()->AddFunctionWithArgs<std::string, int, int>("add", "data version", [](int& a, std::string, int, int c)->void { a += c; std::cout << a << std::endl; });
 
 	//add game examples 
 	ewn::DefineEwnShell(game);
@@ -84,7 +86,7 @@ void ShellDefine()
 		});
 
 	//start shell
-	gadt.Run("cd test");
+	gadt.Run("mttest hello world test");
 }
 
 int main()

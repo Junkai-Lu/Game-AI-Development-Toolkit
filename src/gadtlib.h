@@ -360,6 +360,17 @@ namespace gadt
 		return ss.str();
 	}
 
+	/*
+	* Identity is used to declear the type of lambda.
+	*
+	*<T> is the type of std::function, e.g. std::function<void(int,int)>
+	*/
+	template <typename T>
+	struct Identity
+	{
+		using type = T;
+	};
+
 	namespace console
 	{
 		//various delimiter string
@@ -768,6 +779,4 @@ namespace gadt
 		std::string GetCheckCode(size_t length);
 		
 	}
-
-	
 }

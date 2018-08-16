@@ -993,6 +993,12 @@ namespace gadt
 				aaa = a + b;
 			});
 			GADT_ASSERT(aaa, 5);
+			std::function<std::string(int&, std::string, int, int)> funcA = [](int& a, std::string, int b, int)->std::string { return ToString(a + b); };
+			std::string str = ac.ExecuteFunctionWithReturn<std::string, int&>(funcA, aaa);
+			GADT_ASSERT(str, "7");
+			std::function<void(int&, std::string, int, int)> funcB = [](int& a, std::string, int b, int)->void { a += b; };
+			ac.ExecuteFunction<int&>(funcB, aaa);
+			GADT_ASSERT(aaa, 7);
 		}
 	}
 }

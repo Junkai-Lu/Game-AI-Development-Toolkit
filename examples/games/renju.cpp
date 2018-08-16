@@ -119,7 +119,7 @@ namespace gadt
 			PrintRenjuState(temp);
 		}
 
-		void DefineRenjuShell(shell::page::PagePtr<int> page_ptr)
+		void DefineRenjuShell(shell::page::ShellPagePtr<int> page_ptr)
 		{
 			auto renju = page_ptr->CreateChildPage<RenjuState>("renju", "renju game", 1);
 			renju->AddFunction("print", "print state", [](RenjuState& state) {

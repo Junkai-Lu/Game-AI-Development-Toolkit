@@ -165,7 +165,7 @@ namespace gadt
 
 		bool AllowUpdateValue(const EwnState& state, EwnPlayer winner);
 
-		void DefineEwnShell(shell::page::PagePtr<int> page_ptr);
+		void DefineEwnShell(shell::page::ShellPagePtr<int> page_ptr);
 
 
 	}

@@ -217,6 +217,6 @@ namespace gadt
 		std::string ActionToString(const BtAction& action);
 		std::string ResultToString(const BtPlayer& result);
 
-		void DefineBreakthroughShell(shell::page::PagePtr<int> page_ptr);
+		void DefineBreakthroughShell(shell::page::ShellPagePtr<int> page_ptr);
 	}
 }

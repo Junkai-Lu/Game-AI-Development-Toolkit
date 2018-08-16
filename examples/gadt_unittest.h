@@ -34,7 +34,7 @@
 #include "../src/mcts.hpp"
 #include "../src/parallel_mcts.hpp"
 #include "../src/gadt_io.h"
-#include "../src/gadt_args.hpp"
+#include "../src/gshell_args.hpp"
 
 #pragma once
 
