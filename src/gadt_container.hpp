@@ -1552,7 +1552,7 @@ namespace gadt
 			StaticArray(const StaticArray& target) :
 				_size(0)
 			{
-				::memcpy(_elems, target._elems, target.size() * _MAX_SIZE);
+				::memcpy(_elems, target._elems, sizeof(T) * _MAX_SIZE);
 				_size = target._size;
 			}
 
