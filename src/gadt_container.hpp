@@ -1552,7 +1552,7 @@ namespace gadt
 			StaticArray(const StaticArray& target) :
 				_size(0)
 			{
-				::memcpy(_elems, target._elems, _size * _MAX_SIZE);
+				::memcpy(_elems, target._elems, target.size() * _MAX_SIZE);
 				_size = target._size;
 			}
 
@@ -1707,7 +1707,7 @@ namespace gadt
 			}
 
 			//get a random element.
-			const T& random() const
+			T random() const
 			{
 				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, is_empty(), "overflow");
 				size_t rnd = rand() % size();
