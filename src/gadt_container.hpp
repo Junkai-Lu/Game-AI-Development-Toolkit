@@ -1528,6 +1528,7 @@ namespace gadt
 		private:
 			using pointer = T *;
 			using reference = T &;
+			using const_reference = const T&;
 
 			T _elems[_MAX_SIZE];
 			size_t	_size;
@@ -1599,7 +1600,7 @@ namespace gadt
 			}
 
 			//get element by const.
-			inline const reference const_element(size_t index) const
+			inline const_reference const_element(size_t index) const
 			{
 				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, index >= _size, "out of range");
 				return _elems[index];
