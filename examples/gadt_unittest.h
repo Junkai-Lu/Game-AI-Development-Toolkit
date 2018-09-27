@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2018 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,7 @@
 #include "../src/mcts.hpp"
 #include "../src/parallel_mcts.hpp"
 #include "../src/gadt_io.h"
+#include "../src/gshell_args.hpp"
 
 #pragma once
 
@@ -92,7 +93,10 @@ namespace gadt
 
 		void TestConvertFunc();
 		void TestPoint();
-		void TestBitBoard ();
+		void TestBitBoard();
+		void TestBitBoard64();
+		void TestBitArray();
+		void TestBitArraySet();
 		void TestFilesystem ();
 		void TestIndex ();
 		void TestMctsNode ();
@@ -109,5 +113,6 @@ namespace gadt
 		void TestMonteCarlo ();
 		void TestDynamicArray ();
 		void TestPodFileIO();
+		void TestArgConvertor();
 	}
 }

@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2018 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -359,6 +359,17 @@ namespace gadt
 		ss << data;
 		return ss.str();
 	}
+
+	/*
+	* Identity is used to declear the type of lambda.
+	*
+	*<T> is the type of std::function, e.g. std::function<void(int,int)>
+	*/
+	template <typename T>
+	struct Identity
+	{
+		using type = T;
+	};
 
 	namespace console
 	{
@@ -763,6 +774,9 @@ namespace gadt
 
 		//get manhattan distance between two point.
 		size_t GetManhattanDistance(Point fir, Point sec);
+
+		//return a random check code that consist of 0~9,a~z and A~Z
+		std::string GetCheckCode(size_t length);
 		
 	}
 }

@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2018 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -179,9 +179,27 @@ namespace gadt
 
 	namespace func
 	{
+		//get manhattan distance between two point.
 		size_t GetManhattanDistance(Point fir, Point sec)
 		{
 			return abs(fir.x - sec.x) + abs(fir.y - sec.y);
+		}
+
+		//return a random check code that consist of 0~9,a~z and A~Z
+		std::string GetCheckCode(size_t length)
+		{
+			std::string temp(length, '0');
+			for (size_t i = 0; i < length; i++)
+			{
+				size_t rnd = rand() % 62;
+				if (rnd < 10)
+					temp[i] = static_cast<char>(48 + rnd);//0~9
+				else if (rnd < 36)
+					temp[i] = static_cast<char>(55 + rnd);//A~Z
+				else
+					temp[i] = static_cast<char>(61 + rnd);//a~z
+			}
+			return temp;
 		}
 	}
 }

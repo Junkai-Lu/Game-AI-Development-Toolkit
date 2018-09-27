@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2018 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -287,151 +287,161 @@ namespace gadt
 			GADT_ASSERT(56, temp.upper_bound());
 			temp = bitboard::BitBoard<56>{ 0,1,2,3,4,5 };
 			GADT_ASSERT(6, temp.total());
-
+		}
+		void TestBitBoard64()
+		{
 			//test BitBoard64
-			bitboard::BitBoard64 temp_64;
-			GADT_ASSERT(0, temp_64.total());
-			GADT_ASSERT(false, temp_64.any());
-			GADT_ASSERT(true, temp_64.none());
-			temp_64.set(1);
-			GADT_ASSERT((temp_64 ^ temp_64).total(), 0);
-			GADT_ASSERT((~temp_64).get(1), false);
-			GADT_ASSERT((~temp_64).get(0), true);
-			GADT_ASSERT((~temp_64).get(2), true);
-			count = 0;
-			for (bool v : temp_64)
+			bitboard::BitBoard64 temp;
+			GADT_ASSERT(0, temp.total());
+			GADT_ASSERT(false, temp.any());
+			GADT_ASSERT(true, temp.none());
+			temp.set(1);
+			GADT_ASSERT((temp ^ temp).total(), 0);
+			GADT_ASSERT((~temp).get(1), false);
+			GADT_ASSERT((~temp).get(0), true);
+			GADT_ASSERT((~temp).get(2), true);
+			size_t count = 0;
+			for (bool v : temp)
 			{
 				GADT_ASSERT(v, (count == 1 ? true : false));
 				count++;
 			}
-			GADT_ASSERT(count, temp_64.upper_bound());
-			GADT_ASSERT(true, temp_64.any());
-			GADT_ASSERT(false, temp_64.none());
-			temp_64.set(51);
-			temp_64.set(26);
-			GADT_ASSERT(3, temp_64.total());
-			temp_64.reset(1);
-			temp_64.write(26, 0);
-			GADT_ASSERT(1, temp_64.total());
-			GADT_ASSERT(true, temp_64.get(51));
-			GADT_ASSERT(64, temp_64.upper_bound());
-			temp_64 = bitboard::BitBoard64(0xFF);
-			GADT_ASSERT(8, temp_64.total());
-			temp_64 = bitboard::BitBoard64{0,1,2,3,4,5,6,7};
-			GADT_ASSERT(8, temp_64.total());
-			temp_64 &= bitboard::BitBoard64{ 0,1,2,3,4,5,6,7,8 };
-			GADT_ASSERT(8, temp_64.total());
-			temp_64 |= bitboard::BitBoard64{ 0,1,2,3,4,5,6,7,8 };
-			GADT_ASSERT(9, temp_64.total());
-
-			//test BitPoker
-			bitboard::BitPoker temp_poker;
-			bitboard::BitPoker subtemp_poker;
-			GADT_ASSERT(0, temp_poker.total());
-			GADT_ASSERT(false, temp_poker.any());
-			GADT_ASSERT(true, temp_poker.none());
-			temp_poker.set(1, 1);
-			GADT_ASSERT(true, temp_poker.any());
-			GADT_ASSERT(false, temp_poker.none());
-			temp_poker.set(2, 2);
-			temp_poker.set(3, 3);
-			count = 0;
-			for (size_t v : temp_poker)
+			GADT_ASSERT(count, temp.upper_bound());
+			GADT_ASSERT(true, temp.any());
+			GADT_ASSERT(false, temp.none());
+			temp.set(51);
+			temp.set(26);
+			GADT_ASSERT(3, temp.total());
+			temp.reset(1);
+			temp.write(26, 0);
+			GADT_ASSERT(1, temp.total());
+			GADT_ASSERT(true, temp.get(51));
+			GADT_ASSERT(64, temp.upper_bound());
+			temp = bitboard::BitBoard64(0xFF);
+			GADT_ASSERT(8, temp.total());
+			temp = bitboard::BitBoard64{ 0,1,2,3,4,5,6,7 };
+			GADT_ASSERT(8, temp.total());
+			temp &= bitboard::BitBoard64{ 0,1,2,3,4,5,6,7,8 };
+			GADT_ASSERT(8, temp.total());
+			temp |= bitboard::BitBoard64{ 0,1,2,3,4,5,6,7,8 };
+			GADT_ASSERT(9, temp.total());
+		}
+		void TestBitArray()
+		{
+			//test BitArray<4>
+			bitboard::BitArray<4> temp4;
+			bitboard::BitArray<4> subtemp4;
+			GADT_ASSERT(0, temp4.total());
+			GADT_ASSERT(false, temp4.any());
+			GADT_ASSERT(true, temp4.none());
+			temp4.set(1, 1);
+			GADT_ASSERT(true, temp4.any());
+			GADT_ASSERT(false, temp4.none());
+			temp4.set(2, 2);
+			temp4.set(3, 3);
+			size_t count = 0;
+			for (size_t v : temp4)
 			{
 				GADT_ASSERT(v, (count > 0 && count < 4 ? count : 0));
 				count++;
 			}
-			GADT_ASSERT(count, temp_poker.upper_bound());
-			subtemp_poker.set(1, 1);
-			subtemp_poker.set(2, 1);
-			subtemp_poker.set(3, 1);
-			GADT_ASSERT(true,temp_poker.exist_subset(subtemp_poker));
-			GADT_ASSERT(true,subtemp_poker.is_subset_of(temp_poker));
-			GADT_ASSERT(6, temp_poker.total());
-			temp_poker.reset(1);
-			GADT_ASSERT(5, temp_poker.total());
-			temp_poker.push(3);
-			GADT_ASSERT(4, temp_poker.get(3));
-			temp_poker.decrease(3);
-			GADT_ASSERT(3, temp_poker.get(3));
-			temp_poker.increase(4);
-			GADT_ASSERT(1, temp_poker.get(4));
-			temp_poker = bitboard::BitPoker(0xFF);
-			GADT_ASSERT(30, temp_poker.total());
-			temp_poker = bitboard::BitPoker{ {0,3}, {1,2}, {2,3} };
-			GADT_ASSERT(8, temp_poker.total());
-			temp_poker += bitboard::BitPoker{ { 0,1 },{ 1,1 },{ 2,1 } };
-			GADT_ASSERT(11, temp_poker.total());
-			temp_poker -= bitboard::BitPoker{ { 0,1 },{ 1,1 },{ 2,1 } };
-			GADT_ASSERT(8, temp_poker.total());
+			GADT_ASSERT(count, temp4.upper_bound());
+			subtemp4.set(1, 1);
+			subtemp4.set(2, 1);
+			subtemp4.set(3, 1);
+			GADT_ASSERT(true, temp4.exist_subset(subtemp4));
+			GADT_ASSERT(true, subtemp4.is_subset_of(temp4));
+			GADT_ASSERT(6, temp4.total());
+			temp4.reset(1);
+			GADT_ASSERT(5, temp4.total());
+			temp4.push(3);
+			GADT_ASSERT(4, temp4.get(3));
+			temp4.decrease(3);
+			GADT_ASSERT(3, temp4.get(3));
+			temp4.increase(4);
+			GADT_ASSERT(1, temp4.get(4));
+			temp4 = bitboard::BitArray<4>(0xFF);
+			GADT_ASSERT(30, temp4.total());
+			temp4 = bitboard::BitArray<4>{ { 0,3 },{ 1,2 },{ 2,3 } };
+			GADT_ASSERT(8, temp4.total());
+			temp4 += bitboard::BitArray<4>{ { 0, 1 }, { 1,1 }, { 2,1 } };
+			GADT_ASSERT(11, temp4.total());
+			temp4 -= bitboard::BitArray<4>{ { 0, 1 }, { 1,1 }, { 2,1 } };
+			GADT_ASSERT(8, temp4.total());
 
-
-			//test BitMahjong
-			bitboard::BitMahjong temp_mahjong;
-			GADT_ASSERT(0, temp_mahjong.total());
-			GADT_ASSERT(false, temp_mahjong.any());
-			GADT_ASSERT(true, temp_mahjong.none());
-			temp_mahjong.set(1, 1);
-			GADT_ASSERT(true, temp_mahjong.any());
-			GADT_ASSERT(false, temp_mahjong.none());
-			temp_mahjong.set(2, 2);
-			temp_mahjong.set(3, 3);
+			//test BitArray<8>
+			bitboard::BitArray<8> temp8;
+			bitboard::BitArray<8> subtemp8;
+			GADT_ASSERT(0, temp8.total());
+			GADT_ASSERT(false, temp8.any());
+			GADT_ASSERT(true, temp8.none());
+			temp8.set(1, 0x1);
+			GADT_ASSERT(true, temp8.any());
+			GADT_ASSERT(false, temp8.none());
+			temp8.set(2, 0x2);
+			temp8.set(3, 0x3);
 			count = 0;
-			for (size_t v : temp_mahjong)
+			for (size_t v : temp8)
 			{
 				GADT_ASSERT(v, (count > 0 && count < 4 ? count : 0));
 				count++;
 			}
-			GADT_ASSERT(count, temp_mahjong.upper_bound());
-			GADT_ASSERT(6, temp_mahjong.total());
-			temp_mahjong.reset(1);
-			GADT_ASSERT(5, temp_mahjong.total());
-			temp_mahjong.push(3);
-			GADT_ASSERT(4, temp_mahjong.get(3));
-			temp_mahjong.decrease(3);
-			GADT_ASSERT(3, temp_mahjong.get(3));
-			temp_mahjong.increase(4);
-			GADT_ASSERT(1, temp_mahjong.get(4));
-			temp_mahjong.push(25);
-			GADT_ASSERT(1, temp_mahjong.get(25));
-			temp_mahjong.decrease(25);
-			GADT_ASSERT(0, temp_mahjong.get(25));
-			temp_mahjong.increase(25);
-			GADT_ASSERT(1, temp_mahjong.get(25));
-			GADT_ASSERT(7, temp_mahjong.total());
-			temp_mahjong = bitboard::BitMahjong(0x3F, 0);
-			GADT_ASSERT(14, temp_mahjong.total());
-			temp_mahjong = bitboard::BitMahjong{ { 0,3 },{ 1,2 },{ 2,3 } };
-			GADT_ASSERT(8, temp_mahjong.total());
-			temp_mahjong -= bitboard::BitMahjong{ { 0,1 },{ 1,1 },{ 2,1 } };
-			GADT_ASSERT(5, temp_mahjong.total());
-			temp_mahjong += bitboard::BitMahjong{ { 0,1 },{ 1,1 },{ 2,1 } };
-			GADT_ASSERT(8, temp_mahjong.total());
+			GADT_ASSERT(count, temp8.upper_bound());
+			subtemp8.set(1, 1);
+			subtemp8.set(2, 1);
+			subtemp8.set(3, 1);
+			GADT_ASSERT(true, temp8.exist_subset(subtemp8));
+			GADT_ASSERT(true, subtemp8.is_subset_of(temp8));
+			subtemp8.set(1, 0xFF);
+			GADT_ASSERT(subtemp8.get(1), 0xFF);
+			GADT_ASSERT(false, temp8.exist_subset(subtemp8));
+			GADT_ASSERT(false, subtemp8.is_subset_of(temp8));
+			GADT_ASSERT(6, temp8.total());
+			temp8.reset(1);
+			GADT_ASSERT(5, temp8.total());
+			temp8.push(3);
+			GADT_ASSERT(4, temp8.get(3));
+			temp8.decrease(3);
+			GADT_ASSERT(3, temp8.get(3));
+			temp8.increase(4);
+			GADT_ASSERT(1, temp8.get(4));
+			temp8 = bitboard::BitArray<8>(0xFFFF);
+			GADT_ASSERT(0xFF * 2, temp8.total());
+			temp8 = bitboard::BitArray<8>{ { 0,3 },{ 1,2 },{ 2,3 } };
+			GADT_ASSERT(8, temp8.total());
+			temp8 += bitboard::BitArray<8>{ { 0, 1 }, { 1,1 }, { 2,1 } };
+			GADT_ASSERT(11, temp8.total());
+			temp8 -= bitboard::BitArray<8>{ { 0, 1 }, { 1,1 }, { 2,1 } };
+			GADT_ASSERT(8, temp8.total());
 
-			//test ValueVector
-			bitboard::ValueVector<14> temp_vec;
-			temp_vec.push(2);
-			count = 0;
-			for (auto v : temp_vec)
+			
+		}
+		void TestBitArraySet()
+		{
+			bitboard::BitArraySet<4,4> temp2;
+			GADT_ASSERT(0, temp2.total());
+			GADT_ASSERT(false, temp2.any());
+			GADT_ASSERT(true, temp2.none());
+			temp2[1].set(1, 1);
+			GADT_ASSERT(true, temp2.any());
+			GADT_ASSERT(false, temp2.none());
+			temp2[2].set(2, 2);
+			temp2[3].set(3, 3);
+			size_t count = 0;
+			for (auto arr : temp2)
 			{
-				GADT_ASSERT(v, 2);
+				GADT_ASSERT(arr.total(), count);
 				count++;
 			}
-			GADT_ASSERT(count, temp_vec.length());
-			GADT_ASSERT(1, temp_vec.length());
-			GADT_ASSERT(2, temp_vec.draw_value());
-			GADT_ASSERT(2, temp_vec.draw_and_remove_value());
-			GADT_ASSERT(0, temp_vec.length());
-			temp_vec.push(3);
-			GADT_ASSERT(1, temp_vec.length());
-
-			//test ValueVector
-			bitboard::ValueVector<5> temp_vec_5{1,2,3,4,5,6};
-			GADT_ASSERT(temp_vec_5.get(4), 5);
-			GADT_ASSERT(temp_vec_5.length(), 5);
-			GADT_ASSERT(temp_vec_5.is_full(), true);
-			GADT_ASSERT(temp_vec_5[0], 1);
-			GADT_ASSERT(temp_vec_5.upper_bound(), 5);
+			GADT_ASSERT(6, temp2.total());
+			temp2 = bitboard::BitArraySet<4,4>(bitboard::BitArray<4>(0xF));
+			GADT_ASSERT(0xF * 4, temp2.total());
+			temp2 = bitboard::BitArraySet<4,4>{ bitboard::BitArray<4>(0x1), bitboard::BitArray<4>(0x2), bitboard::BitArray<4>(0x3) };
+			GADT_ASSERT(6, temp2.total());
+			temp2 -= bitboard::BitArraySet<4, 4>{ bitboard::BitArray<4>(0x1), bitboard::BitArray<4>(0x1), bitboard::BitArray<4>(0x1) };
+			GADT_ASSERT(3, temp2.total());
+			temp2 += bitboard::BitArraySet<4, 4>{ bitboard::BitArray<4>(0x1), bitboard::BitArray<4>(0x2), bitboard::BitArray<4>(0x3) };
+			GADT_ASSERT(9, temp2.total());
 		}
 		void TestFilesystem()
 		{
@@ -972,6 +982,23 @@ namespace gadt
 			for (size_t i = 0; i < 11; i++)
 				GADT_ASSERT(vec[i].x, i);
 			filesystem::remove_file(file_name);
+		}
+		void TestArgConvertor()
+		{
+			args::ArgConvertor<std::string, int, int> ac({ "1","2", "3" });
+			auto res = ac.ExecuteFunctionWithReturn<int>([](std::string, int a, int b)->int { return a + b; });
+			GADT_ASSERT(res, 5);
+			int aaa = 0;
+			ac.ExecuteFunction([&](std::string, int a, int b)->void {
+				aaa = a + b;
+			});
+			GADT_ASSERT(aaa, 5);
+			std::function<std::string(int&, std::string, int, int)> funcA = [](int& a, std::string, int b, int)->std::string { return ToString(a + b); };
+			std::string str = ac.ExecuteFunctionWithReturn<std::string, int&>(funcA, aaa);
+			GADT_ASSERT(str, "7");
+			std::function<void(int&, std::string, int, int)> funcB = [](int& a, std::string, int b, int)->void { a += b; };
+			ac.ExecuteFunction<int&>(funcB, aaa);
+			GADT_ASSERT(aaa, 7);
 		}
 	}
 }

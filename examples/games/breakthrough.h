@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2017 Junkai Lu <junkai-lu@outlook.com>.
+﻿/* Copyright (c) 2018 Junkai Lu <junkai-lu@outlook.com>.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -217,6 +217,6 @@ namespace gadt
 		std::string ActionToString(const BtAction& action);
 		std::string ResultToString(const BtPlayer& result);
 
-		void DefineBreakthroughShell(shell::page::PagePtr<int> page_ptr);
+		void DefineBreakthroughShell(shell::page::ShellPagePtr<int> page_ptr);
 	}
 }
