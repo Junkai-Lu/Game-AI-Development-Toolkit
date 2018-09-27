@@ -1591,8 +1591,15 @@ namespace gadt
 				return false;
 			}
 
-			//get first element.
+			//get element.
 			inline reference element(size_t index)
+			{
+				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, index >= _size, "out of range");
+				return _elems[index];
+			}
+
+			//get element by const.
+			inline const reference const_element(size_t index) const
 			{
 				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, index >= _size, "out of range");
 				return _elems[index];
@@ -1711,7 +1718,7 @@ namespace gadt
 			{
 				GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, is_empty(), "overflow");
 				size_t rnd = rand() % size();
-				return _elements[rnd];
+				return _elements.const_element(rnd);
 			}
 
 			//current size of the pool

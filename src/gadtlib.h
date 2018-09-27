@@ -662,7 +662,7 @@ namespace gadt
 		{
 			GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
 			size_t best_index = 0;
-			T* best_ele = &vec[0];
+			const T* best_ele = &vec[0];
 			for (size_t i = 1; i < vec.size(); i++)
 			{
 				if (more_than(vec[i], *best_ele))
@@ -714,7 +714,7 @@ namespace gadt
 		{
 			GADT_WARNING_IF(GADT_STL_ENABLE_WARNING, vec.size() == 0, "empty vector in " + std::string(__FUNCTION__));
 			size_t best_index = 0;
-			T* best_ele = &vec[0];
+			const T* best_ele = &vec[0];
 			for (size_t i = 1; i < vec.size(); i++)
 			{
 				if (less_than(vec[i], *best_ele))
